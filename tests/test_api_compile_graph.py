@@ -1,0 +1,195 @@
+import pandas as pd
+import pytest
+import torch
+
+from kpnn.compile_graph import compile_graph
+from kpnn.compile.artifact import KPNNArtifact
+from kpnn.compile.execution_plan import FeedforwardExecutionPlan
+from kpnn.nn.model import KPNNModel
+from kpnn.utils.errors import KPNNError
+
+
+def test_compile_graph_returns_model_and_artifact_for_valid_feedforward_graph():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2"],
+            "target": ["pathway_1", "pathway_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist)
+
+    assert isinstance(model, KPNNModel)
+    assert isinstance(artifact, KPNNArtifact)
+    assert artifact.backend == "feedforward"
+    assert isinstance(artifact.execution_plan, FeedforwardExecutionPlan)
+
+
+def test_compile_graph_preserves_input_feature_names_in_artifact():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_b", "gene_a"],
+            "target": ["pathway_1", "pathway_1"],
+        }
+    )
+
+    _, artifact = compile_graph(edgelist)
+
+    assert artifact.feature_names == ["gene_a", "gene_b"]
+
+
+def test_compile_graph_builds_expected_layer_structure():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2", "pathway_1"],
+            "target": ["pathway_1", "pathway_1", "output_1"],
+        }
+    )
+
+    _, artifact = compile_graph(edgelist)
+
+    assert artifact.node_names_by_layer == {
+        "layer_0": ["gene_1", "gene_2"],
+        "layer_1": ["pathway_1"],
+        "layer_2": ["output_1"],
+    }
+
+
+def test_compile_graph_expands_feedforward_skip_edges():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "pathway_1", "pathway_2", "gene_1"],
+            "target": ["pathway_1", "pathway_2", "output_1", "output_1"],
+        }
+    )
+
+    _, artifact = compile_graph(edgelist, backend="feedforward")
+
+    plan = artifact.execution_plan
+
+    assert plan.pseudo_nodes == [
+        "pseudo__gene_1__output_1__layer_1",
+        "pseudo__gene_1__output_1__layer_2",
+    ]
+
+    assert sorted(plan.node_names_by_layer["layer_1"]) == [
+        "pathway_1",
+        "pseudo__gene_1__output_1__layer_1",
+    ]
+
+    expanded_edges = plan.expanded_edges.to_dict(orient="records")
+
+    assert {"source": "gene_1", "target": "pathway_1"} in expanded_edges
+    assert {"source": "pathway_1", "target": "pathway_2"} in expanded_edges
+    assert {"source": "pathway_2", "target": "output_1"} in expanded_edges
+
+    assert {
+        "source": "gene_1",
+        "target": "pseudo__gene_1__output_1__layer_1",
+    } in expanded_edges
+    assert {
+        "source": "pseudo__gene_1__output_1__layer_1",
+        "target": "pseudo__gene_1__output_1__layer_2",
+    } in expanded_edges
+    assert {
+        "source": "pseudo__gene_1__output_1__layer_2",
+        "target": "output_1",
+    } in expanded_edges
+
+
+def test_compile_graph_returns_model_that_runs_forward_pass():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2"],
+            "target": ["pathway_1", "pathway_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist)
+
+    x = torch.randn(4, len(artifact.feature_names))
+    y = model(x)
+
+    assert isinstance(y, torch.Tensor)
+    assert y.shape == (4, 1)
+
+
+def test_compile_graph_raises_kpnnerror_for_non_dataframe_edgelist():
+    edgelist = [
+        {"source": "gene_1", "target": "pathway_1"},
+    ]
+
+    with pytest.raises(KPNNError, match="DataFrame|dataframe"):
+        compile_graph(edgelist=edgelist)
+
+
+def test_compile_graph_raises_kpnnerror_if_required_columns_are_missing():
+    edgelist = pd.DataFrame(
+        {
+            "src": ["gene_1"],
+            "dst": ["pathway_1"],
+        }
+    )
+
+    with pytest.raises(KPNNError, match="source|target"):
+        compile_graph(edgelist=edgelist)
+
+
+def test_compile_graph_raises_kpnnerror_for_unknown_backend():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1"],
+            "target": ["pathway_1"],
+        }
+    )
+
+    with pytest.raises(KPNNError, match="backend|Unsupported backend"):
+        compile_graph(edgelist=edgelist, backend="cnn")
+
+
+def test_compile_graph_raises_kpnnerror_for_non_bool_quiet():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1"],
+            "target": ["pathway_1"],
+        }
+    )
+
+    with pytest.raises(KPNNError, match="quiet|bool"):
+        compile_graph(edgelist=edgelist, quiet="no")
+
+
+def test_compile_graph_raises_kpnnerror_for_feedforward_cycle():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["node_a", "node_b"],
+            "target": ["node_b", "node_a"],
+        }
+    )
+
+    with pytest.raises(KPNNError, match="cycles|layered|input node"):
+        compile_graph(edgelist=edgelist, backend="feedforward")
+
+
+def test_compile_graph_raises_kpnnerror_for_missing_values():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", None],
+            "target": ["pathway_1", "pathway_2"],
+        }
+    )
+
+    with pytest.raises(KPNNError, match="missing|Missing|source|target"):
+        compile_graph(edgelist=edgelist)
+
+
+def test_compile_graph_raises_kpnnerror_for_empty_node_names():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "   "],
+            "target": ["pathway_1", "pathway_2"],
+        }
+    )
+
+    with pytest.raises(KPNNError, match="empty|Empty"):
+        compile_graph(edgelist=edgelist)

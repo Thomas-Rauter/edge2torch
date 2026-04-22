@@ -1,0 +1,221 @@
+# kpnn
+
+Compile prior-knowledge biological graphs into minimally opinionated PyTorch
+models, then map trained models back to interpretable node-level biology.
+
+## Overview
+
+`kpnn` is a graph-to-model compiler plus model-to-interpretation bridge for
+knowledge-primed neural networks in biology.
+
+The package is built around two ideas:
+
+1. A prior-knowledge biological network can be compiled into a PyTorch model.
+2. A trained PyTorch model can be mapped back to biological entities for
+   interpretation.
+
+The main goal is to stay as unopinionated as possible about the actual neural
+network design. `kpnn` handles graph compilation, skip-aware structural
+execution, and interpretation mapping. Neural network details such as
+activations, output heads, losses, optimizers, and training loops are left to
+the user.
+
+## Current status
+
+This repository is currently in early development.
+
+At the moment, the package is being designed around a small public API:
+
+- `compile_graph(...)`
+- `interpret_model(...)`
+
+The feedforward backend is the first backend being implemented.
+
+## Design philosophy
+
+`kpnn` should only take over what is necessary.
+
+It should handle:
+
+- validation of prior-knowledge network inputs
+- conversion of an edgelist into an internal graph representation
+- compilation of the graph into a layer-wise PyTorch model
+- expansion of skipped edges into internal pseudo nodes
+- preservation of biological node mappings for later interpretation
+- mapping of Captum outputs back to biological layers and node names
+
+It should not impose:
+
+- activation functions
+- dropout
+- normalization
+- output heads
+- loss functions
+- optimizers
+- training procedures
+
+The compiled model should be a standard PyTorch `nn.Module` that users can
+inspect, modify, wrap, or extend as they wish.
+
+## Why pseudo nodes?
+
+Biological prior-knowledge graphs may contain skip edges across layers.
+
+For GPU-friendly computation, the compiled feedforward model should still be
+computable layer by layer. To enable this, skipped edges are expanded into
+chains of internal pseudo nodes.
+
+Pseudo nodes are internal compiler constructs. They are computed like ordinary
+nodes during layer computation, and then their outputs are overwritten with
+their copied input activations. This makes it possible to preserve skip
+structure while keeping the execution strictly layer-wise.
+
+## Input format
+
+For v1, `compile_graph(...)` accepts a pandas `DataFrame` edgelist with two
+required columns:
+
+- `source`
+- `target`
+
+This minimal edgelist format is intended to serve as the common biological
+input format across backends.
+
+## Planned backends
+
+The package is designed around multiple backends:
+
+- `feedforward`
+- `recurrent`
+- `graph`
+
+The first implemented backend is `feedforward`.
+
+## Planned public API
+
+The intended top-level API is:
+
+# import kpnn
+# model, artifact = kpnn.compile_graph(
+#     edgelist,
+#     backend="feedforward",
+#     quiet=False,
+# )
+
+# result = kpnn.interpret_model(
+#     model,
+#     artifact,
+#     data,
+#     target="nodes",
+#     method="layer_conductance",
+#     quiet=False,
+# )
+
+`compile_graph(...)` should return:
+
+- `model`: a compiled PyTorch model
+- `artifact`: metadata required for biological interpretation
+
+`interpret_model(...)` should return:
+
+- for `target="features"`:
+  - a single pandas `DataFrame`
+  - rows = examples
+  - columns = feature names
+
+- for `target="nodes"`:
+  - a dictionary of pandas `DataFrame`s keyed by layer
+  - rows = examples
+  - columns = biological node names in that layer
+
+Attribution scores should not be collapsed across examples by default.
+
+## Interpretation
+
+The interpretation layer is intended to use Captum.
+
+The distinction between interpretation targets is important:
+
+- feature-level attribution
+- node-level attribution
+
+For example:
+
+- feature-level methods:
+  - integrated gradients
+
+- node-level methods:
+  - layer conductance
+  - layer integrated gradients
+
+The package should preserve the original biological node names from the graph
+and attach them to the returned interpretation outputs.
+
+## Repository structure
+
+The repository is currently organized as follows:
+
+- `src/kpnn/api.py`
+  - thin public API functions
+- `src/kpnn/graph/`
+  - graph conversion and validation
+- `src/kpnn/compile/`
+  - graph-to-model compiler logic
+- `src/kpnn/nn/`
+  - minimal PyTorch model components
+- `src/kpnn/interpret/`
+  - interpretation logic and Captum integration
+- `src/kpnn/utils/`
+  - package-specific utilities and error classes
+
+## Development direction
+
+Near-term goals include:
+
+- stabilizing the feedforward compiler
+- validating skip-edge expansion into pseudo nodes
+- testing forward-pass correctness
+- enriching the compilation artifact for interpretation
+- implementing the interpretation pipeline
+- adding recurrent and graph backends later
+
+## Example workflow
+
+The intended workflow is:
+
+1. Start from a prior-knowledge edgelist.
+2. Compile it into a PyTorch model.
+3. Train the model using ordinary PyTorch code.
+4. Interpret the trained model with Captum through `kpnn`.
+5. Map the results back to biological nodes and layers.
+
+Conceptually:
+
+# import kpnn
+# import torch
+#
+# model, artifact = kpnn.compile_graph(
+#     edgelist,
+#     backend="feedforward",
+# )
+#
+# # user-defined PyTorch training happens here
+# # optimizer = ...
+# # loss_fn = ...
+# # train(model, data, optimizer, loss_fn)
+#
+# result = kpnn.interpret_model(
+#     model,
+#     artifact,
+#     data,
+#     target="nodes",
+#     method="layer_conductance",
+# )
+
+## Installation
+
+Installation instructions will be added once the package reaches a usable state.
+
+## License
+
+See `LICENSE`.

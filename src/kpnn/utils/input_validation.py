@@ -51,3 +51,20 @@ def validate_compile_graph_inputs(
         raise KPNNError(
             "'quiet' must be a boolean value (True or False)."
         )
+
+    edge_columns = edgelist.loc[:, ["source", "target"]]
+
+    if edge_columns.isnull().any().any():
+        raise KPNNError(
+            "'edgelist' columns 'source' and 'target' must not contain "
+            "missing values."
+        )
+
+    source_empty = edge_columns["source"].astype(str).str.strip().eq("")
+    target_empty = edge_columns["target"].astype(str).str.strip().eq("")
+
+    if source_empty.any() or target_empty.any():
+        raise KPNNError(
+            "'edgelist' columns 'source' and 'target' must not contain "
+            "empty node names."
+        )

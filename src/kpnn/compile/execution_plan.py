@@ -143,27 +143,25 @@ def build_feedforward_execution_plan(graph) -> FeedforwardExecutionPlan:
 
         previous_node = source
 
-        for step in range(1, depth_gap):
-            pseudo_depth = source_depth + step
-            is_last_step = step == depth_gap - 1
+        for pseudo_depth in range(source_depth + 1, target_depth):
+            pseudo_node = (
+                f"pseudo__{source}__{target}__layer_{pseudo_depth}"
+            )
+            pseudo_nodes.append(pseudo_node)
 
-            if is_last_step:
-                next_node = target
-            else:
-                next_node = (
-                    f"pseudo__{source}__{target}__layer_{pseudo_depth}"
-                )
-                pseudo_nodes.append(next_node)
-
-                layer_name = f"layer_{pseudo_depth}"
-                node_names_by_layer[layer_name].append(next_node)
-                node_to_layer[next_node] = layer_name
+            layer_name = f"layer_{pseudo_depth}"
+            node_names_by_layer[layer_name].append(pseudo_node)
+            node_to_layer[pseudo_node] = layer_name
 
             expanded_edges_records.append(
-                {"source": previous_node, "target": next_node}
+                {"source": previous_node, "target": pseudo_node}
             )
 
-            previous_node = next_node
+            previous_node = pseudo_node
+
+        expanded_edges_records.append(
+            {"source": previous_node, "target": target}
+        )
 
     for layer_name, layer_nodes in node_names_by_layer.items():
         node_names_by_layer[layer_name] = sorted(layer_nodes)
