@@ -1,6 +1,10 @@
+"""
+API function
+"""
+
 import pandas as pd
 
-from .utils.input_validation import validate_compile_graph_inputs
+from .compile.input_validation import validate_compile_graph_inputs
 from .graph.io import edgelist_to_graph
 from .graph.validate import validate_graph, handle_validation_report
 from .compile.compiler import compile_backend

@@ -72,6 +72,62 @@ class KPNNModel(nn.Module):
 
         return x
 
+    def get_layer_block(self, layer_name: str):
+        """
+        Return the feedforward block that produces the given layer.
+
+        Parameters
+        ----------
+        layer_name : str
+            Layer name like ``"layer_1"`` or ``"layer_2"``.
+
+        Returns
+        -------
+        nn.Module
+            Feedforward block whose output corresponds to ``layer_name``.
+
+        Raises
+        ------
+        KPNNError
+            If the layer name is invalid or refers to the input layer.
+        """
+        if not isinstance(layer_name, str):
+            raise KPNNError(
+                "'layer_name' must be a string."
+            )
+
+        if not layer_name.startswith("layer_"):
+            raise KPNNError(
+                f"Invalid layer name '{layer_name}'."
+            )
+
+        try:
+            layer_idx = int(layer_name.split("_")[1])
+        except (IndexError, ValueError) as exc:
+            raise KPNNError(
+                f"Invalid layer name '{layer_name}'."
+            ) from exc
+
+        if layer_idx == 0:
+            raise KPNNError(
+                "The input layer 'layer_0' does not have a "
+                "feedforward block."
+            )
+
+        if layer_name not in self.layer_names:
+            raise KPNNError(
+                f"Unknown layer name '{layer_name}'."
+            )
+
+        block_idx = layer_idx - 1
+
+        if block_idx >= len(self.blocks):
+            raise KPNNError(
+                f"No block exists for layer '{layer_name}'."
+            )
+
+        return self.blocks[block_idx]
+
     @staticmethod
     def _sort_layer_names(layer_names: list[str]) -> list[str]:
         """

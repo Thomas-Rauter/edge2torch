@@ -1,21 +1,21 @@
-from __future__ import annotations
+"""
+API function
+"""
 
 from typing import Any
 
-import anndata as ad
 import pandas as pd
 import torch
 
-from .errors import KPNNError
-from .interpret.captum_adapter import run_captum_interpretation
+from .interpret.input_validation import validate_interpret_model_inputs
 from .interpret.prepare_input import prepare_interpretation_input
-from .interpret.validate import validate_interpretation_input
+from .interpret.captum_adapter import run_captum_interpretation
 
 
 def interpret_model(
     model: Any,
     artifact: Any,
-    data: pd.DataFrame | ad.AnnData | torch.Tensor,
+    data,
     target: str = "nodes",
     method: str = "layer_conductance",
     quiet: bool = False,
@@ -54,12 +54,13 @@ def interpret_model(
     KPNNError
         If interpretation input validation fails.
     """
-    validate_interpretation_input(
+    validate_interpret_model_inputs(
         model=model,
         artifact=artifact,
         data=data,
         target=target,
         method=method,
+        quiet=quiet
     )
 
     prepared_input = prepare_interpretation_input(

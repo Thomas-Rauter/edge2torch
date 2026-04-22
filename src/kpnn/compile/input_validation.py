@@ -1,6 +1,6 @@
 import pandas as pd
 
-from .errors import KPNNError
+from ..utils.errors import KPNNError
 
 
 def validate_compile_graph_inputs(
