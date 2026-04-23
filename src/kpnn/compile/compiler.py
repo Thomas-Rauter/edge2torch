@@ -1,5 +1,5 @@
 from .feedforward import compile_feedforward
-# from .recurrent import compile_recurrent
+from .recurrent import compile_recurrent
 # from .graph import compile_graph
 from ..utils.errors import KPNNError
 
@@ -31,8 +31,8 @@ def compile_backend(
     if backend == "feedforward":
         return compile_feedforward(graph)
 
-    # if backend == "recurrent":
-        # return compile_recurrent(graph)
+    if backend == "recurrent":
+        return compile_recurrent(graph)
 
     # if backend == "graph":
         # return compile_graph(graph)

@@ -180,3 +180,88 @@ def build_feedforward_execution_plan(graph) -> FeedforwardExecutionPlan:
         input_node_names=input_node_names,
         output_node_names=output_node_names,
     )
+
+
+@dataclass
+class RecurrentExecutionPlan:
+    """
+    Execution plan for a recurrent KPNN model.
+    """
+
+    original_edges: pd.DataFrame
+    node_names: list[str]
+    input_node_names: list[str]
+    output_node_names: list[str]
+
+
+def build_recurrent_execution_plan(graph) -> RecurrentExecutionPlan:
+    """
+    Build a recurrent execution plan from a KPNN graph.
+
+    In the recurrent backend, the graph is kept in its original form rather
+    than expanded into adjacent feedforward layers. Cycles are allowed.
+
+    Parameters
+    ----------
+    graph
+        Internal KPNN graph object.
+
+    Returns
+    -------
+    RecurrentExecutionPlan
+        Execution plan for recurrent compilation.
+
+    Raises
+    ------
+    KPNNError
+        If the graph is empty or structurally invalid for recurrent
+        compilation.
+    """
+    original_edges = graph.edges.copy()
+
+    if original_edges.empty:
+        raise KPNNError(
+            "Recurrent compilation requires at least one edge."
+        )
+
+    node_names = list(graph.nodes)
+
+    if not node_names:
+        raise KPNNError(
+            "Recurrent compilation requires at least one node."
+        )
+
+    children = {node: [] for node in node_names}
+    parents = {node: [] for node in node_names}
+
+    for _, row in original_edges.iterrows():
+        source = row["source"]
+        target = row["target"]
+
+        if source not in children:
+            raise KPNNError(
+                f"Unknown source node '{source}' in recurrent graph."
+            )
+
+        if target not in parents:
+            raise KPNNError(
+                f"Unknown target node '{target}' in recurrent graph."
+            )
+
+        children[source].append(target)
+        parents[target].append(source)
+
+    input_node_names = sorted(
+        [node for node in node_names if len(parents[node]) == 0]
+    )
+
+    output_node_names = sorted(
+        [node for node in node_names if len(children[node]) == 0]
+    )
+
+    return RecurrentExecutionPlan(
+        original_edges=original_edges,
+        node_names=sorted(node_names),
+        input_node_names=input_node_names,
+        output_node_names=output_node_names,
+    )
