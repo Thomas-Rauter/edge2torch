@@ -23,7 +23,7 @@ def compile_graph(
     edgelist : pd.DataFrame
         Edge table with required columns 'source' and 'target'.
     backend : str, default="feedforward"
-        Backend to compile to. One of: "feedforward", "recurrent", "graph".
+        Backend to compile to. One of: "feedforward", "recurrent", "graphnn".
     quiet : bool, default=False
         If False, emit informational notes during validation. If True,
         suppress notes and only surface warnings and errors.

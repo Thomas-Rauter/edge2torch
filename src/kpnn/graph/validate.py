@@ -101,9 +101,9 @@ def validate_graph(
         report.notes.append(
             "Recurrent backend selected. Cycles may be allowed."
         )
-    elif backend == "graph":
+    elif backend == "graphnn":
         report.notes.append(
-            "Graph backend selected. Graph structure will be compiled "
+            "GraphNN backend selected. Graph structure will be compiled "
             "for message passing."
         )
     else:

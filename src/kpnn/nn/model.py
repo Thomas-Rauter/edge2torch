@@ -271,3 +271,124 @@ class KPNNRecurrentModel(nn.Module):
             state[:, self.input_indices] = x
 
         return state[:, self.output_indices]
+
+
+class KPNNGraphNNModel(nn.Module):
+    """
+    Graph neural network KPNN model compiled from a graphnn execution plan.
+
+    The model applies a masked message-passing style update over all graph
+    nodes for a fixed number of steps. No activation functions or other
+    architectural choices are imposed here.
+
+    Input features are injected into nodes with zero in-degree. The model
+    returns the activations of nodes with zero out-degree.
+    """
+
+    def __init__(
+        self,
+        execution_plan,
+        backend: str = "graphnn",
+        steps: int = 3,
+        bias: bool = True,
+    ):
+        super().__init__()
+
+        if backend != "graphnn":
+            raise KPNNError(
+                "KPNNGraphNNModel currently only supports the "
+                "'graphnn' backend."
+            )
+
+        if not isinstance(steps, int) or steps <= 0:
+            raise KPNNError(
+                "'steps' must be a positive integer."
+            )
+
+        self.execution_plan = execution_plan
+        self.backend = backend
+        self.steps = steps
+        self.bias = bias
+
+        self.node_names = list(execution_plan.node_names)
+        self.input_node_names = list(execution_plan.input_node_names)
+        self.output_node_names = list(execution_plan.output_node_names)
+
+        self.node_index = {
+            node_name: idx
+            for idx, node_name in enumerate(self.node_names)
+        }
+
+        self.input_indices = [
+            self.node_index[node_name]
+            for node_name in self.input_node_names
+        ]
+        self.output_indices = [
+            self.node_index[node_name]
+            for node_name in self.output_node_names
+        ]
+
+        n_nodes = len(self.node_names)
+
+        mask = torch.zeros(n_nodes, n_nodes, dtype=torch.float32)
+
+        for _, row in execution_plan.original_edges.iterrows():
+            source = row["source"]
+            target = row["target"]
+
+            source_idx = self.node_index[source]
+            target_idx = self.node_index[target]
+
+            mask[target_idx, source_idx] = 1.0
+
+        self.message_passing = MaskedLinear(
+            in_features=n_nodes,
+            out_features=n_nodes,
+            mask=mask,
+            bias=bias,
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Run the graphnn KPNN for a fixed number of update steps.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor with shape (n_examples, n_input_nodes).
+
+        Returns
+        -------
+        torch.Tensor
+            Output tensor with shape (n_examples, n_output_nodes).
+        """
+        if x.ndim != 2:
+            raise KPNNError(
+                "Input tensor must be 2-dimensional."
+            )
+
+        expected_n_features = len(self.input_indices)
+
+        if x.shape[1] != expected_n_features:
+            raise KPNNError(
+                "Input tensor has the wrong number of features. "
+                f"Expected {expected_n_features}, got {x.shape[1]}."
+            )
+
+        batch_size = x.shape[0]
+        n_nodes = len(self.node_names)
+
+        state = torch.zeros(
+            batch_size,
+            n_nodes,
+            dtype=x.dtype,
+            device=x.device,
+        )
+
+        state[:, self.input_indices] = x
+
+        for _ in range(self.steps):
+            state = self.message_passing(state)
+            state[:, self.input_indices] = x
+
+        return state[:, self.output_indices]

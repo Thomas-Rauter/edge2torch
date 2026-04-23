@@ -265,3 +265,88 @@ def build_recurrent_execution_plan(graph) -> RecurrentExecutionPlan:
         input_node_names=input_node_names,
         output_node_names=output_node_names,
     )
+
+
+@dataclass
+class GraphNNExecutionPlan:
+    """
+    Execution plan for a graph neural network KPNN model.
+    """
+
+    original_edges: pd.DataFrame
+    node_names: list[str]
+    input_node_names: list[str]
+    output_node_names: list[str]
+
+
+def build_graphnn_execution_plan(graph) -> GraphNNExecutionPlan:
+    """
+    Build a graph neural network execution plan from a KPNN graph.
+
+    In the graphnn backend, the graph is kept in its original form rather
+    than expanded into feedforward layers. Cycles are allowed.
+
+    Parameters
+    ----------
+    graph
+        Internal KPNN graph object.
+
+    Returns
+    -------
+    GraphNNExecutionPlan
+        Execution plan for graph neural network compilation.
+
+    Raises
+    ------
+    KPNNError
+        If the graph is empty or structurally invalid for graphnn
+        compilation.
+    """
+    original_edges = graph.edges.copy()
+
+    if original_edges.empty:
+        raise KPNNError(
+            "GraphNN compilation requires at least one edge."
+        )
+
+    node_names = list(graph.nodes)
+
+    if not node_names:
+        raise KPNNError(
+            "GraphNN compilation requires at least one node."
+        )
+
+    children = {node: [] for node in node_names}
+    parents = {node: [] for node in node_names}
+
+    for _, row in original_edges.iterrows():
+        source = row["source"]
+        target = row["target"]
+
+        if source not in children:
+            raise KPNNError(
+                f"Unknown source node '{source}' in graphnn graph."
+            )
+
+        if target not in parents:
+            raise KPNNError(
+                f"Unknown target node '{target}' in graphnn graph."
+            )
+
+        children[source].append(target)
+        parents[target].append(source)
+
+    input_node_names = sorted(
+        [node for node in node_names if len(parents[node]) == 0]
+    )
+
+    output_node_names = sorted(
+        [node for node in node_names if len(children[node]) == 0]
+    )
+
+    return GraphNNExecutionPlan(
+        original_edges=original_edges,
+        node_names=sorted(node_names),
+        input_node_names=input_node_names,
+        output_node_names=output_node_names,
+    )

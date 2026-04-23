@@ -38,7 +38,7 @@ def validate_compile_graph_inputs(
             f"'target'. Missing: {missing_str}."
         )
 
-    supported_backends = {"feedforward", "recurrent", "graph"}
+    supported_backends = {"feedforward", "recurrent", "graphnn"}
 
     if backend not in supported_backends:
         supported = ", ".join(sorted(supported_backends))
