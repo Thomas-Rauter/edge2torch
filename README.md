@@ -219,3 +219,20 @@ Installation instructions will be added once the package reaches a usable state.
 ## License
 
 See `LICENSE`.
+
+## For development
+
+Try out website locally:
+
+pip install -e .[docs]
+
+
+mkdocs serve
+
+
+
+Run the Jupyter notebook:
+jupyter nbconvert --to notebook --execute --inplace docs/getting-started.ipynb
+
+Check if the Jupyter notebook contains the outputs:
+grep -n '"outputs"' docs/getting-started.ipynb

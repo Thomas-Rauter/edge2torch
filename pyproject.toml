@@ -25,6 +25,15 @@ bio = [
 dev = [
     "pytest",
 ]
+docs = [
+    "mkdocs",
+    "mkdocs-material",
+    "mkdocstrings[python]",
+    "mkdocs-jupyter",
+    "pymdown-extensions",
+    "nbconvert",
+    "ipykernel",
+]
 
 [tool.setuptools]
 package-dir = {"" = "src"}

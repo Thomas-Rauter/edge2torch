@@ -7,6 +7,7 @@ src/kpnn/interpret_model.py
 src/kpnn.egg-info/PKG-INFO
 src/kpnn.egg-info/SOURCES.txt
 src/kpnn.egg-info/dependency_links.txt
+src/kpnn.egg-info/requires.txt
 src/kpnn.egg-info/top_level.txt
 src/kpnn/backends/__init__.py
 src/kpnn/backends/feedforward.py
@@ -18,6 +19,7 @@ src/kpnn/compile/compiler.py
 src/kpnn/compile/execution_plan.py
 src/kpnn/compile/feedforward.py
 src/kpnn/compile/graphnn.py
+src/kpnn/compile/input_validation.py
 src/kpnn/compile/recurrent.py
 src/kpnn/graph/__init__.py
 src/kpnn/graph/io.py
@@ -25,14 +27,14 @@ src/kpnn/graph/schema.py
 src/kpnn/graph/validate.py
 src/kpnn/interpret/__init__.py
 src/kpnn/interpret/captum_adapter.py
-src/kpnn/interpret/node_scores.py
-src/kpnn/interpret/reducers.py
-src/kpnn/interpret/result.py
+src/kpnn/interpret/input_validation.py
+src/kpnn/interpret/prepare_input.py
 src/kpnn/nn/__init__.py
 src/kpnn/nn/blocks.py
 src/kpnn/nn/masked_linear.py
 src/kpnn/nn/model.py
 src/kpnn/utils/__init__.py
 src/kpnn/utils/errors.py
-src/kpnn/utils/input_validation.py
 tests/test_api_compile_graph.py
+tests/test_api_interpret_model.py
+tests/test_model_pytorch_integration.py

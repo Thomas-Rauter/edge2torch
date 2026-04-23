@@ -1,0 +1,48 @@
+site_name: kpnn
+site_description: >
+  Compile prior-knowledge biological graphs into minimally opinionated
+  PyTorch models and map trained models back to biological interpretations.
+site_url: https://Thomas-Rauter.github.io/kpnn/
+repo_url: https://github.com/Thomas-Rauter/kpnn
+repo_name: Thomas-Rauter/kpnn
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - content.code.copy
+    - search.suggest
+    - search.highlight
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.ipynb
+  - Design: design.md
+  - API reference: api.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: numpy
+            show_root_heading: true
+            show_root_toc_entry: false
+            show_signature: true
+            show_signature_annotations: true
+            separate_signature: true
+            show_source: false
+            merge_init_into_class: true
+  - mkdocs-jupyter
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
