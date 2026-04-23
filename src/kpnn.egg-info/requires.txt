@@ -7,10 +7,15 @@ anndata
 
 [dev]
 pytest
+ruff
+mypy
+build
 
 [docs]
 mkdocs
 mkdocs-material
 mkdocstrings[python]
-pymdown-extensions
 mkdocs-jupyter
+pymdown-extensions
+nbconvert
+ipykernel

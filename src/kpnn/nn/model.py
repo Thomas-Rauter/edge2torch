@@ -43,12 +43,8 @@ class KPNNModel(nn.Module):
             input_layer_name = self.layer_names[layer_idx]
             output_layer_name = self.layer_names[layer_idx + 1]
 
-            input_node_names = execution_plan.node_names_by_layer[
-                input_layer_name
-            ]
-            output_node_names = execution_plan.node_names_by_layer[
-                output_layer_name
-            ]
+            input_node_names = execution_plan.node_names_by_layer[input_layer_name]
+            output_node_names = execution_plan.node_names_by_layer[output_layer_name]
 
             block_edges = self._select_block_edges(
                 expanded_edges=execution_plan.expanded_edges,
@@ -94,34 +90,25 @@ class KPNNModel(nn.Module):
             If the layer name is invalid or refers to the input layer.
         """
         if not layer_name.startswith("layer_"):
-            raise KPNNError(
-                f"Invalid layer name '{layer_name}'."
-            )
+            raise KPNNError(f"Invalid layer name '{layer_name}'.")
 
         try:
             layer_idx = int(layer_name.split("_")[1])
         except (IndexError, ValueError) as exc:
-            raise KPNNError(
-                f"Invalid layer name '{layer_name}'."
-            ) from exc
+            raise KPNNError(f"Invalid layer name '{layer_name}'.") from exc
 
         if layer_idx == 0:
             raise KPNNError(
-                "The input layer 'layer_0' does not have a "
-                "feedforward block."
+                "The input layer 'layer_0' does not have a feedforward block."
             )
 
         if layer_name not in self.layer_names:
-            raise KPNNError(
-                f"Unknown layer name '{layer_name}'."
-            )
+            raise KPNNError(f"Unknown layer name '{layer_name}'.")
 
         block_idx = layer_idx - 1
 
         if block_idx >= len(self.blocks):
-            raise KPNNError(
-                f"No block exists for layer '{layer_name}'."
-            )
+            raise KPNNError(f"No block exists for layer '{layer_name}'.")
 
         return self.blocks[block_idx]
 
@@ -175,14 +162,11 @@ class KPNNRecurrentModel(nn.Module):
 
         if backend != "recurrent":
             raise KPNNError(
-                "KPNNRecurrentModel currently only supports the "
-                "'recurrent' backend."
+                "KPNNRecurrentModel currently only supports the 'recurrent' backend."
             )
 
         if not isinstance(steps, int) or steps <= 0:
-            raise KPNNError(
-                "'steps' must be a positive integer."
-            )
+            raise KPNNError("'steps' must be a positive integer.")
 
         self.execution_plan = execution_plan
         self.backend = backend
@@ -194,17 +178,14 @@ class KPNNRecurrentModel(nn.Module):
         self.output_node_names = list(execution_plan.output_node_names)
 
         self.node_index = {
-            node_name: idx
-            for idx, node_name in enumerate(self.node_names)
+            node_name: idx for idx, node_name in enumerate(self.node_names)
         }
 
         self.input_indices = [
-            self.node_index[node_name]
-            for node_name in self.input_node_names
+            self.node_index[node_name] for node_name in self.input_node_names
         ]
         self.output_indices = [
-            self.node_index[node_name]
-            for node_name in self.output_node_names
+            self.node_index[node_name] for node_name in self.output_node_names
         ]
 
         n_nodes = len(self.node_names)
@@ -242,9 +223,7 @@ class KPNNRecurrentModel(nn.Module):
             Output tensor with shape (n_examples, n_output_nodes).
         """
         if x.ndim != 2:
-            raise KPNNError(
-                "Input tensor must be 2-dimensional."
-            )
+            raise KPNNError("Input tensor must be 2-dimensional.")
 
         expected_n_features = len(self.input_indices)
 
@@ -296,14 +275,11 @@ class KPNNGraphNNModel(nn.Module):
 
         if backend != "graphnn":
             raise KPNNError(
-                "KPNNGraphNNModel currently only supports the "
-                "'graphnn' backend."
+                "KPNNGraphNNModel currently only supports the 'graphnn' backend."
             )
 
         if not isinstance(steps, int) or steps <= 0:
-            raise KPNNError(
-                "'steps' must be a positive integer."
-            )
+            raise KPNNError("'steps' must be a positive integer.")
 
         self.execution_plan = execution_plan
         self.backend = backend
@@ -315,17 +291,14 @@ class KPNNGraphNNModel(nn.Module):
         self.output_node_names = list(execution_plan.output_node_names)
 
         self.node_index = {
-            node_name: idx
-            for idx, node_name in enumerate(self.node_names)
+            node_name: idx for idx, node_name in enumerate(self.node_names)
         }
 
         self.input_indices = [
-            self.node_index[node_name]
-            for node_name in self.input_node_names
+            self.node_index[node_name] for node_name in self.input_node_names
         ]
         self.output_indices = [
-            self.node_index[node_name]
-            for node_name in self.output_node_names
+            self.node_index[node_name] for node_name in self.output_node_names
         ]
 
         n_nodes = len(self.node_names)
@@ -363,9 +336,7 @@ class KPNNGraphNNModel(nn.Module):
             Output tensor with shape (n_examples, n_output_nodes).
         """
         if x.ndim != 2:
-            raise KPNNError(
-                "Input tensor must be 2-dimensional."
-            )
+            raise KPNNError("Input tensor must be 2-dimensional.")
 
         expected_n_features = len(self.input_indices)
 

@@ -27,13 +27,9 @@ class FeedforwardLayerBlock(nn.Module):
         self.input_node_names = input_node_names
         self.output_node_names = output_node_names
 
-        input_index = {
-            node_name: idx
-            for idx, node_name in enumerate(input_node_names)
-        }
+        input_index = {node_name: idx for idx, node_name in enumerate(input_node_names)}
         output_index = {
-            node_name: idx
-            for idx, node_name in enumerate(output_node_names)
+            node_name: idx for idx, node_name in enumerate(output_node_names)
         }
 
         out_features = len(output_node_names)
@@ -56,9 +52,7 @@ class FeedforwardLayerBlock(nn.Module):
 
             if target.startswith("pseudo__"):
                 if target in pseudo_targets_seen:
-                    raise KPNNError(
-                        "Pseudo nodes must have exactly one incoming edge."
-                    )
+                    raise KPNNError("Pseudo nodes must have exactly one incoming edge.")
 
                 pseudo_targets_seen.add(target)
                 pseudo_input_indices.append(source_idx)

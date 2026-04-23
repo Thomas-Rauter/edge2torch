@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Compile prior-knowledge biological graphs into PyTorch models."
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "MIT" }
+license = "MIT"
 authors = [
     { name = "Thomas Rauter" }
 ]
@@ -24,6 +24,9 @@ bio = [
 ]
 dev = [
     "pytest",
+    "ruff",
+    "mypy",
+    "build",
 ]
 docs = [
     "mkdocs",
@@ -41,3 +44,15 @@ package-dir = {"" = "src"}
 [tool.setuptools.packages.find]
 where = ["src"]
 namespaces = false
+
+[tool.ruff]
+line-length = 80
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.mypy]
+python_version = "3.10"
+files = ["src"]
+ignore_missing_imports = true

@@ -38,11 +38,7 @@ def test_graphnn_model_supports_backward_pass():
 
     loss.backward()
 
-    grads = [
-        param.grad
-        for param in model.parameters()
-        if param.requires_grad
-    ]
+    grads = [param.grad for param in model.parameters() if param.requires_grad]
 
     assert any(grad is not None for grad in grads)
 
@@ -62,10 +58,7 @@ def test_graphnn_model_supports_optimizer_step():
     y = model(x)
     loss = y.sum()
 
-    before = [
-        param.detach().clone()
-        for param in model.parameters()
-    ]
+    before = [param.detach().clone() for param in model.parameters()]
 
     optimizer.zero_grad()
     loss.backward()
@@ -142,11 +135,7 @@ def test_wrapped_graphnn_model_supports_backward_pass():
 
     loss.backward()
 
-    grads = [
-        param.grad
-        for param in model.parameters()
-        if param.requires_grad
-    ]
+    grads = [param.grad for param in model.parameters() if param.requires_grad]
 
     assert any(grad is not None for grad in grads)
 

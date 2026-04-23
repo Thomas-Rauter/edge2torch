@@ -236,3 +236,14 @@ jupyter nbconvert --to notebook --execute --inplace docs/getting-started.ipynb
 
 Check if the Jupyter notebook contains the outputs:
 grep -n '"outputs"' docs/getting-started.ipynb
+
+
+
+### check code
+
+pip install -e .[dev]
+ruff check .
+ruff format --check .
+mypy src
+pytest
+python -m build

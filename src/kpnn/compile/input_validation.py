@@ -43,21 +43,17 @@ def validate_compile_graph_inputs(
     if backend not in supported_backends:
         supported = ", ".join(sorted(supported_backends))
         raise KPNNError(
-            f"Unsupported backend '{backend}'. "
-            f"Expected one of: {supported}."
+            f"Unsupported backend '{backend}'. Expected one of: {supported}."
         )
 
     if not isinstance(quiet, bool):
-        raise KPNNError(
-            "'quiet' must be a boolean value (True or False)."
-        )
+        raise KPNNError("'quiet' must be a boolean value (True or False).")
 
     edge_columns = edgelist.loc[:, ["source", "target"]]
 
     if edge_columns.isnull().any().any():
         raise KPNNError(
-            "'edgelist' columns 'source' and 'target' must not contain "
-            "missing values."
+            "'edgelist' columns 'source' and 'target' must not contain missing values."
         )
 
     source_empty = edge_columns["source"].astype(str).str.strip().eq("")

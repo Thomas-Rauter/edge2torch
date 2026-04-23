@@ -66,9 +66,7 @@ def run_captum_interpretation(
             method=method,
         )
 
-    raise KPNNError(
-        f"Unsupported interpretation target '{target}'."
-    )
+    raise KPNNError(f"Unsupported interpretation target '{target}'.")
 
 
 def _run_feature_interpretation(
@@ -82,32 +80,26 @@ def _run_feature_interpretation(
     Run feature-level attribution and return one DataFrame.
     """
     if method != "integrated_gradients":
-        raise KPNNError(
-            f"Method '{method}' is not supported for "
-            "target='features'."
-        )
+        raise KPNNError(f"Method '{method}' is not supported for target='features'.")
 
     interpreter = IntegratedGradients(model)
     attributions = interpreter.attribute(inputs)
 
     if attributions.ndim != 2:
         raise KPNNError(
-            "Feature attributions must have shape "
-            "(n_examples, n_features)."
+            "Feature attributions must have shape (n_examples, n_features)."
         )
 
     n_examples, n_features = attributions.shape
 
     if n_examples != len(sample_names):
         raise KPNNError(
-            "Feature attribution row count does not match "
-            "the number of samples."
+            "Feature attribution row count does not match the number of samples."
         )
 
     if n_features != len(feature_names):
         raise KPNNError(
-            "Feature attribution column count does not match "
-            "the number of features."
+            "Feature attribution column count does not match the number of features."
         )
 
     return pd.DataFrame(
@@ -131,10 +123,7 @@ def _run_node_interpretation(
         "layer_conductance",
         "layer_integrated_gradients",
     }:
-        raise KPNNError(
-            f"Method '{method}' is not supported for "
-            "target='nodes'."
-        )
+        raise KPNNError(f"Method '{method}' is not supported for target='nodes'.")
 
     results = {}
 
@@ -182,10 +171,7 @@ def _run_node_interpretation(
             for idx, node_name in enumerate(node_names)
             if _is_visible_biological_node(node_name)
         ]
-        visible_node_names = [
-            node_names[idx]
-            for idx in visible_indices
-        ]
+        visible_node_names = [node_names[idx] for idx in visible_indices]
 
         visible_attributions = attributions[:, visible_indices]
 
@@ -212,6 +198,4 @@ def _layer_sort_key(layer_name):
     try:
         return int(layer_name.split("_")[1])
     except (IndexError, ValueError) as exc:
-        raise KPNNError(
-            f"Invalid layer name '{layer_name}' in artifact."
-        ) from exc
+        raise KPNNError(f"Invalid layer name '{layer_name}' in artifact.") from exc

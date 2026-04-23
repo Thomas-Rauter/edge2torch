@@ -82,34 +82,24 @@ def validate_graph(
     n_self_loops = int(self_loops.sum())
 
     if n_self_loops > 0:
-        report.warnings.append(
-            f"The graph contains {n_self_loops} self-loop edge(s)."
-        )
+        report.warnings.append(f"The graph contains {n_self_loops} self-loop edge(s).")
 
     n_nodes = len(graph.nodes)
     n_edges = len(graph.edges)
 
-    report.notes.append(
-        f"Graph contains {n_nodes} node(s) and {n_edges} edge(s)."
-    )
+    report.notes.append(f"Graph contains {n_nodes} node(s) and {n_edges} edge(s).")
 
     if backend == "feedforward":
-        report.notes.append(
-            "Feedforward backend selected. Graph must be layerable."
-        )
+        report.notes.append("Feedforward backend selected. Graph must be layerable.")
     elif backend == "recurrent":
-        report.notes.append(
-            "Recurrent backend selected. Cycles may be allowed."
-        )
+        report.notes.append("Recurrent backend selected. Cycles may be allowed.")
     elif backend == "graphnn":
         report.notes.append(
             "GraphNN backend selected. Graph structure will be compiled "
             "for message passing."
         )
     else:
-        raise KPNNError(
-            f"Unsupported backend '{backend}' during graph validation."
-        )
+        raise KPNNError(f"Unsupported backend '{backend}' during graph validation.")
 
     return report
 

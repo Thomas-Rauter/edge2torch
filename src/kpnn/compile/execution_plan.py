@@ -57,14 +57,10 @@ def build_feedforward_execution_plan(graph) -> FeedforwardExecutionPlan:
         parents[target].append(source)
 
     remaining = set(graph.nodes)
-    current_layer_nodes = sorted(
-        [node for node in graph.nodes if in_degree[node] == 0]
-    )
+    current_layer_nodes = sorted([node for node in graph.nodes if in_degree[node] == 0])
 
     if not current_layer_nodes:
-        raise KPNNError(
-            "Feedforward compilation requires at least one input node."
-        )
+        raise KPNNError("Feedforward compilation requires at least one input node.")
 
     node_to_depth = {}
     depth = 0
@@ -100,7 +96,8 @@ def build_feedforward_execution_plan(graph) -> FeedforwardExecutionPlan:
         layer_name = f"layer_{layer_idx}"
         layer_nodes = sorted(
             [
-                node for node, node_depth in node_to_depth.items()
+                node
+                for node, node_depth in node_to_depth.items()
                 if node_depth == layer_idx
             ]
         )
@@ -110,9 +107,7 @@ def build_feedforward_execution_plan(graph) -> FeedforwardExecutionPlan:
         for node in layer_nodes:
             node_to_layer[node] = layer_name
 
-    input_node_names = sorted(
-        [node for node in graph.nodes if len(parents[node]) == 0]
-    )
+    input_node_names = sorted([node for node in graph.nodes if len(parents[node]) == 0])
 
     output_node_names = sorted(
         [node for node in graph.nodes if len(children[node]) == 0]
@@ -136,17 +131,13 @@ def build_feedforward_execution_plan(graph) -> FeedforwardExecutionPlan:
             )
 
         if depth_gap == 1:
-            expanded_edges_records.append(
-                {"source": source, "target": target}
-            )
+            expanded_edges_records.append({"source": source, "target": target})
             continue
 
         previous_node = source
 
         for pseudo_depth in range(source_depth + 1, target_depth):
-            pseudo_node = (
-                f"pseudo__{source}__{target}__layer_{pseudo_depth}"
-            )
+            pseudo_node = f"pseudo__{source}__{target}__layer_{pseudo_depth}"
             pseudo_nodes.append(pseudo_node)
 
             layer_name = f"layer_{pseudo_depth}"
@@ -159,9 +150,7 @@ def build_feedforward_execution_plan(graph) -> FeedforwardExecutionPlan:
 
             previous_node = pseudo_node
 
-        expanded_edges_records.append(
-            {"source": previous_node, "target": target}
-        )
+        expanded_edges_records.append({"source": previous_node, "target": target})
 
     for layer_name, layer_nodes in node_names_by_layer.items():
         node_names_by_layer[layer_name] = sorted(layer_nodes)
@@ -220,16 +209,12 @@ def build_recurrent_execution_plan(graph) -> RecurrentExecutionPlan:
     original_edges = graph.edges.copy()
 
     if original_edges.empty:
-        raise KPNNError(
-            "Recurrent compilation requires at least one edge."
-        )
+        raise KPNNError("Recurrent compilation requires at least one edge.")
 
     node_names = list(graph.nodes)
 
     if not node_names:
-        raise KPNNError(
-            "Recurrent compilation requires at least one node."
-        )
+        raise KPNNError("Recurrent compilation requires at least one node.")
 
     children = {node: [] for node in node_names}
     parents = {node: [] for node in node_names}
@@ -239,21 +224,15 @@ def build_recurrent_execution_plan(graph) -> RecurrentExecutionPlan:
         target = row["target"]
 
         if source not in children:
-            raise KPNNError(
-                f"Unknown source node '{source}' in recurrent graph."
-            )
+            raise KPNNError(f"Unknown source node '{source}' in recurrent graph.")
 
         if target not in parents:
-            raise KPNNError(
-                f"Unknown target node '{target}' in recurrent graph."
-            )
+            raise KPNNError(f"Unknown target node '{target}' in recurrent graph.")
 
         children[source].append(target)
         parents[target].append(source)
 
-    input_node_names = sorted(
-        [node for node in node_names if len(parents[node]) == 0]
-    )
+    input_node_names = sorted([node for node in node_names if len(parents[node]) == 0])
 
     output_node_names = sorted(
         [node for node in node_names if len(children[node]) == 0]
@@ -305,16 +284,12 @@ def build_graphnn_execution_plan(graph) -> GraphNNExecutionPlan:
     original_edges = graph.edges.copy()
 
     if original_edges.empty:
-        raise KPNNError(
-            "GraphNN compilation requires at least one edge."
-        )
+        raise KPNNError("GraphNN compilation requires at least one edge.")
 
     node_names = list(graph.nodes)
 
     if not node_names:
-        raise KPNNError(
-            "GraphNN compilation requires at least one node."
-        )
+        raise KPNNError("GraphNN compilation requires at least one node.")
 
     children = {node: [] for node in node_names}
     parents = {node: [] for node in node_names}
@@ -324,21 +299,15 @@ def build_graphnn_execution_plan(graph) -> GraphNNExecutionPlan:
         target = row["target"]
 
         if source not in children:
-            raise KPNNError(
-                f"Unknown source node '{source}' in graphnn graph."
-            )
+            raise KPNNError(f"Unknown source node '{source}' in graphnn graph.")
 
         if target not in parents:
-            raise KPNNError(
-                f"Unknown target node '{target}' in graphnn graph."
-            )
+            raise KPNNError(f"Unknown target node '{target}' in graphnn graph.")
 
         children[source].append(target)
         parents[target].append(source)
 
-    input_node_names = sorted(
-        [node for node in node_names if len(parents[node]) == 0]
-    )
+    input_node_names = sorted([node for node in node_names if len(parents[node]) == 0])
 
     output_node_names = sorted(
         [node for node in node_names if len(children[node]) == 0]

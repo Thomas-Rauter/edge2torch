@@ -14,12 +14,17 @@ Provides-Extra: bio
 Requires-Dist: anndata; extra == "bio"
 Provides-Extra: dev
 Requires-Dist: pytest; extra == "dev"
+Requires-Dist: ruff; extra == "dev"
+Requires-Dist: mypy; extra == "dev"
+Requires-Dist: build; extra == "dev"
 Provides-Extra: docs
 Requires-Dist: mkdocs; extra == "docs"
 Requires-Dist: mkdocs-material; extra == "docs"
 Requires-Dist: mkdocstrings[python]; extra == "docs"
-Requires-Dist: pymdown-extensions; extra == "docs"
 Requires-Dist: mkdocs-jupyter; extra == "docs"
+Requires-Dist: pymdown-extensions; extra == "docs"
+Requires-Dist: nbconvert; extra == "docs"
+Requires-Dist: ipykernel; extra == "docs"
 Dynamic: license-file
 
 # kpnn
@@ -249,4 +254,25 @@ See `LICENSE`.
 Try out website locally:
 
 pip install -e .[docs]
+
+
 mkdocs serve
+
+
+
+Run the Jupyter notebook:
+jupyter nbconvert --to notebook --execute --inplace docs/getting-started.ipynb
+
+Check if the Jupyter notebook contains the outputs:
+grep -n '"outputs"' docs/getting-started.ipynb
+
+
+
+### check code
+
+pip install -e .[dev]
+ruff check .
+ruff format --check .
+mypy src
+pytest
+python -m build

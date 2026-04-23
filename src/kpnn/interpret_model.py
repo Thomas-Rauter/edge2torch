@@ -4,9 +4,6 @@ API function
 
 from typing import Any
 
-import pandas as pd
-import torch
-
 from .interpret.input_validation import validate_interpret_model_inputs
 from .interpret.prepare_input import prepare_interpretation_input
 from .interpret.captum_adapter import run_captum_interpretation
@@ -60,7 +57,7 @@ def interpret_model(
         data=data,
         target=target,
         method=method,
-        quiet=quiet
+        quiet=quiet,
     )
 
     prepared_input = prepare_interpretation_input(

@@ -36,5 +36,9 @@ src/kpnn/nn/model.py
 src/kpnn/utils/__init__.py
 src/kpnn/utils/errors.py
 tests/test_api_compile_graph.py
+tests/test_api_compile_graph_graphnn.py
+tests/test_api_compile_graph_recurrent.py
 tests/test_api_interpret_model.py
 tests/test_model_pytorch_integration.py
+tests/test_model_pytorch_integration_graphnn.py
+tests/test_model_pytorch_integration_recurrent.py

@@ -69,8 +69,7 @@ def prepare_interpretation_input(
         if missing_features:
             missing_str = ", ".join(sorted(missing_features))
             raise KPNNError(
-                "AnnData is missing required feature name(s): "
-                f"{missing_str}."
+                f"AnnData is missing required feature name(s): {missing_str}."
             )
 
         order = [var_names.index(name) for name in feature_names]
@@ -101,6 +100,4 @@ def prepare_interpretation_input(
             feature_names=feature_names,
         )
 
-    raise KPNNError(
-        "Unsupported interpretation input type."
-    )
+    raise KPNNError("Unsupported interpretation input type.")
