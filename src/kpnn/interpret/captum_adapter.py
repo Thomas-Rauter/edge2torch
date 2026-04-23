@@ -177,13 +177,32 @@ def _run_node_interpretation(
                 f"Expected {len(node_names)}, got {n_nodes}."
             )
 
+        visible_indices = [
+            idx
+            for idx, node_name in enumerate(node_names)
+            if _is_visible_biological_node(node_name)
+        ]
+        visible_node_names = [
+            node_names[idx]
+            for idx in visible_indices
+        ]
+
+        visible_attributions = attributions[:, visible_indices]
+
         results[layer_name] = pd.DataFrame(
-            attributions.detach().cpu().numpy(),
+            visible_attributions.detach().cpu().numpy(),
             index=sample_names,
-            columns=node_names,
+            columns=visible_node_names,
         )
 
     return results
+
+
+def _is_visible_biological_node(node_name: str) -> bool:
+    """
+    Return True if a node should be exposed in interpretation output.
+    """
+    return not node_name.startswith("pseudo__")
 
 
 def _layer_sort_key(layer_name):

@@ -264,3 +264,103 @@ def test_interpret_model_raises_for_wrong_tensor_feature_count():
             target="features",
             method="integrated_gradients",
         )
+
+
+def test_interpret_model_hides_pseudo_nodes_in_node_results():
+    edgelist = pd.DataFrame(
+        {
+            "source": [
+                "gene_1",
+                "pathway_1",
+                "pathway_2",
+                "gene_1",
+            ],
+            "target": [
+                "pathway_1",
+                "pathway_2",
+                "output_1",
+                "output_1",
+            ],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist)
+
+    data = pd.DataFrame(
+        {
+            "gene_1": [0.1, 0.2],
+        },
+        index=["cell_1", "cell_2"],
+    )
+
+    result = interpret_model(
+        model=model,
+        artifact=artifact,
+        data=data,
+        target="nodes",
+        method="layer_conductance",
+    )
+
+    assert isinstance(result, dict)
+    assert set(result.keys()) == {"layer_1", "layer_2", "layer_3"}
+
+    assert list(result["layer_1"].columns) == ["pathway_1"]
+    assert list(result["layer_2"].columns) == ["pathway_2"]
+    assert list(result["layer_3"].columns) == ["output_1"]
+
+    assert "pseudo__gene_1__output_1__layer_1" not in result["layer_1"].columns
+    assert "pseudo__gene_1__output_1__layer_2" not in result["layer_2"].columns
+
+    assert result["layer_1"].shape == (2, 1)
+    assert result["layer_2"].shape == (2, 1)
+    assert result["layer_3"].shape == (2, 1)
+
+
+def test_interpret_model_hides_pseudo_nodes_for_layer_ig():
+    edgelist = pd.DataFrame(
+        {
+            "source": [
+                "gene_1",
+                "pathway_1",
+                "pathway_2",
+                "gene_1",
+            ],
+            "target": [
+                "pathway_1",
+                "pathway_2",
+                "output_1",
+                "output_1",
+            ],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist)
+
+    data = pd.DataFrame(
+        {
+            "gene_1": [0.1, 0.2],
+        },
+        index=["cell_1", "cell_2"],
+    )
+
+    result = interpret_model(
+        model=model,
+        artifact=artifact,
+        data=data,
+        target="nodes",
+        method="layer_integrated_gradients",
+    )
+
+    assert isinstance(result, dict)
+    assert set(result.keys()) == {"layer_1", "layer_2", "layer_3"}
+
+    assert list(result["layer_1"].columns) == ["pathway_1"]
+    assert list(result["layer_2"].columns) == ["pathway_2"]
+    assert list(result["layer_3"].columns) == ["output_1"]
+
+    assert "pseudo__gene_1__output_1__layer_1" not in result["layer_1"].columns
+    assert "pseudo__gene_1__output_1__layer_2" not in result["layer_2"].columns
+
+    assert result["layer_1"].shape == (2, 1)
+    assert result["layer_2"].shape == (2, 1)
+    assert result["layer_3"].shape == (2, 1)
