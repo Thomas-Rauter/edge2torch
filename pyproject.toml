@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kpnn"
+version = "0.1.0"
+description = "Compile prior-knowledge biological graphs into PyTorch models."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Thomas Rauter" }
+]
+dependencies = [
+    "pandas",
+    "torch",
+    "captum",
+]
+
+[project.optional-dependencies]
+bio = [
+    "anndata",
+]
+dev = [
+    "pytest",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+namespaces = false

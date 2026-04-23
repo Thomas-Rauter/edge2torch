@@ -1,6 +1,12 @@
 import pandas as pd
 import pytest
 import torch
+import numpy as np
+
+try:
+    import anndata as ad
+except ImportError:
+    ad = None
 
 from kpnn.compile_graph import compile_graph
 from kpnn.interpret_model import interpret_model
@@ -364,3 +370,92 @@ def test_interpret_model_hides_pseudo_nodes_for_layer_ig():
     assert result["layer_1"].shape == (2, 1)
     assert result["layer_2"].shape == (2, 1)
     assert result["layer_3"].shape == (2, 1)
+
+
+@pytest.mark.skipif(ad is None, reason="anndata not installed")
+def test_interpret_model_accepts_anndata_for_feature_target():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2"],
+            "target": ["pathway_1", "pathway_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist)
+
+    data = ad.AnnData(
+        X=np.array([[0.1, 1.0], [0.2, 1.1], [0.3, 1.2]], dtype=float),
+    )
+    data.var_names = ["gene_1", "gene_2"]
+    data.obs_names = ["cell_1", "cell_2", "cell_3"]
+
+    result = interpret_model(
+        model=model,
+        artifact=artifact,
+        data=data,
+        target="features",
+        method="integrated_gradients",
+    )
+
+    assert isinstance(result, pd.DataFrame)
+    assert result.shape == (3, 2)
+    assert list(result.index) == ["cell_1", "cell_2", "cell_3"]
+    assert list(result.columns) == ["gene_1", "gene_2"]
+
+
+@pytest.mark.skipif(ad is None, reason="anndata not installed")
+def test_interpret_model_reorders_anndata_var_names():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_a", "gene_b"],
+            "target": ["pathway_1", "pathway_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist)
+
+    data = ad.AnnData(
+        X=np.array([[1.0, 0.1], [1.1, 0.2]], dtype=float),
+    )
+    data.var_names = ["gene_b", "gene_a"]
+    data.obs_names = ["cell_1", "cell_2"]
+
+    result = interpret_model(
+        model=model,
+        artifact=artifact,
+        data=data,
+        target="features",
+        method="integrated_gradients",
+    )
+
+    assert isinstance(result, pd.DataFrame)
+    assert result.shape == (2, 2)
+    assert list(result.index) == ["cell_1", "cell_2"]
+    assert list(result.columns) == artifact.feature_names
+
+
+@pytest.mark.skipif(ad is None, reason="anndata not installed")
+def test_interpret_model_raises_for_missing_anndata_features():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2"],
+            "target": ["pathway_1", "pathway_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist)
+
+    data = ad.AnnData(
+        X=np.array([[0.1], [0.2]], dtype=float),
+    )
+    data.var_names = ["gene_1"]
+    data.obs_names = ["cell_1", "cell_2"]
+
+    with pytest.raises(KPNNError, match="wrong number of variables"):
+        interpret_model(
+            model=model,
+            artifact=artifact,
+            data=data,
+            target="features",
+            method="integrated_gradients",
+        )
