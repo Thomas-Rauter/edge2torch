@@ -36,6 +36,7 @@ docs = [
     "pymdown-extensions",
     "nbconvert",
     "ipykernel",
+    "graphviz",
 ]
 
 [tool.setuptools]

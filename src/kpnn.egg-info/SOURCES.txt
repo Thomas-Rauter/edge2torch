@@ -3,6 +3,7 @@ README.md
 pyproject.toml
 src/kpnn/__init__.py
 src/kpnn/compile_graph.py
+src/kpnn/customize_model.py
 src/kpnn/interpret_model.py
 src/kpnn.egg-info/PKG-INFO
 src/kpnn.egg-info/SOURCES.txt
@@ -31,6 +32,7 @@ src/kpnn/interpret/input_validation.py
 src/kpnn/interpret/prepare_input.py
 src/kpnn/nn/__init__.py
 src/kpnn/nn/blocks.py
+src/kpnn/nn/customized_model.py
 src/kpnn/nn/masked_linear.py
 src/kpnn/nn/model.py
 src/kpnn/utils/__init__.py
@@ -39,6 +41,7 @@ tests/test_api_compile_graph.py
 tests/test_api_compile_graph_graphnn.py
 tests/test_api_compile_graph_recurrent.py
 tests/test_api_interpret_model.py
+tests/test_model_customization.py
 tests/test_model_pytorch_integration.py
 tests/test_model_pytorch_integration_graphnn.py
 tests/test_model_pytorch_integration_recurrent.py

@@ -19,3 +19,4 @@ mkdocs-jupyter
 pymdown-extensions
 nbconvert
 ipykernel
+graphviz
