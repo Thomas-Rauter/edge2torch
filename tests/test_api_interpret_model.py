@@ -459,3 +459,127 @@ def test_interpret_model_raises_for_missing_anndata_features():
             target="features",
             method="integrated_gradients",
         )
+
+
+def test_interpret_model_supports_feature_target_for_recurrent_backend():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "node_a", "node_b", "node_b"],
+            "target": ["node_a", "node_b", "node_a", "output_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist, backend="recurrent")
+
+    data = pd.DataFrame(
+        {
+            "gene_1": [0.1, 0.2, 0.3],
+        },
+        index=["cell_1", "cell_2", "cell_3"],
+    )
+
+    result = interpret_model(
+        model=model,
+        artifact=artifact,
+        data=data,
+        target="features",
+        method="integrated_gradients",
+    )
+
+    assert isinstance(result, pd.DataFrame)
+    assert result.shape == (3, 1)
+    assert list(result.index) == ["cell_1", "cell_2", "cell_3"]
+    assert list(result.columns) == ["gene_1"]
+
+
+def test_interpret_model_supports_feature_target_for_graphnn_backend():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2", "node_a", "node_b"],
+            "target": ["node_a", "node_a", "node_b", "output_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist, backend="graphnn")
+
+    data = pd.DataFrame(
+        {
+            "gene_1": [0.1, 0.2, 0.3],
+            "gene_2": [1.0, 1.1, 1.2],
+        },
+        index=["cell_1", "cell_2", "cell_3"],
+    )
+
+    result = interpret_model(
+        model=model,
+        artifact=artifact,
+        data=data,
+        target="features",
+        method="integrated_gradients",
+    )
+
+    assert isinstance(result, pd.DataFrame)
+    assert result.shape == (3, 2)
+    assert list(result.index) == ["cell_1", "cell_2", "cell_3"]
+    assert list(result.columns) == ["gene_1", "gene_2"]
+
+
+def test_interpret_model_raises_for_node_target_with_recurrent_backend():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "node_a", "node_b", "node_b"],
+            "target": ["node_a", "node_b", "node_a", "output_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist, backend="recurrent")
+
+    data = pd.DataFrame(
+        {
+            "gene_1": [0.1, 0.2],
+        },
+        index=["cell_1", "cell_2"],
+    )
+
+    with pytest.raises(
+        KPNNError,
+        match="Node interpretation currently supports only",
+    ):
+        interpret_model(
+            model=model,
+            artifact=artifact,
+            data=data,
+            target="nodes",
+            method="layer_conductance",
+        )
+
+
+def test_interpret_model_raises_for_node_target_with_graphnn_backend():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2", "node_a", "node_b"],
+            "target": ["node_a", "node_a", "node_b", "output_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist, backend="graphnn")
+
+    data = pd.DataFrame(
+        {
+            "gene_1": [0.1, 0.2],
+            "gene_2": [1.0, 1.1],
+        },
+        index=["cell_1", "cell_2"],
+    )
+
+    with pytest.raises(
+        KPNNError,
+        match="Node interpretation currently supports only",
+    ):
+        interpret_model(
+            model=model,
+            artifact=artifact,
+            data=data,
+            target="nodes",
+            method="layer_conductance",
+        )

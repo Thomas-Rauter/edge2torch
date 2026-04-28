@@ -17,7 +17,7 @@ def run_captum_interpretation(
     quiet,
 ):
     """
-    Run a Captum interpretation and map results back to biological names.
+    Run a Captum interpretation and map results back to named entities.
 
     Parameters
     ----------
@@ -41,7 +41,7 @@ def run_captum_interpretation(
     Returns
     -------
     pd.DataFrame | dict[str, pd.DataFrame]
-        Feature or node attributions mapped back to biological names.
+        Feature or node attributions mapped back to named entities.
 
     Raises
     ------
@@ -51,6 +51,7 @@ def run_captum_interpretation(
     if target == "features":
         return _run_feature_interpretation(
             model=model,
+            artifact=artifact,
             inputs=inputs,
             sample_names=sample_names,
             feature_names=feature_names,
@@ -58,19 +59,47 @@ def run_captum_interpretation(
         )
 
     if target == "nodes":
-        return _run_node_interpretation(
-            model=model,
-            artifact=artifact,
-            inputs=inputs,
-            sample_names=sample_names,
-            method=method,
+        backend = artifact.backend
+
+        if backend == "feedforward":
+            return _run_feedforward_node_interpretation(
+                model=model,
+                artifact=artifact,
+                inputs=inputs,
+                sample_names=sample_names,
+                method=method,
+            )
+
+        if backend == "recurrent":
+            return _run_recurrent_node_interpretation(
+                model=model,
+                artifact=artifact,
+                inputs=inputs,
+                sample_names=sample_names,
+                method=method,
+            )
+
+        if backend == "graphnn":
+            return _run_graphnn_node_interpretation(
+                model=model,
+                artifact=artifact,
+                inputs=inputs,
+                sample_names=sample_names,
+                method=method,
+            )
+
+        raise KPNNError(
+            f"Unsupported backend '{backend}' for target='nodes'."
         )
 
-    raise KPNNError(f"Unsupported interpretation target '{target}'.")
+    raise KPNNError(
+        f"Unsupported interpretation target '{target}'."
+    )
 
 
 def _run_feature_interpretation(
     model,
+    artifact,
     inputs,
     sample_names,
     feature_names,
@@ -78,28 +107,46 @@ def _run_feature_interpretation(
 ):
     """
     Run feature-level attribution and return one DataFrame.
+
+    This path is backend-agnostic as long as the compiled model supports
+    standard differentiable PyTorch input-output behavior.
     """
     if method != "integrated_gradients":
-        raise KPNNError(f"Method '{method}' is not supported for target='features'.")
+        raise KPNNError(
+            f"Method '{method}' is not supported for "
+            "target='features'."
+        )
+
+    if artifact.backend not in {
+        "feedforward",
+        "recurrent",
+        "graphnn",
+    }:
+        raise KPNNError(
+            f"Unsupported backend '{artifact.backend}' for "
+            "feature interpretation."
+        )
 
     interpreter = IntegratedGradients(model)
     attributions = interpreter.attribute(inputs)
 
     if attributions.ndim != 2:
         raise KPNNError(
-            "Feature attributions must have shape (n_examples, n_features)."
+            "Feature attributions must have shape "
+            "(n_examples, n_features)."
         )
 
     n_examples, n_features = attributions.shape
 
     if n_examples != len(sample_names):
         raise KPNNError(
-            "Feature attribution row count does not match the number of samples."
+            "Feature attribution row count does not match sample count."
         )
 
     if n_features != len(feature_names):
         raise KPNNError(
-            "Feature attribution column count does not match the number of features."
+            "Feature attribution column count does not match "
+            "feature count."
         )
 
     return pd.DataFrame(
@@ -109,7 +156,7 @@ def _run_feature_interpretation(
     )
 
 
-def _run_node_interpretation(
+def _run_feedforward_node_interpretation(
     model,
     artifact,
     inputs,
@@ -117,13 +164,16 @@ def _run_node_interpretation(
     method,
 ):
     """
-    Run node-level attribution and return one DataFrame per layer.
+    Run feedforward node-level attribution and return one DataFrame per
+    layer.
     """
     if method not in {
         "layer_conductance",
         "layer_integrated_gradients",
     }:
-        raise KPNNError(f"Method '{method}' is not supported for target='nodes'.")
+        raise KPNNError(
+            f"Method '{method}' is not supported for target='nodes'."
+        )
 
     results = {}
 
@@ -157,7 +207,7 @@ def _run_node_interpretation(
         if n_examples != len(sample_names):
             raise KPNNError(
                 f"Node attribution row count for '{layer_name}' "
-                "does not match the number of samples."
+                "does not match sample count."
             )
 
         if n_nodes != len(node_names):
@@ -184,6 +234,38 @@ def _run_node_interpretation(
     return results
 
 
+def _run_recurrent_node_interpretation(
+    model,
+    artifact,
+    inputs,
+    sample_names,
+    method,
+):
+    """
+    Placeholder for recurrent node-level interpretation.
+    """
+    raise KPNNError(
+        "Node interpretation is not yet implemented for the "
+        "'recurrent' backend."
+    )
+
+
+def _run_graphnn_node_interpretation(
+    model,
+    artifact,
+    inputs,
+    sample_names,
+    method,
+):
+    """
+    Placeholder for graphnn node-level interpretation.
+    """
+    raise KPNNError(
+        "Node interpretation is not yet implemented for the "
+        "'graphnn' backend."
+    )
+
+
 def _is_visible_biological_node(node_name: str) -> bool:
     """
     Return True if a node should be exposed in interpretation output.
@@ -198,4 +280,6 @@ def _layer_sort_key(layer_name):
     try:
         return int(layer_name.split("_")[1])
     except (IndexError, ValueError) as exc:
-        raise KPNNError(f"Invalid layer name '{layer_name}' in artifact.") from exc
+        raise KPNNError(
+            f"Invalid layer name '{layer_name}' in artifact."
+        ) from exc
