@@ -43,3 +43,18 @@ class CustomizedKPNNModel(nn.Module):
             x = self.head(x)
 
         return x
+
+    def get_layer_block(self, layer_name: str):
+        """
+        Delegate layer-block access to the wrapped compiled model.
+
+        This is needed for interpretation methods that target internal
+        feedforward layer blocks.
+        """
+        if not hasattr(self.base_model, "get_layer_block"):
+            raise AttributeError(
+                f"'{type(self.base_model).__name__}' object has no attribute "
+                "'get_layer_block'"
+            )
+
+        return self.base_model.get_layer_block(layer_name)
