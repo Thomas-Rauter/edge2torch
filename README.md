@@ -1,5 +1,8 @@
 # kpnn
 
+[![CI](https://github.com/Thomas-Rauter/kpnn/actions/workflows/ci.yml/badge.svg)](https://github.com/Thomas-Rauter/kpnn/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/Thomas-Rauter/kpnn/branch/main/graph/badge.svg)](https://app.codecov.io/gh/Thomas-Rauter/kpnn)
+
 Compile prior-knowledge graphs into minimally opinionated PyTorch models
 and map trained models back to interpretable named entities.
 

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "kpnn"
 version = "0.1.0"
-description = "Compile prior-knowledge biological graphs into PyTorch models."
+description = "Compile prior-knowledge graphs into minimally opinionated PyTorch models."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
@@ -17,6 +17,23 @@ dependencies = [
     "torch",
     "captum",
 ]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.urls]
+Homepage = "https://Thomas-Rauter.github.io/kpnn/"
+Documentation = "https://Thomas-Rauter.github.io/kpnn/"
+Repository = "https://github.com/Thomas-Rauter/kpnn"
+Issues = "https://github.com/Thomas-Rauter/kpnn/issues"
 
 [project.optional-dependencies]
 bio = [
@@ -24,6 +41,7 @@ bio = [
 ]
 dev = [
     "pytest",
+    "pytest-cov",
     "ruff",
     "mypy",
     "build",
@@ -37,6 +55,8 @@ docs = [
     "nbconvert",
     "ipykernel",
     "graphviz",
+    "IPython",
+    "seaborn",
 ]
 
 [tool.setuptools]
