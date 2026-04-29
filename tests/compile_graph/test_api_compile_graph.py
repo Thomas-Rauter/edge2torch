@@ -67,14 +67,17 @@ def test_compile_graph_expands_feedforward_skip_edges():
 
     plan = artifact.execution_plan
 
+    pseudo_layer_1 = "__kpnn_pseudo__gene_1__output_1__layer_1"
+    pseudo_layer_2 = "__kpnn_pseudo__gene_1__output_1__layer_2"
+
     assert plan.pseudo_nodes == [
-        "pseudo__gene_1__output_1__layer_1",
-        "pseudo__gene_1__output_1__layer_2",
+        pseudo_layer_1,
+        pseudo_layer_2,
     ]
 
     assert sorted(plan.node_names_by_layer["layer_1"]) == [
+        pseudo_layer_1,
         "pathway_1",
-        "pseudo__gene_1__output_1__layer_1",
     ]
 
     expanded_edges = plan.expanded_edges.to_dict(orient="records")
@@ -85,14 +88,14 @@ def test_compile_graph_expands_feedforward_skip_edges():
 
     assert {
         "source": "gene_1",
-        "target": "pseudo__gene_1__output_1__layer_1",
+        "target": pseudo_layer_1,
     } in expanded_edges
     assert {
-        "source": "pseudo__gene_1__output_1__layer_1",
-        "target": "pseudo__gene_1__output_1__layer_2",
+        "source": pseudo_layer_1,
+        "target": pseudo_layer_2,
     } in expanded_edges
     assert {
-        "source": "pseudo__gene_1__output_1__layer_2",
+        "source": pseudo_layer_2,
         "target": "output_1",
     } in expanded_edges
 

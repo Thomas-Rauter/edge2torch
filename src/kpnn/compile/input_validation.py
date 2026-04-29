@@ -18,6 +18,7 @@ backend compilation, or PyTorch model construction logic.
 
 import pandas as pd
 
+from ..utils.constants import INTERNAL_NODE_PREFIX
 from ..utils.errors import KPNNError
 
 
@@ -74,13 +75,25 @@ def validate_compile_graph_inputs(
             "contain missing values."
         )
 
-    source_empty = edge_columns["source"].astype(str).str.strip().eq("")
-    target_empty = edge_columns["target"].astype(str).str.strip().eq("")
+    normalized_sources = edge_columns["source"].astype(str).str.strip()
+    normalized_targets = edge_columns["target"].astype(str).str.strip()
+
+    source_empty = normalized_sources.eq("")
+    target_empty = normalized_targets.eq("")
 
     if source_empty.any() or target_empty.any():
         raise KPNNError(
             "'edgelist' columns 'source' and 'target' must not contain "
             "empty node names."
+        )
+
+    reserved_sources = normalized_sources.str.startswith(INTERNAL_NODE_PREFIX)
+    reserved_targets = normalized_targets.str.startswith(INTERNAL_NODE_PREFIX)
+
+    if reserved_sources.any() or reserved_targets.any():
+        raise KPNNError(
+            "Node names starting with "
+            f"'{INTERNAL_NODE_PREFIX}' are reserved for internal kpnn nodes."
         )
 
     # Backend validation

@@ -17,12 +17,15 @@ contain graphnn-specific compilation logic, not public API handling or
 generic backend dispatch.
 """
 
+from ..graph.schema import KPNNGraph
 from ..nn.model import KPNNGraphNNModel
 from .artifact import KPNNArtifact
 from .execution_plan import build_graphnn_execution_plan
 
 
-def compile_graphnn(graph):
+def compile_graphnn(
+    graph: KPNNGraph,
+) -> tuple[KPNNGraphNNModel, KPNNArtifact]:
     """
     Compile a KPNN graph into a graph neural network PyTorch model.
 

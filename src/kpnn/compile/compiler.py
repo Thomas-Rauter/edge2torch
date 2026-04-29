@@ -16,16 +16,20 @@ backend name. It should contain backend dispatch logic, not the backend
 implementations themselves or the public API entry point.
 """
 
+from torch import nn
+
+from ..graph.schema import KPNNGraph
 from ..utils.errors import KPNNError
+from .artifact import KPNNArtifact
 from .feedforward import compile_feedforward
 from .graphnn import compile_graphnn
 from .recurrent import compile_recurrent
 
 
 def compile_backend(
-    graph,
-    backend,
-):
+    graph: KPNNGraph,
+    backend: str,
+) -> tuple[nn.Module, KPNNArtifact]:
     """
     Compile a graph into a backend-specific PyTorch model.
 

@@ -23,6 +23,7 @@ import pandas as pd
 import torch
 from torch import nn
 
+from ..utils.constants import PSEUDO_NODE_PREFIX
 from ..utils.errors import KPNNError
 from .masked_linear import MaskedLinear
 
@@ -73,7 +74,7 @@ class FeedforwardLayerBlock(nn.Module):
 
             mask[target_idx, source_idx] = 1.0
 
-            if target.startswith("pseudo__"):
+            if target.startswith(PSEUDO_NODE_PREFIX):
                 if target in pseudo_targets_seen:
                     raise KPNNError(
                         "Pseudo nodes must have exactly one incoming edge."

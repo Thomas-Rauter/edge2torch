@@ -17,12 +17,15 @@ contain feedforward-specific compilation logic, not public API handling
 or generic backend dispatch.
 """
 
+from ..graph.schema import KPNNGraph
 from ..nn.model import KPNNModel
 from .artifact import KPNNArtifact
 from .execution_plan import build_feedforward_execution_plan
 
 
-def compile_feedforward(graph):
+def compile_feedforward(
+    graph: KPNNGraph,
+) -> tuple[KPNNModel, KPNNArtifact]:
     """
     Compile a KPNN graph into a feedforward PyTorch model.
 

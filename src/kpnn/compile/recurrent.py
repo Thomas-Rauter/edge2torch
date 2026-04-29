@@ -17,12 +17,15 @@ contain recurrent-specific compilation logic, not public API handling or
 generic backend dispatch.
 """
 
+from ..graph.schema import KPNNGraph
 from ..nn.model import KPNNRecurrentModel
 from .artifact import KPNNArtifact
 from .execution_plan import build_recurrent_execution_plan
 
 
-def compile_recurrent(graph):
+def compile_recurrent(
+    graph: KPNNGraph,
+) -> tuple[KPNNRecurrentModel, KPNNArtifact]:
     """
     Compile a KPNN graph into a recurrent PyTorch model.
 

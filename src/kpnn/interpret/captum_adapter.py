@@ -26,6 +26,7 @@ from captum.attr import (
     LayerIntegratedGradients,
 )
 
+from ..utils.constants import INTERNAL_NODE_PREFIX
 from ..utils.errors import KPNNError
 
 
@@ -235,7 +236,7 @@ def _run_feedforward_node_interpretation(
         visible_indices = [
             idx
             for idx, node_name in enumerate(node_names)
-            if _is_visible_biological_node(node_name)
+            if _is_visible_domain_node(node_name)
         ]
         visible_node_names = [node_names[idx] for idx in visible_indices]
 
@@ -281,11 +282,11 @@ def _run_graphnn_node_interpretation(
     )
 
 
-def _is_visible_biological_node(node_name: str) -> bool:
+def _is_visible_domain_node(node_name: str) -> bool:
     """
     Return True if a node should be exposed in interpretation output.
     """
-    return not node_name.startswith("pseudo__")
+    return not node_name.startswith(INTERNAL_NODE_PREFIX)
 
 
 def _layer_sort_key(layer_name):

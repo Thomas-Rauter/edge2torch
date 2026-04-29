@@ -275,9 +275,7 @@ def _validate_recurrent_graph(
     """
     Validate graph constraints required by the recurrent backend.
     """
-    report.notes.append(
-        "Recurrent backend selected. Cycles may be allowed."
-    )
+    report.notes.append("Recurrent backend selected. Cycles may be allowed.")
 
     self_loops = graph.edges["source"] == graph.edges["target"]
     n_self_loops = int(self_loops.sum())

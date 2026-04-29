@@ -22,6 +22,7 @@ from dataclasses import dataclass
 
 import pandas as pd
 
+from ..utils.constants import PSEUDO_NODE_PREFIX
 from ..utils.errors import KPNNError
 
 
@@ -78,7 +79,7 @@ def build_feedforward_execution_plan(graph) -> FeedforwardExecutionPlan:
 
     remaining = set(graph.nodes)
     current_layer_nodes = sorted(
-        [node for node in graph.nodes if in_degree[node] == 0]
+        node for node in graph.nodes if in_degree[node] == 0
     )
 
     if not current_layer_nodes:
@@ -132,11 +133,11 @@ def build_feedforward_execution_plan(graph) -> FeedforwardExecutionPlan:
             node_to_layer[node] = layer_name
 
     input_node_names = sorted(
-        [node for node in graph.nodes if len(parents[node]) == 0]
+        node for node in graph.nodes if len(parents[node]) == 0
     )
 
     output_node_names = sorted(
-        [node for node in graph.nodes if len(children[node]) == 0]
+        node for node in graph.nodes if len(children[node]) == 0
     )
 
     expanded_edges_records: list[dict[str, str]] = []
@@ -163,7 +164,9 @@ def build_feedforward_execution_plan(graph) -> FeedforwardExecutionPlan:
         previous_node = source
 
         for pseudo_depth in range(source_depth + 1, target_depth):
-            pseudo_node = f"pseudo__{source}__{target}__layer_{pseudo_depth}"
+            pseudo_node = (
+                f"{PSEUDO_NODE_PREFIX}{source}__{target}__layer_{pseudo_depth}"
+            )
             pseudo_nodes.append(pseudo_node)
 
             layer_name = f"layer_{pseudo_depth}"
