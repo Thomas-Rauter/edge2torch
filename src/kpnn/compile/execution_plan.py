@@ -24,6 +24,7 @@ import pandas as pd
 
 from ..utils.constants import PSEUDO_NODE_PREFIX
 from ..utils.errors import KPNNError
+from ..graph.schema import KPNNGraph
 
 
 @dataclass
@@ -41,7 +42,9 @@ class FeedforwardExecutionPlan:
     output_node_names: list[str]
 
 
-def build_feedforward_execution_plan(graph) -> FeedforwardExecutionPlan:
+def build_feedforward_execution_plan(
+    graph: KPNNGraph,
+) -> FeedforwardExecutionPlan:
     """
     Build a feedforward execution plan from a KPNN graph.
 
@@ -69,9 +72,9 @@ def build_feedforward_execution_plan(graph) -> FeedforwardExecutionPlan:
     children: dict[str, list[str]] = {node: [] for node in graph.nodes}
     parents: dict[str, list[str]] = {node: [] for node in graph.nodes}
 
-    for _, row in original_edges.iterrows():
-        source = row["source"]
-        target = row["target"]
+    for row in original_edges.itertuples(index=False):
+        source = str(row.source)
+        target = str(row.target)
 
         in_degree[target] += 1
         children[source].append(target)
@@ -91,7 +94,7 @@ def build_feedforward_execution_plan(graph) -> FeedforwardExecutionPlan:
     depth = 0
 
     while current_layer_nodes:
-        next_layer_candidates = set()
+        next_layer_candidates: set[str] = set()
 
         for node in current_layer_nodes:
             node_to_depth[node] = depth
@@ -120,11 +123,9 @@ def build_feedforward_execution_plan(graph) -> FeedforwardExecutionPlan:
     for layer_idx in range(max_depth + 1):
         layer_name = f"layer_{layer_idx}"
         layer_nodes = sorted(
-            [
-                node
-                for node, node_depth in node_to_depth.items()
-                if node_depth == layer_idx
-            ]
+            node
+            for node, node_depth in node_to_depth.items()
+            if node_depth == layer_idx
         )
 
         node_names_by_layer[layer_name] = layer_nodes
@@ -143,9 +144,9 @@ def build_feedforward_execution_plan(graph) -> FeedforwardExecutionPlan:
     expanded_edges_records: list[dict[str, str]] = []
     pseudo_nodes: list[str] = []
 
-    for _, row in original_edges.iterrows():
-        source = row["source"]
-        target = row["target"]
+    for row in original_edges.itertuples(index=False):
+        source = str(row.source)
+        target = str(row.target)
 
         source_depth = node_to_depth[source]
         target_depth = node_to_depth[target]

@@ -19,6 +19,7 @@ structure, not public API validation, graph conversion, or compiler
 dispatch.
 """
 
+from typing import cast
 import pandas as pd
 import torch
 from torch import nn
@@ -26,6 +27,7 @@ from torch import nn
 from ..utils.errors import KPNNError
 from .blocks import FeedforwardLayerBlock
 from .masked_linear import MaskedLinear
+from ..compile.execution_plan import FeedforwardExecutionPlan
 
 
 class KPNNModel(nn.Module):
@@ -39,10 +41,10 @@ class KPNNModel(nn.Module):
 
     def __init__(
         self,
-        execution_plan,
+        execution_plan: FeedforwardExecutionPlan,
         backend: str = "feedforward",
         bias: bool = True,
-    ):
+    ) -> None:
         super().__init__()
 
         if backend != "feedforward":
@@ -64,10 +66,10 @@ class KPNNModel(nn.Module):
             input_layer_name = self.layer_names[layer_idx]
             output_layer_name = self.layer_names[layer_idx + 1]
 
-            input_node_names = (execution_plan.node_names_by_layer)[
+            input_node_names = execution_plan.node_names_by_layer[
                 input_layer_name
             ]
-            output_node_names = (execution_plan.node_names_by_layer)[
+            output_node_names = execution_plan.node_names_by_layer[
                 output_layer_name
             ]
 
@@ -86,7 +88,7 @@ class KPNNModel(nn.Module):
 
             self.blocks.append(block)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Forward pass through the compiled feedforward KPNN.
         """
@@ -95,7 +97,7 @@ class KPNNModel(nn.Module):
 
         return x
 
-    def get_layer_block(self, layer_name: str):
+    def get_layer_block(self, layer_name: str) -> FeedforwardLayerBlock:
         """
         Return the feedforward block that produces the given layer.
 
@@ -135,17 +137,20 @@ class KPNNModel(nn.Module):
         if block_idx >= len(self.blocks):
             raise KPNNError(f"No block exists for layer '{layer_name}'.")
 
-        return self.blocks[block_idx]
+        return cast(FeedforwardLayerBlock, self.blocks[block_idx])
 
     @staticmethod
     def _sort_layer_names(layer_names: list[str]) -> list[str]:
         """
         Sort layer names like 'layer_0', 'layer_1', ...
         """
-        return sorted(
-            layer_names,
-            key=lambda name: int(name.split("_")[1]),
-        )
+        try:
+            return sorted(
+                layer_names,
+                key=lambda name: int(name.split("_")[1]),
+            )
+        except (IndexError, ValueError) as exc:
+            raise KPNNError("Invalid layer name in execution plan.") from exc
 
     @staticmethod
     def _select_block_edges(

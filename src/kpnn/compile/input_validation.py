@@ -16,6 +16,7 @@ unsupported or ambiguous usage. It should not contain graph parsing,
 backend compilation, or PyTorch model construction logic.
 """
 
+from typing import Any
 import pandas as pd
 
 from ..utils.constants import INTERNAL_NODE_PREFIX
@@ -23,10 +24,10 @@ from ..utils.errors import KPNNError
 
 
 def validate_compile_graph_inputs(
-    edgelist,
-    backend,
-    quiet,
-):
+    edgelist: Any,
+    backend: Any,
+    quiet: Any,
+) -> None:
     """
     Validate the public inputs of ``compile_graph()``.
 

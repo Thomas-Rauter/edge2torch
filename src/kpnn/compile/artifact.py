@@ -19,6 +19,8 @@ code.
 
 from dataclasses import dataclass
 
+from ..graph.schema import KPNNGraph
+
 
 @dataclass
 class KPNNArtifact:
@@ -40,7 +42,7 @@ class KPNNArtifact:
     """
 
     backend: str
-    graph: object
+    graph: KPNNGraph
     execution_plan: object
     node_names_by_layer: dict[str, list[str]]
     feature_names: list[str]

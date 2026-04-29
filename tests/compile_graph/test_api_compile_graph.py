@@ -63,7 +63,7 @@ def test_compile_graph_expands_feedforward_skip_edges():
         }
     )
 
-    _, artifact = compile_graph(edgelist, backend="feedforward")
+    _, artifact = compile_graph(edgelist)
 
     plan = artifact.execution_plan
 
