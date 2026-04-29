@@ -31,7 +31,7 @@ class KPNNArtifact:
     ----------
     backend : str
         Backend used for compilation.
-    graph
+    graph : KPNNGraph
         Internal KPNN graph object used for compilation.
     execution_plan
         Compiled execution plan used to build the model.

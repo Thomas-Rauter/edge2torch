@@ -28,6 +28,7 @@ from ..utils.errors import KPNNError
 from .blocks import FeedforwardLayerBlock
 from .masked_linear import MaskedLinear
 from ..compile.execution_plan import FeedforwardExecutionPlan
+from ..compile.execution_plan import RecurrentExecutionPlan
 
 
 class KPNNModel(nn.Module):
@@ -42,18 +43,12 @@ class KPNNModel(nn.Module):
     def __init__(
         self,
         execution_plan: FeedforwardExecutionPlan,
-        backend: str = "feedforward",
         bias: bool = True,
     ) -> None:
         super().__init__()
 
-        if backend != "feedforward":
-            raise KPNNError(
-                "KPNNModel currently only supports the 'feedforward' backend."
-            )
-
         self.execution_plan = execution_plan
-        self.backend = backend
+        self.backend = "feedforward"
         self.bias = bias
 
         self.layer_names = self._sort_layer_names(
@@ -183,24 +178,31 @@ class KPNNRecurrentModel(nn.Module):
 
     def __init__(
         self,
-        execution_plan,
-        backend: str = "recurrent",
+        execution_plan: RecurrentExecutionPlan,
         steps: int = 3,
         bias: bool = True,
-    ):
+    ) -> None:
         super().__init__()
 
         if not isinstance(steps, int) or steps <= 0:
             raise KPNNError("'steps' must be a positive integer.")
 
         self.execution_plan = execution_plan
-        self.backend = backend
+        self.backend = "recurrent"
         self.steps = steps
         self.bias = bias
 
         self.node_names = list(execution_plan.node_names)
         self.input_node_names = list(execution_plan.input_node_names)
         self.output_node_names = list(execution_plan.output_node_names)
+
+        if not self.input_node_names:
+            raise KPNNError(
+                "KPNNRecurrentModel requires at least one input node.")
+
+        if not self.output_node_names:
+            raise KPNNError(
+                "KPNNRecurrentModel requires at least one output node.")
 
         self.node_index = {
             node_name: idx for idx, node_name in enumerate(self.node_names)
@@ -217,9 +219,9 @@ class KPNNRecurrentModel(nn.Module):
 
         mask = torch.zeros(n_nodes, n_nodes, dtype=torch.float32)
 
-        for _, row in execution_plan.original_edges.iterrows():
-            source = row["source"]
-            target = row["target"]
+        for row in execution_plan.original_edges.itertuples(index=False):
+            source = str(row.source)
+            target = str(row.target)
 
             source_idx = self.node_index[source]
             target_idx = self.node_index[target]
@@ -292,7 +294,6 @@ class KPNNGraphNNModel(nn.Module):
     def __init__(
         self,
         execution_plan,
-        backend: str = "graphnn",
         steps: int = 3,
         bias: bool = True,
     ):
@@ -302,7 +303,7 @@ class KPNNGraphNNModel(nn.Module):
             raise KPNNError("'steps' must be a positive integer.")
 
         self.execution_plan = execution_plan
-        self.backend = backend
+        self.backend = "graphnn"
         self.steps = steps
         self.bias = bias
 

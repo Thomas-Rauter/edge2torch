@@ -215,12 +215,15 @@ class RecurrentExecutionPlan:
     output_node_names: list[str]
 
 
-def build_recurrent_execution_plan(graph) -> RecurrentExecutionPlan:
+def build_recurrent_execution_plan(
+    graph: KPNNGraph,
+) -> RecurrentExecutionPlan:
     """
     Build a recurrent execution plan from a KPNN graph.
 
     In the recurrent backend, the graph is kept in its original form rather
-    than expanded into adjacent feedforward layers. Cycles are allowed.
+    than expanded into adjacent feedforward layers. Cycles are allowed, but the
+    graph must expose at least one input node and one output node.
 
     Parameters
     ----------
@@ -251,9 +254,9 @@ def build_recurrent_execution_plan(graph) -> RecurrentExecutionPlan:
     children: dict[str, list[str]] = {node: [] for node in node_names}
     parents: dict[str, list[str]] = {node: [] for node in node_names}
 
-    for _, row in original_edges.iterrows():
-        source = row["source"]
-        target = row["target"]
+    for row in original_edges.itertuples(index=False):
+        source = str(row.source)
+        target = str(row.target)
 
         if source not in children:
             raise KPNNError(
@@ -269,12 +272,26 @@ def build_recurrent_execution_plan(graph) -> RecurrentExecutionPlan:
         parents[target].append(source)
 
     input_node_names = sorted(
-        [node for node in node_names if len(parents[node]) == 0]
+        node for node in node_names if len(parents[node]) == 0
     )
 
     output_node_names = sorted(
-        [node for node in node_names if len(children[node]) == 0]
+        node for node in node_names if len(children[node]) == 0
     )
+
+    if not input_node_names:
+        raise KPNNError(
+            "Recurrent compilation requires at least one input node. "
+            "Cycles are allowed, but the graph must include at least one "
+            "node with no incoming edges."
+        )
+
+    if not output_node_names:
+        raise KPNNError(
+            "Recurrent compilation requires at least one output node. "
+            "Cycles are allowed, but the graph must include at least one "
+            "node with no outgoing edges."
+        )
 
     return RecurrentExecutionPlan(
         original_edges=original_edges,
