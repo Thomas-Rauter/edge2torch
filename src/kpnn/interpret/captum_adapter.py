@@ -111,13 +111,9 @@ def run_captum_interpretation(
                 method=method,
             )
 
-        raise KPNNError(
-            f"Unsupported backend '{backend}' for target='nodes'."
-        )
+        raise KPNNError(f"Unsupported backend '{backend}' for target='nodes'.")
 
-    raise KPNNError(
-        f"Unsupported interpretation target '{target}'."
-    )
+    raise KPNNError(f"Unsupported interpretation target '{target}'.")
 
 
 def _run_feature_interpretation(
@@ -136,8 +132,7 @@ def _run_feature_interpretation(
     """
     if method != "integrated_gradients":
         raise KPNNError(
-            f"Method '{method}' is not supported for "
-            "target='features'."
+            f"Method '{method}' is not supported for target='features'."
         )
 
     if artifact.backend not in {
@@ -155,8 +150,7 @@ def _run_feature_interpretation(
 
     if attributions.ndim != 2:
         raise KPNNError(
-            "Feature attributions must have shape "
-            "(n_examples, n_features)."
+            "Feature attributions must have shape (n_examples, n_features)."
         )
 
     n_examples, n_features = attributions.shape
@@ -168,8 +162,7 @@ def _run_feature_interpretation(
 
     if n_features != len(feature_names):
         raise KPNNError(
-            "Feature attribution column count does not match "
-            "feature count."
+            "Feature attribution column count does not match feature count."
         )
 
     return pd.DataFrame(
@@ -284,8 +277,7 @@ def _run_graphnn_node_interpretation(
     Placeholder for graphnn node-level interpretation.
     """
     raise KPNNError(
-        "Node interpretation is not yet implemented for the "
-        "'graphnn' backend."
+        "Node interpretation is not yet implemented for the 'graphnn' backend."
     )
 
 

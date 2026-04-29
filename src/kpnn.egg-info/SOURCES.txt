@@ -10,10 +10,6 @@ src/kpnn.egg-info/SOURCES.txt
 src/kpnn.egg-info/dependency_links.txt
 src/kpnn.egg-info/requires.txt
 src/kpnn.egg-info/top_level.txt
-src/kpnn/backends/__init__.py
-src/kpnn/backends/feedforward.py
-src/kpnn/backends/gnn.py
-src/kpnn/backends/recurrent.py
 src/kpnn/compile/__init__.py
 src/kpnn/compile/artifact.py
 src/kpnn/compile/compiler.py
@@ -37,11 +33,3 @@ src/kpnn/nn/masked_linear.py
 src/kpnn/nn/model.py
 src/kpnn/utils/__init__.py
 src/kpnn/utils/errors.py
-tests/test_api_compile_graph.py
-tests/test_api_compile_graph_graphnn.py
-tests/test_api_compile_graph_recurrent.py
-tests/test_api_interpret_model.py
-tests/test_model_customization.py
-tests/test_model_pytorch_integration.py
-tests/test_model_pytorch_integration_graphnn.py
-tests/test_model_pytorch_integration_recurrent.py

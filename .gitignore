@@ -3,3 +3,4 @@ dev/
 .idea/
 __pycache__/
 *.py[cod]
+coverage.xml

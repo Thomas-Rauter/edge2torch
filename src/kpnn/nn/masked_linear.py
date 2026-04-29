@@ -18,6 +18,7 @@ model orchestration.
 """
 
 import math
+from typing import cast
 
 import torch
 from torch import nn
@@ -74,5 +75,7 @@ class MaskedLinear(nn.Module):
         """
         Apply masked linear transformation.
         """
-        masked_weight = self.weight * self.mask
+        mask = cast(torch.Tensor, self.mask)
+        masked_weight = self.weight * mask
+
         return f.linear(x, masked_weight, self.bias)

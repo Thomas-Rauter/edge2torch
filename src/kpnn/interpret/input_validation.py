@@ -79,34 +79,28 @@ def validate_interpret_model_inputs(
     }
 
     if not isinstance(quiet, bool):
-        raise KPNNError(
-            "'quiet' must be a boolean value (True or False)."
-        )
+        raise KPNNError("'quiet' must be a boolean value (True or False).")
 
     if target not in supported_targets:
         supported = ", ".join(sorted(supported_targets))
         raise KPNNError(
-            f"Unsupported target '{target}'. Expected one of: "
-            f"{supported}."
+            f"Unsupported target '{target}'. Expected one of: {supported}."
         )
 
     if method not in supported_methods:
         supported = ", ".join(sorted(supported_methods))
         raise KPNNError(
-            f"Unsupported method '{method}'. Expected one of: "
-            f"{supported}."
+            f"Unsupported method '{method}'. Expected one of: {supported}."
         )
 
     if target == "features" and method not in feature_methods:
         raise KPNNError(
-            f"Method '{method}' is not compatible with "
-            "target='features'."
+            f"Method '{method}' is not compatible with target='features'."
         )
 
     if target == "nodes" and method not in node_methods:
         raise KPNNError(
-            f"Method '{method}' is not compatible with "
-            "target='nodes'."
+            f"Method '{method}' is not compatible with target='nodes'."
         )
 
     if not hasattr(model, "forward"):
@@ -121,16 +115,13 @@ def validate_interpret_model_inputs(
         "execution_plan",
     }
     missing_attrs = [
-        attr
-        for attr in required_artifact_attrs
-        if not hasattr(artifact, attr)
+        attr for attr in required_artifact_attrs if not hasattr(artifact, attr)
     ]
 
     if missing_attrs:
         missing_str = ", ".join(sorted(missing_attrs))
         raise KPNNError(
-            "'artifact' is missing required attribute(s): "
-            f"{missing_str}."
+            f"'artifact' is missing required attribute(s): {missing_str}."
         )
 
     if artifact.backend not in supported_backends:
@@ -147,23 +138,17 @@ def validate_interpret_model_inputs(
         )
 
     if not isinstance(artifact.feature_names, list):
-        raise KPNNError(
-            "'artifact.feature_names' must be a list."
-        )
+        raise KPNNError("'artifact.feature_names' must be a list.")
 
     if not all(isinstance(name, str) for name in artifact.feature_names):
-        raise KPNNError(
-            "'artifact.feature_names' must contain only strings."
-        )
+        raise KPNNError("'artifact.feature_names' must contain only strings.")
 
     if not isinstance(artifact.node_names_by_layer, dict):
-        raise KPNNError(
-            "'artifact.node_names_by_layer' must be a dictionary."
-        )
+        raise KPNNError("'artifact.node_names_by_layer' must be a dictionary.")
 
     supported_data_types = (pd.DataFrame, torch.Tensor)
     if ad is not None:
-        supported_data_types += ad.AnnData,
+        supported_data_types += (ad.AnnData,)
 
     if not isinstance(data, supported_data_types):
         if ad is None:
@@ -181,15 +166,12 @@ def validate_interpret_model_inputs(
     expected_n_features = len(artifact.feature_names)
 
     if isinstance(data, pd.DataFrame):
-        missing_columns = set(artifact.feature_names).difference(
-            data.columns
-        )
+        missing_columns = set(artifact.feature_names).difference(data.columns)
 
         if missing_columns:
             missing_str = ", ".join(sorted(missing_columns))
             raise KPNNError(
-                "'data' is missing required feature column(s): "
-                f"{missing_str}."
+                f"'data' is missing required feature column(s): {missing_str}."
             )
 
     elif ad is not None and isinstance(data, ad.AnnData):
@@ -202,9 +184,7 @@ def validate_interpret_model_inputs(
 
     elif isinstance(data, torch.Tensor):
         if data.ndim != 2:
-            raise KPNNError(
-                "'data' tensor must be 2-dimensional."
-            )
+            raise KPNNError("'data' tensor must be 2-dimensional.")
 
         if data.shape[1] != expected_n_features:
             raise KPNNError(

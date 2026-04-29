@@ -18,6 +18,9 @@ needed. It should contain model-execution behavior, not public API
 validation or higher-level customization orchestration.
 """
 
+from collections.abc import Callable
+from typing import cast
+
 import torch
 from torch import nn
 
@@ -40,9 +43,7 @@ class CustomizedKPNNModel(nn.Module):
         self.base_model = base_model
         self.activation = activation
         self.dropout = (
-            nn.Dropout(float(dropout))
-            if dropout is not None
-            else None
+            nn.Dropout(float(dropout)) if dropout is not None else None
         )
         self.head = head
 
@@ -54,17 +55,20 @@ class CustomizedKPNNModel(nn.Module):
         x = self.base_model(x)
 
         if self.activation is not None:
-            x = self.activation(x)
+            activation = cast(nn.Module, self.activation)
+            x = activation(x)
 
         if self.dropout is not None:
-            x = self.dropout(x)
+            dropout = cast(nn.Module, self.dropout)
+            x = dropout(x)
 
         if self.head is not None:
-            x = self.head(x)
+            head = cast(nn.Module, self.head)
+            x = head(x)
 
         return x
 
-    def get_layer_block(self, layer_name: str):
+    def get_layer_block(self, layer_name: str) -> nn.Module:
         """
         Delegate layer-block access to the wrapped compiled model.
 
@@ -77,4 +81,9 @@ class CustomizedKPNNModel(nn.Module):
                 "'get_layer_block'"
             )
 
-        return self.base_model.get_layer_block(layer_name)
+        get_layer_block = cast(
+            Callable[[str], nn.Module],
+            getattr(self.base_model, "get_layer_block"),
+        )
+
+        return get_layer_block(layer_name)

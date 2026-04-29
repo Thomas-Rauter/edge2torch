@@ -48,54 +48,34 @@ def validate_customize_model_inputs(
         If any input is invalid.
     """
     if not isinstance(model, nn.Module):
-        raise KPNNError(
-            "'model' must be a torch.nn.Module."
-        )
+        raise KPNNError("'model' must be a torch.nn.Module.")
 
     if not hasattr(model, "forward"):
-        raise KPNNError(
-            "'model' must define a forward method."
-        )
+        raise KPNNError("'model' must define a forward method.")
 
     if activation is not None and not isinstance(activation, nn.Module):
-        raise KPNNError(
-            "'activation' must be a torch.nn.Module or None."
-        )
+        raise KPNNError("'activation' must be a torch.nn.Module or None.")
 
     if activation is model:
-        raise KPNNError(
-            "'activation' must not be the same object as 'model'."
-        )
+        raise KPNNError("'activation' must not be the same object as 'model'.")
 
     if dropout is not None:
         if isinstance(dropout, bool):
-            raise KPNNError(
-                "'dropout' must be a float, int, or None."
-            )
+            raise KPNNError("'dropout' must be a float, int, or None.")
 
         if not isinstance(dropout, (int, float)):
-            raise KPNNError(
-                "'dropout' must be a float, int, or None."
-            )
+            raise KPNNError("'dropout' must be a float, int, or None.")
 
         dropout = float(dropout)
 
         if not 0 <= dropout < 1:
-            raise KPNNError(
-                "'dropout' must satisfy 0 <= dropout < 1."
-            )
+            raise KPNNError("'dropout' must satisfy 0 <= dropout < 1.")
 
     if head is not None and not isinstance(head, nn.Module):
-        raise KPNNError(
-            "'head' must be a torch.nn.Module or None."
-        )
+        raise KPNNError("'head' must be a torch.nn.Module or None.")
 
     if head is model:
-        raise KPNNError(
-            "'head' must not be the same object as 'model'."
-        )
+        raise KPNNError("'head' must not be the same object as 'model'.")
 
     if activation is not None and head is not None and activation is head:
-        raise KPNNError(
-            "'activation' and 'head' must not be the same object."
-        )
+        raise KPNNError("'activation' and 'head' must not be the same object.")

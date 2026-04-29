@@ -64,10 +64,12 @@ class KPNNModel(nn.Module):
             input_layer_name = self.layer_names[layer_idx]
             output_layer_name = self.layer_names[layer_idx + 1]
 
-            input_node_names = (
-                execution_plan.node_names_by_layer)[input_layer_name]
-            output_node_names = (
-                execution_plan.node_names_by_layer)[output_layer_name]
+            input_node_names = (execution_plan.node_names_by_layer)[
+                input_layer_name
+            ]
+            output_node_names = (execution_plan.node_names_by_layer)[
+                output_layer_name
+            ]
 
             block_edges = self._select_block_edges(
                 expanded_edges=execution_plan.expanded_edges,

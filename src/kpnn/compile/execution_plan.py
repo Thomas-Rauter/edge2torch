@@ -64,9 +64,9 @@ def build_feedforward_execution_plan(graph) -> FeedforwardExecutionPlan:
     """
     original_edges = graph.edges.copy()
 
-    in_degree = {node: 0 for node in graph.nodes}
-    children = {node: [] for node in graph.nodes}
-    parents = {node: [] for node in graph.nodes}
+    in_degree: dict[str, int] = {node: 0 for node in graph.nodes}
+    children: dict[str, list[str]] = {node: [] for node in graph.nodes}
+    parents: dict[str, list[str]] = {node: [] for node in graph.nodes}
 
     for _, row in original_edges.iterrows():
         source = row["source"]
@@ -86,7 +86,7 @@ def build_feedforward_execution_plan(graph) -> FeedforwardExecutionPlan:
             "Feedforward compilation requires at least one input node."
         )
 
-    node_to_depth = {}
+    node_to_depth: dict[str, int] = {}
     depth = 0
 
     while current_layer_nodes:
@@ -111,8 +111,8 @@ def build_feedforward_execution_plan(graph) -> FeedforwardExecutionPlan:
             "cycles or cannot be layered."
         )
 
-    node_names_by_layer = {}
-    node_to_layer = {}
+    node_names_by_layer: dict[str, list[str]] = {}
+    node_to_layer: dict[str, str] = {}
 
     max_depth = max(node_to_depth.values())
 
@@ -139,8 +139,8 @@ def build_feedforward_execution_plan(graph) -> FeedforwardExecutionPlan:
         [node for node in graph.nodes if len(children[node]) == 0]
     )
 
-    expanded_edges_records = []
-    pseudo_nodes = []
+    expanded_edges_records: list[dict[str, str]] = []
+    pseudo_nodes: list[str] = []
 
     for _, row in original_edges.iterrows():
         source = row["source"]
@@ -244,8 +244,8 @@ def build_recurrent_execution_plan(graph) -> RecurrentExecutionPlan:
     if not node_names:
         raise KPNNError("Recurrent compilation requires at least one node.")
 
-    children = {node: [] for node in node_names}
-    parents = {node: [] for node in node_names}
+    children: dict[str, list[str]] = {node: [] for node in node_names}
+    parents: dict[str, list[str]] = {node: [] for node in node_names}
 
     for _, row in original_edges.iterrows():
         source = row["source"]
@@ -325,8 +325,8 @@ def build_graphnn_execution_plan(graph) -> GraphNNExecutionPlan:
     if not node_names:
         raise KPNNError("GraphNN compilation requires at least one node.")
 
-    children = {node: [] for node in node_names}
-    parents = {node: [] for node in node_names}
+    children: dict[str, list[str]] = {node: [] for node in node_names}
+    parents: dict[str, list[str]] = {node: [] for node in node_names}
 
     for _, row in original_edges.iterrows():
         source = row["source"]

@@ -16,6 +16,7 @@ hierarchy itself, not error-producing logic or higher-level API
 behavior.
 """
 
+
 class KPNNError(Exception):
     """Base exception for all KPNN-specific errors."""
 

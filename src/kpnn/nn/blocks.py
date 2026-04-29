@@ -17,6 +17,8 @@ should contain feedforward block behavior, not public API logic,
 validation, or backend dispatch.
 """
 
+from typing import cast
+
 import pandas as pd
 import torch
 from torch import nn
@@ -101,9 +103,13 @@ class FeedforwardLayerBlock(nn.Module):
         """
         Compute one layer transition and overwrite pseudo node outputs.
         """
-        y = self.linear(x)
+        linear = cast(MaskedLinear, self.linear)
+        pseudo_input_indices = cast(torch.Tensor, self.pseudo_input_indices)
+        pseudo_output_indices = cast(torch.Tensor, self.pseudo_output_indices)
 
-        if self.pseudo_output_indices.numel() > 0:
-            y[:, self.pseudo_output_indices] = x[:, self.pseudo_input_indices]
+        y = linear(x)
+
+        if pseudo_output_indices.numel() > 0:
+            y[:, pseudo_output_indices] = x[:, pseudo_input_indices]
 
         return y
