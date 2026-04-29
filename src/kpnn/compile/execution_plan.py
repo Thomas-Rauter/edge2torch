@@ -22,9 +22,9 @@ from dataclasses import dataclass
 
 import pandas as pd
 
+from ..graph.schema import KPNNGraph
 from ..utils.constants import PSEUDO_NODE_PREFIX
 from ..utils.errors import KPNNError
-from ..graph.schema import KPNNGraph
 
 
 @dataclass

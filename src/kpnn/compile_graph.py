@@ -18,10 +18,17 @@ def compile_graph(
     """
     Compile an edgelist into a PyTorch model and compilation artifact.
 
+    The edgelist must describe the full prior-knowledge computation graph,
+    including the input feature nodes. Input features are inferred as graph
+    nodes with no incoming edges. The returned artifact stores these names in
+    ``artifact.feature_names``; tensors passed to the compiled model must have
+    columns in that exact order.
+
     Parameters
     ----------
     edgelist : pd.DataFrame
-        Edge table with required columns 'source' and 'target'.
+        Edge table with required columns 'source' and 'target'. The table should
+        include edges from input feature nodes into the rest of the graph.
     backend : str, default="feedforward"
         Backend to compile to. One of: "feedforward", "recurrent", "graphnn".
     quiet : bool, default=False
@@ -35,10 +42,8 @@ def compile_graph(
 
     Raises
     ------
-    ValueError
-        If the backend is unknown.
     KPNNError
-        If graph validation fails.
+        If input validation, graph validation, or backend compilation fails.
     """
     validate_compile_graph_inputs(
         edgelist=edgelist,

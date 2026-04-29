@@ -20,16 +20,19 @@ dispatch.
 """
 
 from typing import cast
+
 import pandas as pd
 import torch
 from torch import nn
 
+from ..compile.execution_plan import (
+    FeedforwardExecutionPlan,
+    GraphNNExecutionPlan,
+    RecurrentExecutionPlan,
+)
 from ..utils.errors import KPNNError
 from .blocks import FeedforwardLayerBlock
 from .masked_linear import MaskedLinear
-from ..compile.execution_plan import FeedforwardExecutionPlan
-from ..compile.execution_plan import RecurrentExecutionPlan
-from ..compile.execution_plan import GraphNNExecutionPlan
 
 
 class KPNNModel(nn.Module):
@@ -199,11 +202,13 @@ class KPNNRecurrentModel(nn.Module):
 
         if not self.input_node_names:
             raise KPNNError(
-                "KPNNRecurrentModel requires at least one input node.")
+                "KPNNRecurrentModel requires at least one input node."
+            )
 
         if not self.output_node_names:
             raise KPNNError(
-                "KPNNRecurrentModel requires at least one output node.")
+                "KPNNRecurrentModel requires at least one output node."
+            )
 
         self.node_index = {
             node_name: idx for idx, node_name in enumerate(self.node_names)
