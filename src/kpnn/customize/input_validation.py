@@ -18,16 +18,17 @@ execution logic, model construction, or public API orchestration.
 """
 
 from torch import nn
+from typing import Any
 
 from ..utils.errors import KPNNError
 
 
 def validate_customize_model_inputs(
-    model,
-    activation,
-    dropout,
-    head,
-):
+    model: Any,
+    activation: Any,
+    dropout: Any,
+    head: Any,
+) -> None:
     """
     Validate the public inputs of ``customize_model()``.
 

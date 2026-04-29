@@ -29,6 +29,10 @@ class CustomizedKPNNModel(nn.Module):
     """
     PyTorch wrapper around a compiled KPNN model with optional downstream
     architectural components.
+
+    Components are applied to the output of the compiled model. The wrapper
+    does not modify the compiled graph structure or insert modules inside
+    backend-specific computations.
     """
 
     def __init__(
@@ -37,12 +41,12 @@ class CustomizedKPNNModel(nn.Module):
         activation: nn.Module | None = None,
         dropout: float | int | None = None,
         head: nn.Module | None = None,
-    ):
+    ) -> None:
         super().__init__()
 
         self.base_model = base_model
         self.activation = activation
-        self.dropout = (
+        self.dropout_layer = (
             nn.Dropout(float(dropout)) if dropout is not None else None
         )
         self.head = head
@@ -58,9 +62,9 @@ class CustomizedKPNNModel(nn.Module):
             activation = cast(nn.Module, self.activation)
             x = activation(x)
 
-        if self.dropout is not None:
-            dropout = cast(nn.Module, self.dropout)
-            x = dropout(x)
+        if self.dropout_layer is not None:
+            dropout_layer = cast(nn.Module, self.dropout_layer)
+            x = dropout_layer(x)
 
         if self.head is not None:
             head = cast(nn.Module, self.head)

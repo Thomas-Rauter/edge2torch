@@ -15,8 +15,13 @@ def customize_model(
     head: nn.Module | None = None,
 ) -> nn.Module:
     """
-    Add optional downstream architectural components to a compiled KPNN
-    model.
+    Wrap a compiled KPNN model with optional downstream PyTorch modules.
+
+    This function is a convenience layer for common post-compilation additions.
+    It applies the requested components sequentially to the output of the
+    compiled model. It does not modify the compiled graph structure, insert
+    modules inside graph-derived layers, or replace ordinary PyTorch
+    training/customization.
 
     Parameters
     ----------
