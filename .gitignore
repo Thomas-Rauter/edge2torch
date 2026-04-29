@@ -1,6 +1,15 @@
+build/
+*.egg-info/
 dev/
+dist/
 .venv/
 .idea/
 __pycache__/
 *.py[cod]
 coverage.xml
+.cache/mkdocs-jupyter/
+htmlcov/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
