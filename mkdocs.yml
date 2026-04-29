@@ -18,8 +18,11 @@ theme:
 
 nav:
   - Home: index.md
+  - Installation: installation.md
   - Getting started: getting-started.ipynb
-  - Design: design.md
+  - Feedforward skip edges: feedforward-skip-edges.ipynb
+  - Backends: backends.md
+  - Interpretation: interpretation.md
   - API reference: api.md
 
 plugins:
