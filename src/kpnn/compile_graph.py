@@ -4,10 +4,10 @@ API function
 
 import pandas as pd
 
+from .compile.compiler import compile_backend
 from .compile.input_validation import validate_compile_graph_inputs
 from .graph.io import edgelist_to_graph
-from .graph.validate import validate_graph, handle_validation_report
-from .compile.compiler import compile_backend
+from .graph.validate import handle_validation_report, validate_graph
 
 
 def compile_graph(

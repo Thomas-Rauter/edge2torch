@@ -20,9 +20,11 @@ downstream plotting and analysis.
 """
 
 import pandas as pd
-from captum.attr import IntegratedGradients
-from captum.attr import LayerConductance
-from captum.attr import LayerIntegratedGradients
+from captum.attr import (
+    IntegratedGradients,
+    LayerConductance,
+    LayerIntegratedGradients,
+)
 
 from ..utils.errors import KPNNError
 

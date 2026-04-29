@@ -252,15 +252,21 @@ def build_recurrent_execution_plan(graph) -> RecurrentExecutionPlan:
         target = row["target"]
 
         if source not in children:
-            raise KPNNError(f"Unknown source node '{source}' in recurrent graph.")
+            raise KPNNError(
+                f"Unknown source node '{source}' in recurrent graph."
+            )
 
         if target not in parents:
-            raise KPNNError(f"Unknown target node '{target}' in recurrent graph.")
+            raise KPNNError(
+                f"Unknown target node '{target}' in recurrent graph."
+            )
 
         children[source].append(target)
         parents[target].append(source)
 
-    input_node_names = sorted([node for node in node_names if len(parents[node]) == 0])
+    input_node_names = sorted(
+        [node for node in node_names if len(parents[node]) == 0]
+    )
 
     output_node_names = sorted(
         [node for node in node_names if len(children[node]) == 0]
@@ -335,7 +341,9 @@ def build_graphnn_execution_plan(graph) -> GraphNNExecutionPlan:
         children[source].append(target)
         parents[target].append(source)
 
-    input_node_names = sorted([node for node in node_names if len(parents[node]) == 0])
+    input_node_names = sorted(
+        [node for node in node_names if len(parents[node]) == 0]
+    )
 
     output_node_names = sorted(
         [node for node in node_names if len(children[node]) == 0]

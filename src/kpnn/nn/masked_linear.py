@@ -39,7 +39,9 @@ class MaskedLinear(nn.Module):
         super().__init__()
 
         if mask.shape != (out_features, in_features):
-            raise ValueError(f"'mask' must have shape ({out_features}, {in_features}).")
+            raise ValueError(
+                f"'mask' must have shape ({out_features}, {in_features})."
+            )
 
         self.in_features = in_features
         self.out_features = out_features

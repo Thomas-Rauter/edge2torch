@@ -71,7 +71,7 @@ def prepare_interpretation_input(
     if isinstance(data, pd.DataFrame):
         ordered = data.loc[:, feature_names]
         inputs = torch.tensor(
-            ordered.to_numpy(),
+            ordered.to_numpy(copy=True),
             dtype=torch.float32,
         )
         sample_names = [str(idx) for idx in ordered.index]
@@ -99,7 +99,7 @@ def prepare_interpretation_input(
             matrix = matrix.toarray()
 
         inputs = torch.tensor(
-            matrix,
+            matrix.copy(),
             dtype=torch.float32,
         )
         sample_names = [str(name) for name in data.obs_names]

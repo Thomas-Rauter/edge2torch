@@ -16,10 +16,10 @@ backend name. It should contain backend dispatch logic, not the backend
 implementations themselves or the public API entry point.
 """
 
-from .feedforward import compile_feedforward
-from .recurrent import compile_recurrent
-from .graphnn import compile_graphnn
 from ..utils.errors import KPNNError
+from .feedforward import compile_feedforward
+from .graphnn import compile_graphnn
+from .recurrent import compile_recurrent
 
 
 def compile_backend(

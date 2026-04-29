@@ -21,8 +21,8 @@ import pandas as pd
 import torch
 from torch import nn
 
-from .masked_linear import MaskedLinear
 from ..utils.errors import KPNNError
+from .masked_linear import MaskedLinear
 
 
 class FeedforwardLayerBlock(nn.Module):

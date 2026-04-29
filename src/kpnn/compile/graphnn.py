@@ -17,9 +17,9 @@ contain graphnn-specific compilation logic, not public API handling or
 generic backend dispatch.
 """
 
+from ..nn.model import KPNNGraphNNModel
 from .artifact import KPNNArtifact
 from .execution_plan import build_graphnn_execution_plan
-from ..nn.model import KPNNGraphNNModel
 
 
 def compile_graphnn(graph):

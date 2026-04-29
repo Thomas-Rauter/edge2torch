@@ -17,9 +17,9 @@ contain recurrent-specific compilation logic, not public API handling or
 generic backend dispatch.
 """
 
+from ..nn.model import KPNNRecurrentModel
 from .artifact import KPNNArtifact
 from .execution_plan import build_recurrent_execution_plan
-from ..nn.model import KPNNRecurrentModel
 
 
 def compile_recurrent(graph):

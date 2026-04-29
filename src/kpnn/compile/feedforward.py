@@ -17,9 +17,9 @@ contain feedforward-specific compilation logic, not public API handling
 or generic backend dispatch.
 """
 
+from ..nn.model import KPNNModel
 from .artifact import KPNNArtifact
 from .execution_plan import build_feedforward_execution_plan
-from ..nn.model import KPNNModel
 
 
 def compile_feedforward(graph):

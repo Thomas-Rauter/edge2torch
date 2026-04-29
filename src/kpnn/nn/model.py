@@ -23,9 +23,9 @@ import pandas as pd
 import torch
 from torch import nn
 
+from ..utils.errors import KPNNError
 from .blocks import FeedforwardLayerBlock
 from .masked_linear import MaskedLinear
-from ..utils.errors import KPNNError
 
 
 class KPNNModel(nn.Module):

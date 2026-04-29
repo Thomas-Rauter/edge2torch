@@ -1,7 +1,7 @@
+import numpy as np
 import pandas as pd
 import pytest
 import torch
-import numpy as np
 
 try:
     import anndata as ad

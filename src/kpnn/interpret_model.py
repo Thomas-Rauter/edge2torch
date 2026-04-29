@@ -4,9 +4,9 @@ API function
 
 from typing import Any
 
+from .interpret.captum_adapter import run_captum_interpretation
 from .interpret.input_validation import validate_interpret_model_inputs
 from .interpret.prepare_input import prepare_interpretation_input
-from .interpret.captum_adapter import run_captum_interpretation
 
 
 def interpret_model(

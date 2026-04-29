@@ -2,9 +2,9 @@ import pandas as pd
 import pytest
 import torch
 
-from kpnn.compile_graph import compile_graph
 from kpnn.compile.artifact import KPNNArtifact
 from kpnn.compile.execution_plan import RecurrentExecutionPlan
+from kpnn.compile_graph import compile_graph
 from kpnn.nn.model import KPNNRecurrentModel
 from kpnn.utils.errors import KPNNError
 
