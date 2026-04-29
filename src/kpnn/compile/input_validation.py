@@ -43,6 +43,7 @@ def validate_compile_graph_inputs(
     KPNNError
         If any input is invalid.
     """
+    # Edgelist validation
     if not isinstance(edgelist, pd.DataFrame):
         raise KPNNError("'edgelist' must be a pandas DataFrame.")
 
@@ -56,16 +57,14 @@ def validate_compile_graph_inputs(
             f"'target'. Missing: {missing_str}."
         )
 
-    supported_backends = {"feedforward", "recurrent", "graphnn"}
+    source_count = int((edgelist.columns == "source").sum())
+    target_count = int((edgelist.columns == "target").sum())
 
-    if backend not in supported_backends:
-        supported = ", ".join(sorted(supported_backends))
+    if source_count != 1 or target_count != 1:
         raise KPNNError(
-            f"Unsupported backend '{backend}'. Expected one of: {supported}."
+            "'edgelist' columns 'source' and 'target' must each appear "
+            "exactly once."
         )
-
-    if not isinstance(quiet, bool):
-        raise KPNNError("'quiet' must be a boolean value (True or False).")
 
     edge_columns = edgelist.loc[:, ["source", "target"]]
 
@@ -83,3 +82,19 @@ def validate_compile_graph_inputs(
             "'edgelist' columns 'source' and 'target' must not contain "
             "empty node names."
         )
+
+    # Backend validation
+    if not isinstance(backend, str):
+        raise KPNNError("'backend' must be a string.")
+
+    supported_backends = {"feedforward", "recurrent", "graphnn"}
+
+    if backend not in supported_backends:
+        supported = ", ".join(sorted(supported_backends))
+        raise KPNNError(
+            f"Unsupported backend '{backend}'. Expected one of: {supported}."
+        )
+
+    # Verbosity validation
+    if not isinstance(quiet, bool):
+        raise KPNNError("'quiet' must be a boolean value (True or False).")
