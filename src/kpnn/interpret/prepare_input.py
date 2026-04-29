@@ -1,3 +1,23 @@
+"""
+Standardization of interpretation inputs for downstream attribution.
+
+Why this file exists
+--------------------
+This file isolates the step that converts accepted interpretation input
+containers into one standardized tensor-based representation. The
+separation keeps container-specific preparation logic out of both the
+public API wrapper and the Captum execution layer, making the
+interpretation pipeline easier to reason about and extend.
+
+Role in the package
+-------------------
+This is an internal interpretation-input module. It defines the
+standardized prepared-input object and the logic that converts validated
+DataFrame, Tensor, or optional AnnData inputs into that form. It should
+contain input preparation logic, not public API validation, Captum
+execution, or downstream result analysis.
+"""
+
 from dataclasses import dataclass
 
 import pandas as pd

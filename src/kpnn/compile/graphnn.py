@@ -1,3 +1,22 @@
+"""
+GraphNN backend compilation.
+
+Why this file exists
+--------------------
+This file isolates the logic for compiling a validated graph into the
+graphnn backend. Keeping this path separate makes the graphnn-specific
+compilation semantics explicit and allows the backend to evolve without
+adding complexity to the general compiler dispatch.
+
+Role in the package
+-------------------
+This is an internal backend-compilation module. It takes a graph,
+derives the graphnn execution plan, builds the corresponding PyTorch
+model, and packages the result together with its artifact. It should
+contain graphnn-specific compilation logic, not public API handling or
+generic backend dispatch.
+"""
+
 from .artifact import KPNNArtifact
 from .execution_plan import build_graphnn_execution_plan
 from ..nn.model import KPNNGraphNNModel
@@ -19,10 +38,7 @@ def compile_graphnn(graph):
     """
     execution_plan = build_graphnn_execution_plan(graph)
 
-    model = KPNNGraphNNModel(
-        execution_plan=execution_plan,
-        backend="graphnn",
-    )
+    model = KPNNGraphNNModel(execution_plan=execution_plan)
 
     artifact = KPNNArtifact(
         backend="graphnn",

@@ -1,3 +1,23 @@
+"""
+Internal graph validation and reporting.
+
+Why this file exists
+--------------------
+This file separates graph-structural validation from both public API
+input validation and backend-specific compilation. The package needs a
+place to check whether a normalized internal graph is structurally
+suitable for a requested backend and to represent the result in a form
+that can be handled consistently.
+
+Role in the package
+-------------------
+This is an internal graph-validation module. It defines the validation
+report structure, performs backend-aware validation on normalized graph
+objects, and handles the resulting notes, warnings, and errors. It
+should focus on graph validity and reporting, not on input conversion,
+public API orchestration, or model construction.
+"""
+
 from dataclasses import dataclass, field
 
 from ..utils.errors import KPNNError
@@ -82,24 +102,34 @@ def validate_graph(
     n_self_loops = int(self_loops.sum())
 
     if n_self_loops > 0:
-        report.warnings.append(f"The graph contains {n_self_loops} self-loop edge(s).")
+        report.warnings.append(
+            f"The graph contains {n_self_loops} self-loop edge(s)."
+        )
 
     n_nodes = len(graph.nodes)
     n_edges = len(graph.edges)
 
-    report.notes.append(f"Graph contains {n_nodes} node(s) and {n_edges} edge(s).")
+    report.notes.append(
+        f"Graph contains {n_nodes} node(s) and {n_edges} edge(s)."
+    )
 
     if backend == "feedforward":
-        report.notes.append("Feedforward backend selected. Graph must be layerable.")
+        report.notes.append(
+            "Feedforward backend selected. Graph must be layerable."
+        )
     elif backend == "recurrent":
-        report.notes.append("Recurrent backend selected. Cycles may be allowed.")
+        report.notes.append(
+            "Recurrent backend selected. Cycles may be allowed."
+        )
     elif backend == "graphnn":
         report.notes.append(
             "GraphNN backend selected. Graph structure will be compiled "
             "for message passing."
         )
     else:
-        raise KPNNError(f"Unsupported backend '{backend}' during graph validation.")
+        raise KPNNError(
+            f"Unsupported backend '{backend}' during graph validation."
+        )
 
     return report
 

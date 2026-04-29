@@ -1,3 +1,22 @@
+"""
+Artifact definition for compiled KPNN models.
+
+Why this file exists
+--------------------
+This file defines the structured object that is returned alongside a
+compiled PyTorch model. The artifact exists to preserve the non-model
+metadata needed after compilation, especially for interpretation and
+other downstream package operations.
+
+Role in the package
+-------------------
+This is an internal compilation-bridge module. It defines the data
+structure that connects graph compilation to later stages such as model
+customization and interpretation. It should contain the artifact schema
+itself, not compilation logic, validation logic, or model execution
+code.
+"""
+
 from dataclasses import dataclass
 
 

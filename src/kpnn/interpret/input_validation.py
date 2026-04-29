@@ -1,3 +1,23 @@
+"""
+Validation logic for the interpret_model() public API.
+
+Why this file exists
+--------------------
+This file separates strict public input validation from both the
+interpret_model() API wrapper and the internal interpretation execution
+logic. Keeping validation here makes the supported interpretation
+contract easier to reason about and avoids duplicating checks across
+input preparation and Captum-specific modules.
+
+Role in the package
+-------------------
+This is an internal validation module for model interpretation. It
+defines which target / method / backend / data combinations are accepted
+by interpret_model() and raises clear errors for unsupported or
+ambiguous usage. It should not contain Captum execution logic, input
+standardization, or public API orchestration.
+"""
+
 import pandas as pd
 
 try:

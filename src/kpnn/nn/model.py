@@ -1,3 +1,24 @@
+"""
+Compiled PyTorch model classes for KPNN backends.
+
+Why this file exists
+--------------------
+This file collects the concrete PyTorch model classes produced by the
+different backend compilers. Keeping these model implementations in one
+place makes the runtime behavior of compiled backends explicit and
+separates model execution semantics from execution-plan construction and
+public API orchestration.
+
+Role in the package
+-------------------
+This is an internal neural-network implementation module. It defines the
+compiled model classes for the feedforward, recurrent, and graphnn
+backends, along with the backend-specific runtime behavior they need. It
+should contain model execution logic and backend-specific model
+structure, not public API validation, graph conversion, or compiler
+dispatch.
+"""
+
 import pandas as pd
 import torch
 from torch import nn
@@ -43,8 +64,10 @@ class KPNNModel(nn.Module):
             input_layer_name = self.layer_names[layer_idx]
             output_layer_name = self.layer_names[layer_idx + 1]
 
-            input_node_names = execution_plan.node_names_by_layer[input_layer_name]
-            output_node_names = execution_plan.node_names_by_layer[output_layer_name]
+            input_node_names = (
+                execution_plan.node_names_by_layer)[input_layer_name]
+            output_node_names = (
+                execution_plan.node_names_by_layer)[output_layer_name]
 
             block_edges = self._select_block_edges(
                 expanded_edges=execution_plan.expanded_edges,
@@ -160,11 +183,6 @@ class KPNNRecurrentModel(nn.Module):
     ):
         super().__init__()
 
-        if backend != "recurrent":
-            raise KPNNError(
-                "KPNNRecurrentModel currently only supports the 'recurrent' backend."
-            )
-
         if not isinstance(steps, int) or steps <= 0:
             raise KPNNError("'steps' must be a positive integer.")
 
@@ -272,11 +290,6 @@ class KPNNGraphNNModel(nn.Module):
         bias: bool = True,
     ):
         super().__init__()
-
-        if backend != "graphnn":
-            raise KPNNError(
-                "KPNNGraphNNModel currently only supports the 'graphnn' backend."
-            )
 
         if not isinstance(steps, int) or steps <= 0:
             raise KPNNError("'steps' must be a positive integer.")

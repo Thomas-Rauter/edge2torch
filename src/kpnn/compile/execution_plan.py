@@ -1,3 +1,23 @@
+"""
+Execution-plan definitions and builders for compiled backends.
+
+Why this file exists
+--------------------
+This file defines the intermediate execution-plan objects used to
+translate a validated graph into backend-specific PyTorch models. The
+execution plan exists to separate graph-structural reasoning from model
+construction, so that compilation can first decide how a backend should
+execute the graph and only then build the corresponding model.
+
+Role in the package
+-------------------
+This is an internal compilation-structure module. It contains the
+backend-specific execution-plan schemas and the logic that derives them
+from an internal graph object. It should focus on execution structure,
+not on public API orchestration, input validation, or PyTorch module
+implementation.
+"""
+
 from dataclasses import dataclass
 
 import pandas as pd
@@ -57,10 +77,14 @@ def build_feedforward_execution_plan(graph) -> FeedforwardExecutionPlan:
         parents[target].append(source)
 
     remaining = set(graph.nodes)
-    current_layer_nodes = sorted([node for node in graph.nodes if in_degree[node] == 0])
+    current_layer_nodes = sorted(
+        [node for node in graph.nodes if in_degree[node] == 0]
+    )
 
     if not current_layer_nodes:
-        raise KPNNError("Feedforward compilation requires at least one input node.")
+        raise KPNNError(
+            "Feedforward compilation requires at least one input node."
+        )
 
     node_to_depth = {}
     depth = 0
@@ -107,7 +131,9 @@ def build_feedforward_execution_plan(graph) -> FeedforwardExecutionPlan:
         for node in layer_nodes:
             node_to_layer[node] = layer_name
 
-    input_node_names = sorted([node for node in graph.nodes if len(parents[node]) == 0])
+    input_node_names = sorted(
+        [node for node in graph.nodes if len(parents[node]) == 0]
+    )
 
     output_node_names = sorted(
         [node for node in graph.nodes if len(children[node]) == 0]
@@ -150,7 +176,9 @@ def build_feedforward_execution_plan(graph) -> FeedforwardExecutionPlan:
 
             previous_node = pseudo_node
 
-        expanded_edges_records.append({"source": previous_node, "target": target})
+        expanded_edges_records.append(
+            {"source": previous_node, "target": target}
+        )
 
     for layer_name, layer_nodes in node_names_by_layer.items():
         node_names_by_layer[layer_name] = sorted(layer_nodes)

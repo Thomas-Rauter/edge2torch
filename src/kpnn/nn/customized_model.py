@@ -1,3 +1,23 @@
+"""
+PyTorch wrapper for optional post-compilation model customization.
+
+Why this file exists
+--------------------
+This file isolates the internal PyTorch module used to add optional
+downstream architectural components around a compiled KPNN model. The
+separation keeps the public customize_model() API thin and prevents
+model-wrapper implementation details from being mixed into API
+validation or orchestration code.
+
+Role in the package
+-------------------
+This is an internal neural-network implementation module. It defines the
+runtime wrapper that applies optional activation, dropout, and head
+components while preserving access to the wrapped compiled model where
+needed. It should contain model-execution behavior, not public API
+validation or higher-level customization orchestration.
+"""
+
 import torch
 from torch import nn
 

@@ -1,3 +1,22 @@
+"""
+Validation logic for the customize_model() public API.
+
+Why this file exists
+--------------------
+This file separates strict public input validation from both the
+customize_model() API wrapper and the internal model-wrapper
+implementation. Keeping validation here makes the accepted customization
+contract easier to reason about and avoids duplicating checks in
+multiple places.
+
+Role in the package
+-------------------
+This is an internal validation module for model customization. It
+defines what inputs are accepted by customize_model() and raises clear
+errors for unsupported or ambiguous usage. It should not contain PyTorch
+execution logic, model construction, or public API orchestration.
+"""
+
 from torch import nn
 
 from ..utils.errors import KPNNError

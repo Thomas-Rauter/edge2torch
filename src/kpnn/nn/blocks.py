@@ -1,3 +1,22 @@
+"""
+Feedforward block definitions for compiled KPNN models.
+
+Why this file exists
+--------------------
+This file isolates the PyTorch modules that implement feedforward
+layer-to-layer execution for compiled graphs. The separation keeps
+feedforward block behavior explicit and prevents backend-specific model
+semantics from being mixed into higher-level model orchestration code.
+
+Role in the package
+-------------------
+This is an internal neural-network implementation module. It defines the
+runtime building blocks used by compiled feedforward models, including
+the handling of compiler-generated pseudo nodes during execution. It
+should contain feedforward block behavior, not public API logic,
+validation, or backend dispatch.
+"""
+
 import pandas as pd
 import torch
 from torch import nn
@@ -27,7 +46,9 @@ class FeedforwardLayerBlock(nn.Module):
         self.input_node_names = input_node_names
         self.output_node_names = output_node_names
 
-        input_index = {node_name: idx for idx, node_name in enumerate(input_node_names)}
+        input_index = {
+            node_name: idx for idx, node_name in enumerate(input_node_names)
+        }
         output_index = {
             node_name: idx for idx, node_name in enumerate(output_node_names)
         }
@@ -52,7 +73,9 @@ class FeedforwardLayerBlock(nn.Module):
 
             if target.startswith("pseudo__"):
                 if target in pseudo_targets_seen:
-                    raise KPNNError("Pseudo nodes must have exactly one incoming edge.")
+                    raise KPNNError(
+                        "Pseudo nodes must have exactly one incoming edge."
+                    )
 
                 pseudo_targets_seen.add(target)
                 pseudo_input_indices.append(source_idx)

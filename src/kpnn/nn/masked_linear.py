@@ -1,8 +1,27 @@
+"""
+Masked linear layer for graph-derived sparse connectivity.
+
+Why this file exists
+--------------------
+This file isolates the fixed-mask linear transformation used to enforce
+graph-defined sparsity in compiled models. The separation makes the
+package's core sparse-connection mechanism explicit and reusable without
+mixing it into higher-level block or model definitions.
+
+Role in the package
+-------------------
+This is an internal neural-network implementation module. It defines the
+masked linear primitive that backend-specific blocks use to realize
+graph-structured connectivity in PyTorch. It should contain sparse
+linear-layer behavior, not compilation logic, public API handling, or
+model orchestration.
+"""
+
 import math
 
 import torch
 from torch import nn
-from torch.nn import functional as F
+from torch.nn import functional as f
 
 
 class MaskedLinear(nn.Module):
@@ -54,4 +73,4 @@ class MaskedLinear(nn.Module):
         Apply masked linear transformation.
         """
         masked_weight = self.weight * self.mask
-        return F.linear(x, masked_weight, self.bias)
+        return f.linear(x, masked_weight, self.bias)

@@ -1,3 +1,7 @@
+"""
+API function
+"""
+
 from torch import nn
 
 from .customize.input_validation import validate_customize_model_inputs

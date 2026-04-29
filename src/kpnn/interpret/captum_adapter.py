@@ -1,3 +1,24 @@
+"""
+Captum-based interpretation dispatch and result mapping.
+
+Why this file exists
+--------------------
+This file isolates the package's integration with Captum so that
+attribution-method handling, backend-aware dispatch, and result mapping
+are kept separate from the public interpret_model() API. The separation
+makes it easier to extend supported interpretation paths without mixing
+Captum-specific logic into validation or API orchestration.
+
+Role in the package
+-------------------
+This is an internal interpretation-execution module. It chooses the
+appropriate Captum-based interpretation path for a validated request,
+runs the underlying attribution method, and maps outputs back to
+artifact-defined names. It should contain backend- and method-specific
+interpretation logic, not public API validation, input preparation, or
+downstream plotting and analysis.
+"""
+
 import pandas as pd
 from captum.attr import IntegratedGradients
 from captum.attr import LayerConductance

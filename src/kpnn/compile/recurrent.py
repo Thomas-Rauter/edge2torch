@@ -1,3 +1,22 @@
+"""
+Recurrent backend compilation.
+
+Why this file exists
+--------------------
+This file isolates the logic for compiling a validated graph into the
+recurrent backend. The separation keeps recurrent-specific compilation
+semantics out of the general compiler dispatch and makes the recurrent
+path easier to evolve independently.
+
+Role in the package
+-------------------
+This is an internal backend-compilation module. It takes a graph,
+derives the recurrent execution plan, builds the corresponding PyTorch
+model, and packages the result together with its artifact. It should
+contain recurrent-specific compilation logic, not public API handling or
+generic backend dispatch.
+"""
+
 from .artifact import KPNNArtifact
 from .execution_plan import build_recurrent_execution_plan
 from ..nn.model import KPNNRecurrentModel
@@ -19,10 +38,7 @@ def compile_recurrent(graph):
     """
     execution_plan = build_recurrent_execution_plan(graph)
 
-    model = KPNNRecurrentModel(
-        execution_plan=execution_plan,
-        backend="recurrent",
-    )
+    model = KPNNRecurrentModel(execution_plan=execution_plan)
 
     artifact = KPNNArtifact(
         backend="recurrent",
