@@ -29,6 +29,7 @@ from .blocks import FeedforwardLayerBlock
 from .masked_linear import MaskedLinear
 from ..compile.execution_plan import FeedforwardExecutionPlan
 from ..compile.execution_plan import RecurrentExecutionPlan
+from ..compile.execution_plan import GraphNNExecutionPlan
 
 
 class KPNNModel(nn.Module):
@@ -293,10 +294,10 @@ class KPNNGraphNNModel(nn.Module):
 
     def __init__(
         self,
-        execution_plan,
+        execution_plan: GraphNNExecutionPlan,
         steps: int = 3,
         bias: bool = True,
-    ):
+    ) -> None:
         super().__init__()
 
         if not isinstance(steps, int) or steps <= 0:
@@ -310,6 +311,16 @@ class KPNNGraphNNModel(nn.Module):
         self.node_names = list(execution_plan.node_names)
         self.input_node_names = list(execution_plan.input_node_names)
         self.output_node_names = list(execution_plan.output_node_names)
+
+        if not self.input_node_names:
+            raise KPNNError(
+                "KPNNGraphNNModel requires at least one input node."
+            )
+
+        if not self.output_node_names:
+            raise KPNNError(
+                "KPNNGraphNNModel requires at least one output node."
+            )
 
         self.node_index = {
             node_name: idx for idx, node_name in enumerate(self.node_names)
@@ -326,9 +337,9 @@ class KPNNGraphNNModel(nn.Module):
 
         mask = torch.zeros(n_nodes, n_nodes, dtype=torch.float32)
 
-        for _, row in execution_plan.original_edges.iterrows():
-            source = row["source"]
-            target = row["target"]
+        for row in execution_plan.original_edges.itertuples(index=False):
+            source = str(row.source)
+            target = str(row.target)
 
             source_idx = self.node_index[source]
             target_idx = self.node_index[target]

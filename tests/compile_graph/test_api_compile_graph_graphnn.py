@@ -12,8 +12,8 @@ from kpnn.utils.errors import KPNNError
 def test_compile_graph_returns_graphnn_model_and_artifact():
     edgelist = pd.DataFrame(
         {
-            "source": ["node_a", "node_b"],
-            "target": ["node_b", "node_a"],
+            "source": ["input_1", "node_a", "node_b", "node_b"],
+            "target": ["node_a", "node_b", "node_a", "output_1"],
         }
     )
 
@@ -28,8 +28,8 @@ def test_compile_graph_returns_graphnn_model_and_artifact():
 def test_compile_graph_graphnn_allows_cycles():
     edgelist = pd.DataFrame(
         {
-            "source": ["node_a", "node_b"],
-            "target": ["node_b", "node_a"],
+            "source": ["input_1", "node_a", "node_b", "node_b"],
+            "target": ["node_a", "node_b", "node_a", "output_1"],
         }
     )
 

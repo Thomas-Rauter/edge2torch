@@ -143,8 +143,8 @@ def test_wrapped_graphnn_model_supports_backward_pass():
 def test_graphnn_model_runs_on_cyclic_graph():
     edgelist = pd.DataFrame(
         {
-            "source": ["node_a", "node_b", "gene_1"],
-            "target": ["node_b", "node_a", "node_a"],
+            "source": ["gene_1", "node_a", "node_b", "node_b"],
+            "target": ["node_a", "node_b", "node_a", "output_1"],
         }
     )
 
@@ -154,7 +154,7 @@ def test_graphnn_model_runs_on_cyclic_graph():
     y = model(x)
 
     assert isinstance(y, torch.Tensor)
-    assert y.shape == (3, 0)
+    assert y.shape == (3, 1)
 
 
 def test_graphnn_model_uses_configured_number_of_steps():

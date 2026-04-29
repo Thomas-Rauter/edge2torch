@@ -313,7 +313,9 @@ class GraphNNExecutionPlan:
     output_node_names: list[str]
 
 
-def build_graphnn_execution_plan(graph) -> GraphNNExecutionPlan:
+def build_graphnn_execution_plan(
+    graph: KPNNGraph,
+) -> GraphNNExecutionPlan:
     """
     Build a graph neural network execution plan from a KPNN graph.
 
@@ -349,9 +351,9 @@ def build_graphnn_execution_plan(graph) -> GraphNNExecutionPlan:
     children: dict[str, list[str]] = {node: [] for node in node_names}
     parents: dict[str, list[str]] = {node: [] for node in node_names}
 
-    for _, row in original_edges.iterrows():
-        source = row["source"]
-        target = row["target"]
+    for row in original_edges.itertuples(index=False):
+        source = str(row.source)
+        target = str(row.target)
 
         if source not in children:
             raise KPNNError(f"Unknown source node '{source}' in graphnn graph.")
@@ -363,12 +365,26 @@ def build_graphnn_execution_plan(graph) -> GraphNNExecutionPlan:
         parents[target].append(source)
 
     input_node_names = sorted(
-        [node for node in node_names if len(parents[node]) == 0]
+        node for node in node_names if len(parents[node]) == 0
     )
 
     output_node_names = sorted(
-        [node for node in node_names if len(children[node]) == 0]
+        node for node in node_names if len(children[node]) == 0
     )
+
+    if not input_node_names:
+        raise KPNNError(
+            "GraphNN compilation requires at least one input node. "
+            "Cycles are allowed, but the graph must include at least one "
+            "node with no incoming edges."
+        )
+
+    if not output_node_names:
+        raise KPNNError(
+            "GraphNN compilation requires at least one output node. "
+            "Cycles are allowed, but the graph must include at least one "
+            "node with no outgoing edges."
+        )
 
     return GraphNNExecutionPlan(
         original_edges=original_edges,

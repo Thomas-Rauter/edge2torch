@@ -213,9 +213,9 @@ def _validate_feedforward_graph(
     in_degree: dict[str, int] = {node: 0 for node in node_names}
     children: dict[str, list[str]] = {node: [] for node in node_names}
 
-    for _, row in graph.edges.iterrows():
-        source = row["source"]
-        target = row["target"]
+    for row in graph.edges.itertuples(index=False):
+        source = str(row.source)
+        target = str(row.target)
 
         if source not in children:
             report.errors.append(
@@ -353,4 +353,53 @@ def _validate_graphnn_graph(
     if n_self_loops > 0:
         report.warnings.append(
             f"The graph contains {n_self_loops} self-loop edge(s)."
+        )
+
+    node_names = list(graph.nodes)
+
+    children: dict[str, list[str]] = {node: [] for node in node_names}
+    parents: dict[str, list[str]] = {node: [] for node in node_names}
+
+    for row in graph.edges.itertuples(index=False):
+        source = str(row.source)
+        target = str(row.target)
+
+        if source not in children:
+            report.errors.append(
+                f"Unknown source node '{source}' in graphnn graph."
+            )
+            continue
+
+        if target not in parents:
+            report.errors.append(
+                f"Unknown target node '{target}' in graphnn graph."
+            )
+            continue
+
+        children[source].append(target)
+        parents[target].append(source)
+
+    if report.has_errors:
+        return
+
+    input_node_names = sorted(
+        node for node in node_names if len(parents[node]) == 0
+    )
+
+    output_node_names = sorted(
+        node for node in node_names if len(children[node]) == 0
+    )
+
+    if not input_node_names:
+        report.errors.append(
+            "GraphNN compilation requires at least one input node. "
+            "Cycles are allowed, but the graph must include at least one "
+            "node with no incoming edges."
+        )
+
+    if not output_node_names:
+        report.errors.append(
+            "GraphNN compilation requires at least one output node. "
+            "Cycles are allowed, but the graph must include at least one "
+            "node with no outgoing edges."
         )
