@@ -774,3 +774,216 @@ def test_interpret_model_rejects_return_convergence_delta():
             quiet=True,
             attribute_kwargs={"return_convergence_delta": True},
         )
+
+
+@pytest.mark.parametrize(
+    "method",
+    [
+        "integrated_gradients",
+        "saliency",
+        "input_x_gradient",
+        "feature_ablation",
+        "feature_permutation",
+        "shapley_value_sampling",
+        "shapley_values",
+    ],
+)
+def test_interpret_model_supports_basic_feature_methods(method):
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2"],
+            "target": ["pathway_1", "pathway_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist, quiet=True)
+
+    data = pd.DataFrame(
+        {
+            "gene_1": [0.1, 0.2],
+            "gene_2": [1.0, 1.1],
+        },
+        index=["cell_1", "cell_2"],
+    )
+
+    result = interpret_model(
+        model=model,
+        artifact=artifact,
+        data=data,
+        target="features",
+        method=method,
+        quiet=True,
+    )
+
+    assert isinstance(result, pd.DataFrame)
+    assert result.shape == (2, 2)
+    assert list(result.index) == ["cell_1", "cell_2"]
+    assert list(result.columns) == ["gene_1", "gene_2"]
+
+
+def test_interpret_model_supports_gradient_shap_with_attribute_kwargs():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2"],
+            "target": ["pathway_1", "pathway_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist, quiet=True)
+
+    data = pd.DataFrame(
+        {
+            "gene_1": [0.1, 0.2],
+            "gene_2": [1.0, 1.1],
+        },
+        index=["cell_1", "cell_2"],
+    )
+
+    baselines = torch.zeros(2, 2)
+
+    result = interpret_model(
+        model=model,
+        artifact=artifact,
+        data=data,
+        target="features",
+        method="gradient_shap",
+        quiet=True,
+        attribute_kwargs={
+            "baselines": baselines,
+            "n_samples": 2,
+            "stdevs": 0.0,
+        },
+    )
+
+    assert isinstance(result, pd.DataFrame)
+    assert result.shape == (2, 2)
+    assert list(result.index) == ["cell_1", "cell_2"]
+    assert list(result.columns) == ["gene_1", "gene_2"]
+
+
+def test_interpret_model_supports_occlusion_with_attribute_kwargs():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2"],
+            "target": ["pathway_1", "pathway_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist, quiet=True)
+
+    data = pd.DataFrame(
+        {
+            "gene_1": [0.1, 0.2],
+            "gene_2": [1.0, 1.1],
+        },
+        index=["cell_1", "cell_2"],
+    )
+
+    result = interpret_model(
+        model=model,
+        artifact=artifact,
+        data=data,
+        target="features",
+        method="occlusion",
+        quiet=True,
+        attribute_kwargs={
+            "sliding_window_shapes": (1,),
+        },
+    )
+
+    assert isinstance(result, pd.DataFrame)
+    assert result.shape == (2, 2)
+    assert list(result.index) == ["cell_1", "cell_2"]
+    assert list(result.columns) == ["gene_1", "gene_2"]
+
+
+def test_interpret_model_rejects_constructor_kwargs_for_saliency():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2"],
+            "target": ["pathway_1", "pathway_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist, quiet=True)
+
+    data = pd.DataFrame(
+        {
+            "gene_1": [0.1, 0.2],
+            "gene_2": [1.0, 1.1],
+        }
+    )
+
+    with pytest.raises(KPNNError, match="does not support constructor_kwargs"):
+        interpret_model(
+            model=model,
+            artifact=artifact,
+            data=data,
+            target="features",
+            method="saliency",
+            quiet=True,
+            constructor_kwargs={"multiply_by_inputs": True},
+        )
+
+
+def test_interpret_model_accepts_constructor_kwargs_for_integrated_gradients():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2"],
+            "target": ["pathway_1", "pathway_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist, quiet=True)
+
+    data = pd.DataFrame(
+        {
+            "gene_1": [0.1, 0.2],
+            "gene_2": [1.0, 1.1],
+        },
+        index=["cell_1", "cell_2"],
+    )
+
+    result = interpret_model(
+        model=model,
+        artifact=artifact,
+        data=data,
+        target="features",
+        method="integrated_gradients",
+        quiet=True,
+        constructor_kwargs={"multiply_by_inputs": True},
+        attribute_kwargs={"n_steps": 4},
+    )
+
+    assert isinstance(result, pd.DataFrame)
+    assert result.shape == (2, 2)
+    assert list(result.index) == ["cell_1", "cell_2"]
+    assert list(result.columns) == ["gene_1", "gene_2"]
+
+
+def test_interpret_model_rejects_unknown_feature_method():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2"],
+            "target": ["pathway_1", "pathway_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist, quiet=True)
+
+    data = pd.DataFrame(
+        {
+            "gene_1": [0.1, 0.2],
+            "gene_2": [1.0, 1.1],
+        }
+    )
+
+    with pytest.raises(KPNNError, match="Unsupported method"):
+        interpret_model(
+            model=model,
+            artifact=artifact,
+            data=data,
+            target="features",
+            method="not_a_captum_method",
+            quiet=True,
+        )

@@ -19,11 +19,14 @@ from typing import Any, cast
 
 import pandas as pd
 import torch
-from captum.attr import IntegratedGradients
 from torch import nn
 
 from ..compile.artifact import KPNNArtifact
 from ..utils.errors import KPNNError
+from .method_registry import (
+    FEATURE_INTERPRETERS_WITH_CONSTRUCTOR_KWARGS,
+    FEATURE_INTERPRETERS_WITHOUT_CONSTRUCTOR_KWARGS,
+)
 
 # Level 2 functions (called by level 1 functions) ------------------------------
 
@@ -66,6 +69,8 @@ def run_feature_attribution(
         **attribute_kwargs,
     )
 
+    attributions = _normalize_feature_attributions(attributions)
+
     _validate_feature_attributions(
         attributions=attributions,
         sample_names=sample_names,
@@ -90,15 +95,40 @@ def _build_feature_interpreter(
     """
     Build a Captum interpreter for feature-level attribution.
     """
-    if method == "integrated_gradients":
-        return IntegratedGradients(
+    if method in FEATURE_INTERPRETERS_WITH_CONSTRUCTOR_KWARGS:
+        interpreter_class = FEATURE_INTERPRETERS_WITH_CONSTRUCTOR_KWARGS[method]
+        return interpreter_class(
             model,
             **constructor_kwargs,
         )
 
+    if method in FEATURE_INTERPRETERS_WITHOUT_CONSTRUCTOR_KWARGS:
+        interpreter_class = FEATURE_INTERPRETERS_WITHOUT_CONSTRUCTOR_KWARGS[
+            method
+        ]
+        return interpreter_class(model)
+
     raise KPNNError(
         f"Method '{method}' is not supported for target='features'."
     )
+
+
+def _normalize_feature_attributions(
+    attributions: torch.Tensor,
+) -> torch.Tensor:
+    """
+    Normalize supported Captum feature-attribution output shapes.
+
+    Most feature-attribution methods return shape
+    ``(n_examples, n_features)``. Some methods may return
+    ``(n_examples, 1, n_features)`` for single-output models; this singleton
+    output dimension is removed so the result can be represented as one
+    feature-attribution DataFrame.
+    """
+    if attributions.ndim == 3 and attributions.shape[1] == 1:
+        return attributions.squeeze(1)
+
+    return attributions
 
 
 def _validate_feature_attributions(

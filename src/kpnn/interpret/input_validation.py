@@ -27,6 +27,12 @@ except ImportError:
 import torch
 
 from ..utils.errors import KPNNError
+from .method_registry import (
+    FEATURE_INTERPRETERS_WITHOUT_CONSTRUCTOR_KWARGS,
+    FEATURE_METHODS,
+    NODE_METHODS,
+    SUPPORTED_METHODS,
+)
 
 # Level 1 functions (called by API functions) ----------------------------------
 
@@ -103,25 +109,13 @@ def _validate_interpret_options(
     """
     Validate interpretation target, method, verbosity, and Captum kwargs.
     """
-    supported_targets = {"nodes", "features"}
-    supported_methods = {
-        "integrated_gradients",
-        "layer_conductance",
-        "layer_integrated_gradients",
-    }
-
-    feature_methods = {"integrated_gradients"}
-    node_methods = {
-        "layer_conductance",
-        "layer_integrated_gradients",
-    }
-
     if not isinstance(quiet, bool):
         raise KPNNError("'quiet' must be a boolean value (True or False).")
 
     if not isinstance(target, str):
         raise KPNNError("'target' must be a string.")
 
+    supported_targets = {"nodes", "features"}
     if target not in supported_targets:
         supported = ", ".join(sorted(supported_targets))
         raise KPNNError(
@@ -131,18 +125,18 @@ def _validate_interpret_options(
     if not isinstance(method, str):
         raise KPNNError("'method' must be a string.")
 
-    if method not in supported_methods:
-        supported = ", ".join(sorted(supported_methods))
+    if method not in SUPPORTED_METHODS:
+        supported = ", ".join(sorted(SUPPORTED_METHODS))
         raise KPNNError(
             f"Unsupported method '{method}'. Expected one of: {supported}."
         )
 
-    if target == "features" and method not in feature_methods:
+    if target == "features" and method not in FEATURE_METHODS:
         raise KPNNError(
             f"Method '{method}' is not compatible with target='features'."
         )
 
-    if target == "nodes" and method not in node_methods:
+    if target == "nodes" and method not in NODE_METHODS:
         raise KPNNError(
             f"Method '{method}' is not compatible with target='nodes'."
         )
@@ -152,6 +146,16 @@ def _validate_interpret_options(
         dict,
     ):
         raise KPNNError("'constructor_kwargs' must be a dictionary or None.")
+
+    if (
+        target == "features"
+        and method in FEATURE_INTERPRETERS_WITHOUT_CONSTRUCTOR_KWARGS
+        and constructor_kwargs
+    ):
+        raise KPNNError(
+            f"Method '{method}' does not support constructor_kwargs. "
+            "Pass method-specific attribution options via attribute_kwargs."
+        )
 
     if attribute_kwargs is not None and not isinstance(attribute_kwargs, dict):
         raise KPNNError("'attribute_kwargs' must be a dictionary or None.")
