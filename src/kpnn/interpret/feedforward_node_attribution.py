@@ -17,6 +17,7 @@ or plotting.
 
 from collections.abc import Callable
 from typing import Any, cast
+
 import pandas as pd
 import torch
 from captum.attr import LayerConductance, LayerIntegratedGradients
@@ -26,6 +27,8 @@ from ..compile.artifact import KPNNArtifact
 from ..utils.constants import INTERNAL_NODE_PREFIX
 from ..utils.errors import KPNNError
 
+# Level 3 functions (called by level 2 functions) ------------------------------
+
 
 def run_feedforward_node_attribution(
     model: nn.Module,
@@ -33,6 +36,8 @@ def run_feedforward_node_attribution(
     inputs: torch.Tensor,
     sample_names: list[str],
     method: str,
+    constructor_kwargs: dict[str, Any],
+    attribute_kwargs: dict[str, Any],
 ) -> dict[str, pd.DataFrame]:
     """
     Run feedforward node-level attribution and return one DataFrame per layer.
@@ -59,10 +64,14 @@ def run_feedforward_node_attribution(
             method=method,
             model=model,
             layer_block=layer_block,
+            constructor_kwargs=constructor_kwargs,
         )
 
         interpreter = cast(Any, interpreter)
-        attributions = interpreter.attribute(inputs)
+        attributions = interpreter.attribute(
+            inputs,
+            **attribute_kwargs,
+        )
 
         _validate_node_attributions(
             attributions=attributions,
@@ -89,19 +98,31 @@ def run_feedforward_node_attribution(
     return results
 
 
+# Level 4 functions (called by level 3 functions) ------------------------------
+
+
 def _build_feedforward_layer_interpreter(
     method: str,
     model: nn.Module,
     layer_block: nn.Module,
+    constructor_kwargs: dict[str, Any],
 ):
     """
     Build a Captum interpreter for feedforward layer-level attribution.
     """
     if method == "layer_conductance":
-        return LayerConductance(model, layer_block)
+        return LayerConductance(
+            model,
+            layer_block,
+            **constructor_kwargs,
+        )
 
     if method == "layer_integrated_gradients":
-        return LayerIntegratedGradients(model, layer_block)
+        return LayerIntegratedGradients(
+            model,
+            layer_block,
+            **constructor_kwargs,
+        )
 
     raise KPNNError(f"Method '{method}' is not supported for target='nodes'.")
 

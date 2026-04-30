@@ -28,6 +28,8 @@ import torch
 
 from ..utils.errors import KPNNError
 
+# Level 1 functions (called by API functions) ----------------------------------
+
 
 def validate_interpret_model_inputs(
     model,
@@ -35,6 +37,8 @@ def validate_interpret_model_inputs(
     data,
     target,
     method,
+    constructor_kwargs,
+    attribute_kwargs,
     quiet,
 ) -> None:
     """
@@ -52,6 +56,11 @@ def validate_interpret_model_inputs(
         Interpretation target.
     method
         Captum attribution method.
+    constructor_kwargs
+        Optional keyword arguments passed to the Captum attribution class
+        constructor.
+    attribute_kwargs
+        Optional keyword arguments passed to the Captum ``attribute()`` call.
     quiet
         Whether informational notes should be suppressed.
 
@@ -60,16 +69,45 @@ def validate_interpret_model_inputs(
     KPNNError
         If any input is invalid.
     """
+    _validate_interpret_options(
+        target=target,
+        method=method,
+        quiet=quiet,
+        constructor_kwargs=constructor_kwargs,
+        attribute_kwargs=attribute_kwargs,
+    )
+
+    _validate_interpret_model(model=model)
+
+    _validate_interpret_artifact(
+        artifact=artifact,
+        target=target,
+    )
+
+    _validate_interpret_data(
+        data=data,
+        feature_names=list(artifact.feature_names),
+    )
+
+
+# Level 2 functions (called by level 1 functions) ------------------------------
+
+
+def _validate_interpret_options(
+    target,
+    method,
+    quiet,
+    constructor_kwargs,
+    attribute_kwargs,
+) -> None:
+    """
+    Validate interpretation target, method, verbosity, and Captum kwargs.
+    """
     supported_targets = {"nodes", "features"}
     supported_methods = {
         "integrated_gradients",
         "layer_conductance",
         "layer_integrated_gradients",
-    }
-    supported_backends = {
-        "feedforward",
-        "recurrent",
-        "graphnn",
     }
 
     feature_methods = {"integrated_gradients"}
@@ -109,10 +147,48 @@ def validate_interpret_model_inputs(
             f"Method '{method}' is not compatible with target='nodes'."
         )
 
+    if constructor_kwargs is not None and not isinstance(
+        constructor_kwargs,
+        dict,
+    ):
+        raise KPNNError("'constructor_kwargs' must be a dictionary or None.")
+
+    if attribute_kwargs is not None and not isinstance(attribute_kwargs, dict):
+        raise KPNNError("'attribute_kwargs' must be a dictionary or None.")
+
+    if (
+        isinstance(attribute_kwargs, dict)
+        and attribute_kwargs.get("return_convergence_delta") is True
+    ):
+        raise KPNNError(
+            "'return_convergence_delta=True' is not currently supported "
+            "because kpnn expects Captum attribution methods to return "
+            "attribution tensors."
+        )
+
+
+def _validate_interpret_model(model) -> None:
+    """
+    Validate the model object.
+    """
     if not hasattr(model, "forward"):
         raise KPNNError(
             "'model' must be a PyTorch model with a forward method."
         )
+
+
+def _validate_interpret_artifact(
+    artifact,
+    target,
+) -> None:
+    """
+    Validate the compilation artifact and backend compatibility.
+    """
+    supported_backends = {
+        "feedforward",
+        "recurrent",
+        "graphnn",
+    }
 
     required_artifact_attrs = {
         "backend",
@@ -168,6 +244,14 @@ def validate_interpret_model_inputs(
             "node interpretation."
         )
 
+
+def _validate_interpret_data(
+    data,
+    feature_names: list[str],
+) -> None:
+    """
+    Validate interpretation input data against expected feature names.
+    """
     is_supported_data = isinstance(data, (pd.DataFrame, torch.Tensor))
 
     if ad is not None:
@@ -185,75 +269,122 @@ def validate_interpret_model_inputs(
             "or torch.Tensor."
         )
 
-    feature_names = list(artifact.feature_names)
     required_features = set(feature_names)
     expected_n_features = len(feature_names)
 
     if isinstance(data, pd.DataFrame):
-        if data.columns.duplicated().any():
-            raise KPNNError(
-                "'data' DataFrame must not contain duplicate column names."
-            )
+        _validate_interpret_dataframe(
+            data=data,
+            feature_names=feature_names,
+            required_features=required_features,
+        )
+        return
 
-        data_features = set(data.columns)
+    if ad is not None and isinstance(data, ad.AnnData):
+        _validate_interpret_anndata(
+            data=data,
+            required_features=required_features,
+        )
+        return
 
-        missing_columns = required_features.difference(data_features)
-        if missing_columns:
-            missing_str = ", ".join(sorted(missing_columns))
-            raise KPNNError(
-                f"'data' is missing required feature column(s): {missing_str}."
-            )
+    if isinstance(data, torch.Tensor):
+        _validate_interpret_tensor(
+            data=data,
+            expected_n_features=expected_n_features,
+        )
+        return
 
-        extra_columns = data_features.difference(required_features)
-        if extra_columns:
-            extra_str = ", ".join(sorted(extra_columns))
-            raise KPNNError(
-                "'data' contains feature column(s) that are not input nodes "
-                f"in the compiled model: {extra_str}."
-            )
+    raise KPNNError("Unsupported interpretation input type.")
 
-        non_numeric_columns = [
-            name
-            for name in feature_names
-            if not pd.api.types.is_numeric_dtype(data[name])
-        ]
 
-        if non_numeric_columns:
-            non_numeric_str = ", ".join(sorted(non_numeric_columns))
-            raise KPNNError(
-                f"'data' contains non-numeric feature column(s): "
-                f"{non_numeric_str}."
-            )
+# Level 3 functions (called by level 2 functions) ------------------------------
 
-    elif ad is not None and isinstance(data, ad.AnnData):
-        var_names = list(data.var_names)
 
-        if len(set(var_names)) != len(var_names):
-            raise KPNNError("'data.var_names' must not contain duplicates.")
+def _validate_interpret_dataframe(
+    data: pd.DataFrame,
+    feature_names: list[str],
+    required_features: set[str],
+) -> None:
+    """
+    Validate DataFrame interpretation input.
+    """
+    if data.columns.duplicated().any():
+        raise KPNNError(
+            "'data' DataFrame must not contain duplicate column names."
+        )
 
-        data_features = set(var_names)
+    data_features = set(data.columns)
 
-        missing_vars = required_features.difference(data_features)
-        if missing_vars:
-            missing_str = ", ".join(sorted(missing_vars))
-            raise KPNNError(
-                f"'data' is missing required variable name(s): {missing_str}."
-            )
+    missing_columns = required_features.difference(data_features)
+    if missing_columns:
+        missing_str = ", ".join(sorted(missing_columns))
+        raise KPNNError(
+            f"'data' is missing required feature column(s): {missing_str}."
+        )
 
-        extra_vars = data_features.difference(required_features)
-        if extra_vars:
-            extra_str = ", ".join(sorted(extra_vars))
-            raise KPNNError(
-                "'data' contains variable name(s) that are not input nodes "
-                f"in the compiled model: {extra_str}."
-            )
+    extra_columns = data_features.difference(required_features)
+    if extra_columns:
+        extra_str = ", ".join(sorted(extra_columns))
+        raise KPNNError(
+            "'data' contains feature column(s) that are not input nodes "
+            f"in the compiled model: {extra_str}."
+        )
 
-    elif isinstance(data, torch.Tensor):
-        if data.ndim != 2:
-            raise KPNNError("'data' tensor must be 2-dimensional.")
+    non_numeric_columns = [
+        name
+        for name in feature_names
+        if not pd.api.types.is_numeric_dtype(data[name])
+    ]
 
-        if data.shape[1] != expected_n_features:
-            raise KPNNError(
-                "'data' tensor has the wrong number of features. "
-                f"Expected {expected_n_features}, got {data.shape[1]}."
-            )
+    if non_numeric_columns:
+        non_numeric_str = ", ".join(sorted(non_numeric_columns))
+        raise KPNNError(
+            f"'data' contains non-numeric feature column(s): {non_numeric_str}."
+        )
+
+
+def _validate_interpret_anndata(
+    data,
+    required_features: set[str],
+) -> None:
+    """
+    Validate AnnData interpretation input.
+    """
+    var_names = list(data.var_names)
+
+    if len(set(var_names)) != len(var_names):
+        raise KPNNError("'data.var_names' must not contain duplicates.")
+
+    data_features = set(var_names)
+
+    missing_vars = required_features.difference(data_features)
+    if missing_vars:
+        missing_str = ", ".join(sorted(missing_vars))
+        raise KPNNError(
+            f"'data' is missing required variable name(s): {missing_str}."
+        )
+
+    extra_vars = data_features.difference(required_features)
+    if extra_vars:
+        extra_str = ", ".join(sorted(extra_vars))
+        raise KPNNError(
+            "'data' contains variable name(s) that are not input nodes "
+            f"in the compiled model: {extra_str}."
+        )
+
+
+def _validate_interpret_tensor(
+    data: torch.Tensor,
+    expected_n_features: int,
+) -> None:
+    """
+    Validate tensor interpretation input.
+    """
+    if data.ndim != 2:
+        raise KPNNError("'data' tensor must be 2-dimensional.")
+
+    if data.shape[1] != expected_n_features:
+        raise KPNNError(
+            "'data' tensor has the wrong number of features. "
+            f"Expected {expected_n_features}, got {data.shape[1]}."
+        )

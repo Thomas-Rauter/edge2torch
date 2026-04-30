@@ -15,6 +15,8 @@ Captum attribution and map outputs back to feature names. It should not handle
 public API validation, graph compilation, input preparation, or plotting.
 """
 
+from typing import Any, cast
+
 import pandas as pd
 import torch
 from captum.attr import IntegratedGradients
@@ -22,6 +24,8 @@ from torch import nn
 
 from ..compile.artifact import KPNNArtifact
 from ..utils.errors import KPNNError
+
+# Level 2 functions (called by level 1 functions) ------------------------------
 
 
 def run_feature_attribution(
@@ -31,6 +35,8 @@ def run_feature_attribution(
     sample_names: list[str],
     feature_names: list[str],
     method: str,
+    constructor_kwargs: dict[str, Any],
+    attribute_kwargs: dict[str, Any],
 ) -> pd.DataFrame:
     """
     Run feature-level attribution and return one DataFrame.
@@ -51,9 +57,14 @@ def run_feature_attribution(
     interpreter = _build_feature_interpreter(
         method=method,
         model=model,
+        constructor_kwargs=constructor_kwargs,
     )
 
-    attributions = interpreter.attribute(inputs)
+    interpreter = cast(Any, interpreter)
+    attributions = interpreter.attribute(
+        inputs,
+        **attribute_kwargs,
+    )
 
     _validate_feature_attributions(
         attributions=attributions,
@@ -68,15 +79,22 @@ def run_feature_attribution(
     )
 
 
+# Level 3 functions (called by level 2 functions) ------------------------------
+
+
 def _build_feature_interpreter(
     method: str,
     model: nn.Module,
+    constructor_kwargs: dict[str, Any],
 ):
     """
     Build a Captum interpreter for feature-level attribution.
     """
     if method == "integrated_gradients":
-        return IntegratedGradients(model)
+        return IntegratedGradients(
+            model,
+            **constructor_kwargs,
+        )
 
     raise KPNNError(
         f"Method '{method}' is not supported for target='features'."

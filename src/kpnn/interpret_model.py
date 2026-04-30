@@ -17,6 +17,8 @@ def interpret_model(
     data: Any,
     target: str = "nodes",
     method: str = "layer_conductance",
+    constructor_kwargs: dict[str, Any] | None = None,
+    attribute_kwargs: dict[str, Any] | None = None,
     quiet: bool = False,
 ) -> Union[pd.DataFrame, dict[str, pd.DataFrame]]:
     """
@@ -35,6 +37,14 @@ def interpret_model(
     method : str, default="layer_conductance"
         Attribution method. Must be compatible with ``target`` and the
         compiled backend.
+    constructor_kwargs : dict[str, Any] | None, default=None
+        Optional keyword arguments passed directly to the selected Captum
+        attribution class constructor. These arguments are method-specific and
+        are not interpreted by kpnn.
+    attribute_kwargs : dict[str, Any] | None, default=None
+        Optional keyword arguments passed directly to the selected Captum
+        method's ``attribute()`` call. These arguments are method-specific and
+        are not interpreted by kpnn.
     quiet : bool, default=False
         If False, emit informational notes. If True, suppress notes and
         only surface warnings and errors.
@@ -60,8 +70,9 @@ def interpret_model(
     Raises
     ------
     KPNNError
-        If interpretation input validation fails or the requested
-        target / method / backend combination is not supported.
+        If interpretation input validation fails, the requested
+        target / method / backend combination is not supported, or Captum
+        returns unsupported output.
     """
     validate_interpret_model_inputs(
         model=model,
@@ -69,7 +80,16 @@ def interpret_model(
         data=data,
         target=target,
         method=method,
+        constructor_kwargs=constructor_kwargs,
+        attribute_kwargs=attribute_kwargs,
         quiet=quiet,
+    )
+
+    constructor_kwargs = (
+        {} if constructor_kwargs is None else dict(constructor_kwargs)
+    )
+    attribute_kwargs = (
+        {} if attribute_kwargs is None else dict(attribute_kwargs)
     )
 
     prepared_input = prepare_interpretation_input(
@@ -85,6 +105,8 @@ def interpret_model(
         feature_names=prepared_input.feature_names,
         target=target,
         method=method,
+        constructor_kwargs=constructor_kwargs,
+        attribute_kwargs=attribute_kwargs,
     )
 
     if not quiet:

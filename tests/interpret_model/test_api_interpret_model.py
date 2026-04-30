@@ -583,3 +583,194 @@ def test_interpret_model_raises_for_node_target_with_graphnn_backend():
             target="nodes",
             method="layer_conductance",
         )
+
+
+def test_interpret_model_accepts_feature_constructor_kwargs():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2"],
+            "target": ["pathway_1", "pathway_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist, quiet=True)
+
+    data = pd.DataFrame(
+        {
+            "gene_1": [0.1, 0.2],
+            "gene_2": [1.0, 1.1],
+        },
+        index=["cell_1", "cell_2"],
+    )
+
+    result = interpret_model(
+        model=model,
+        artifact=artifact,
+        data=data,
+        target="features",
+        method="integrated_gradients",
+        quiet=True,
+        constructor_kwargs={"multiply_by_inputs": True},
+    )
+
+    assert isinstance(result, pd.DataFrame)
+    assert result.shape == (2, 2)
+    assert list(result.index) == ["cell_1", "cell_2"]
+    assert list(result.columns) == ["gene_1", "gene_2"]
+
+
+def test_interpret_model_accepts_feature_attribute_kwargs():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2"],
+            "target": ["pathway_1", "pathway_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist, quiet=True)
+
+    data = pd.DataFrame(
+        {
+            "gene_1": [0.1, 0.2],
+            "gene_2": [1.0, 1.1],
+        },
+        index=["cell_1", "cell_2"],
+    )
+
+    result = interpret_model(
+        model=model,
+        artifact=artifact,
+        data=data,
+        target="features",
+        method="integrated_gradients",
+        quiet=True,
+        attribute_kwargs={"n_steps": 4},
+    )
+
+    assert isinstance(result, pd.DataFrame)
+    assert result.shape == (2, 2)
+    assert list(result.index) == ["cell_1", "cell_2"]
+    assert list(result.columns) == ["gene_1", "gene_2"]
+
+
+def test_interpret_model_accepts_node_attribute_kwargs():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2"],
+            "target": ["pathway_1", "pathway_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist, quiet=True)
+
+    data = pd.DataFrame(
+        {
+            "gene_1": [0.1, 0.2],
+            "gene_2": [1.0, 1.1],
+        },
+        index=["cell_1", "cell_2"],
+    )
+
+    result = interpret_model(
+        model=model,
+        artifact=artifact,
+        data=data,
+        target="nodes",
+        method="layer_integrated_gradients",
+        quiet=True,
+        attribute_kwargs={"n_steps": 4},
+    )
+
+    assert isinstance(result, dict)
+    assert "layer_1" in result
+    assert isinstance(result["layer_1"], pd.DataFrame)
+    assert result["layer_1"].shape == (2, 1)
+    assert list(result["layer_1"].index) == ["cell_1", "cell_2"]
+    assert list(result["layer_1"].columns) == ["pathway_1"]
+
+
+def test_interpret_model_rejects_invalid_constructor_kwargs():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2"],
+            "target": ["pathway_1", "pathway_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist, quiet=True)
+
+    data = pd.DataFrame(
+        {
+            "gene_1": [0.1, 0.2],
+            "gene_2": [1.0, 1.1],
+        }
+    )
+
+    with pytest.raises(KPNNError, match="constructor_kwargs"):
+        interpret_model(
+            model=model,
+            artifact=artifact,
+            data=data,
+            target="features",
+            method="integrated_gradients",
+            quiet=True,
+            constructor_kwargs=["not", "a", "dict"],
+        )
+
+
+def test_interpret_model_rejects_invalid_attribute_kwargs():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2"],
+            "target": ["pathway_1", "pathway_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist, quiet=True)
+
+    data = pd.DataFrame(
+        {
+            "gene_1": [0.1, 0.2],
+            "gene_2": [1.0, 1.1],
+        }
+    )
+
+    with pytest.raises(KPNNError, match="attribute_kwargs"):
+        interpret_model(
+            model=model,
+            artifact=artifact,
+            data=data,
+            target="features",
+            method="integrated_gradients",
+            quiet=True,
+            attribute_kwargs=["not", "a", "dict"],
+        )
+
+
+def test_interpret_model_rejects_return_convergence_delta():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2"],
+            "target": ["pathway_1", "pathway_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist, quiet=True)
+
+    data = pd.DataFrame(
+        {
+            "gene_1": [0.1, 0.2],
+            "gene_2": [1.0, 1.1],
+        }
+    )
+
+    with pytest.raises(KPNNError, match="return_convergence_delta=True"):
+        interpret_model(
+            model=model,
+            artifact=artifact,
+            data=data,
+            target="features",
+            method="integrated_gradients",
+            quiet=True,
+            attribute_kwargs={"return_convergence_delta": True},
+        )

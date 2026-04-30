@@ -16,7 +16,7 @@ method-specific attribution logic, graph compilation, input preparation, or
 plotting logic.
 """
 
-from typing import Union
+from typing import Any, Union
 
 import pandas as pd
 import torch
@@ -27,6 +27,8 @@ from ..utils.errors import KPNNError
 from .feature_attribution import run_feature_attribution
 from .feedforward_node_attribution import run_feedforward_node_attribution
 
+# Level 1 functions (called by API functions) ----------------------------------
+
 
 def run_captum_interpretation(
     model: nn.Module,
@@ -36,6 +38,8 @@ def run_captum_interpretation(
     feature_names: list[str],
     target: str,
     method: str,
+    constructor_kwargs: dict[str, Any],
+    attribute_kwargs: dict[str, Any],
 ) -> Union[pd.DataFrame, dict[str, pd.DataFrame]]:
     """
     Run a Captum interpretation and map results back to named entities.
@@ -56,6 +60,11 @@ def run_captum_interpretation(
         Interpretation target. One of: ``"features"``, ``"nodes"``.
     method
         Captum attribution method compatible with ``target``.
+    constructor_kwargs
+        Keyword arguments passed to the selected Captum attribution class
+        constructor.
+    attribute_kwargs
+        Keyword arguments passed to the selected Captum ``attribute()`` call.
 
     Returns
     -------
@@ -75,6 +84,8 @@ def run_captum_interpretation(
             sample_names=sample_names,
             feature_names=feature_names,
             method=method,
+            constructor_kwargs=constructor_kwargs,
+            attribute_kwargs=attribute_kwargs,
         )
 
     if target == "nodes":
@@ -84,9 +95,14 @@ def run_captum_interpretation(
             inputs=inputs,
             sample_names=sample_names,
             method=method,
+            constructor_kwargs=constructor_kwargs,
+            attribute_kwargs=attribute_kwargs,
         )
 
     raise KPNNError(f"Unsupported interpretation target '{target}'.")
+
+
+# Level 2 functions (called by level 1 functions) ------------------------------
 
 
 def _run_node_interpretation(
@@ -95,6 +111,8 @@ def _run_node_interpretation(
     inputs: torch.Tensor,
     sample_names: list[str],
     method: str,
+    constructor_kwargs: dict[str, Any],
+    attribute_kwargs: dict[str, Any],
 ) -> dict[str, pd.DataFrame]:
     """
     Dispatch node-level interpretation by backend.
@@ -108,6 +126,8 @@ def _run_node_interpretation(
             inputs=inputs,
             sample_names=sample_names,
             method=method,
+            constructor_kwargs=constructor_kwargs,
+            attribute_kwargs=attribute_kwargs,
         )
 
     if backend == "recurrent":
