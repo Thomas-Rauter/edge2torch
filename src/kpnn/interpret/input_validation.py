@@ -19,18 +19,20 @@ standardization, or public API orchestration.
 """
 
 import pandas as pd
+import torch
+from torch import nn
 
 try:
     import anndata as ad
 except ImportError:
     ad = None
-import torch
 
 from ..utils.errors import KPNNError
 from .method_registry import (
     FEATURE_INTERPRETERS_WITHOUT_CONSTRUCTOR_KWARGS,
     FEATURE_METHODS,
-    NODE_METHODS,
+    FEEDFORWARD_NODE_INTERPRETERS_WITHOUT_CONSTRUCTOR_KWARGS,
+    FEEDFORWARD_NODE_METHODS,
     SUPPORTED_METHODS,
 )
 
@@ -136,7 +138,7 @@ def _validate_interpret_options(
             f"Method '{method}' is not compatible with target='features'."
         )
 
-    if target == "nodes" and method not in NODE_METHODS:
+    if target == "nodes" and method not in FEEDFORWARD_NODE_METHODS:
         raise KPNNError(
             f"Method '{method}' is not compatible with target='nodes'."
         )
@@ -150,6 +152,16 @@ def _validate_interpret_options(
     if (
         target == "features"
         and method in FEATURE_INTERPRETERS_WITHOUT_CONSTRUCTOR_KWARGS
+        and constructor_kwargs
+    ):
+        raise KPNNError(
+            f"Method '{method}' does not support constructor_kwargs. "
+            "Pass method-specific attribution options via attribute_kwargs."
+        )
+
+    if (
+        target == "nodes"
+        and method in FEEDFORWARD_NODE_INTERPRETERS_WITHOUT_CONSTRUCTOR_KWARGS
         and constructor_kwargs
     ):
         raise KPNNError(
@@ -175,6 +187,9 @@ def _validate_interpret_model(model) -> None:
     """
     Validate the model object.
     """
+    if not isinstance(model, nn.Module):
+        raise KPNNError("'model' must be a torch.nn.Module.")
+
     if not hasattr(model, "forward"):
         raise KPNNError(
             "'model' must be a PyTorch model with a forward method."

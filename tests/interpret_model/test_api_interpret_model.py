@@ -987,3 +987,157 @@ def test_interpret_model_rejects_unknown_feature_method():
             method="not_a_captum_method",
             quiet=True,
         )
+
+
+@pytest.mark.parametrize(
+    "method",
+    [
+        "layer_conductance",
+        "layer_activation",
+        "layer_gradient_x_activation",
+        "layer_feature_ablation",
+        "layer_feature_permutation",
+        "layer_integrated_gradients",
+    ],
+)
+def test_interpret_model_supports_feedforward_node_methods(method):
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2"],
+            "target": ["pathway_1", "pathway_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist, quiet=True)
+
+    data = pd.DataFrame(
+        {
+            "gene_1": [0.1, 0.2],
+            "gene_2": [1.0, 1.1],
+        },
+        index=["cell_1", "cell_2"],
+    )
+
+    result = interpret_model(
+        model=model,
+        artifact=artifact,
+        data=data,
+        target="nodes",
+        method=method,
+        quiet=True,
+    )
+
+    assert isinstance(result, dict)
+    assert "layer_1" in result
+    assert isinstance(result["layer_1"], pd.DataFrame)
+    assert result["layer_1"].shape == (2, 1)
+    assert list(result["layer_1"].index) == ["cell_1", "cell_2"]
+    assert list(result["layer_1"].columns) == ["pathway_1"]
+
+
+def test_interpret_model_supports_layer_gradient_shap_with_attribute_kwargs():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2"],
+            "target": ["pathway_1", "pathway_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist, quiet=True)
+
+    data = pd.DataFrame(
+        {
+            "gene_1": [0.1, 0.2],
+            "gene_2": [1.0, 1.1],
+        },
+        index=["cell_1", "cell_2"],
+    )
+
+    baselines = torch.zeros(2, 2)
+
+    result = interpret_model(
+        model=model,
+        artifact=artifact,
+        data=data,
+        target="nodes",
+        method="layer_gradient_shap",
+        quiet=True,
+        attribute_kwargs={
+            "baselines": baselines,
+            "n_samples": 2,
+            "stdevs": 0.0,
+        },
+    )
+
+    assert isinstance(result, dict)
+    assert "layer_1" in result
+    assert isinstance(result["layer_1"], pd.DataFrame)
+    assert result["layer_1"].shape == (2, 1)
+    assert list(result["layer_1"].index) == ["cell_1", "cell_2"]
+    assert list(result["layer_1"].columns) == ["pathway_1"]
+
+
+def test_interpret_model_accepts_layer_ig_constructor_kwargs():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2"],
+            "target": ["pathway_1", "pathway_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist, quiet=True)
+
+    data = pd.DataFrame(
+        {
+            "gene_1": [0.1, 0.2],
+            "gene_2": [1.0, 1.1],
+        },
+        index=["cell_1", "cell_2"],
+    )
+
+    result = interpret_model(
+        model=model,
+        artifact=artifact,
+        data=data,
+        target="nodes",
+        method="layer_integrated_gradients",
+        quiet=True,
+        constructor_kwargs={"multiply_by_inputs": True},
+        attribute_kwargs={"n_steps": 4},
+    )
+
+    assert isinstance(result, dict)
+    assert "layer_1" in result
+    assert isinstance(result["layer_1"], pd.DataFrame)
+    assert result["layer_1"].shape == (2, 1)
+    assert list(result["layer_1"].index) == ["cell_1", "cell_2"]
+    assert list(result["layer_1"].columns) == ["pathway_1"]
+
+
+def test_interpret_model_rejects_constructor_kwargs_for_layer_activation():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2"],
+            "target": ["pathway_1", "pathway_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist, quiet=True)
+
+    data = pd.DataFrame(
+        {
+            "gene_1": [0.1, 0.2],
+            "gene_2": [1.0, 1.1],
+        }
+    )
+
+    with pytest.raises(KPNNError, match="does not support constructor_kwargs"):
+        interpret_model(
+            model=model,
+            artifact=artifact,
+            data=data,
+            target="nodes",
+            method="layer_activation",
+            quiet=True,
+            constructor_kwargs={"multiply_by_inputs": True},
+        )

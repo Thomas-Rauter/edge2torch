@@ -20,12 +20,15 @@ from typing import Any, cast
 
 import pandas as pd
 import torch
-from captum.attr import LayerConductance, LayerIntegratedGradients
 from torch import nn
 
 from ..compile.artifact import KPNNArtifact
 from ..utils.constants import INTERNAL_NODE_PREFIX
 from ..utils.errors import KPNNError
+from .method_registry import (
+    FEEDFORWARD_NODE_INTERPRETERS_WITH_CONSTRUCTOR_KWARGS,
+    FEEDFORWARD_NODE_INTERPRETERS_WITHOUT_CONSTRUCTOR_KWARGS,
+)
 
 # Level 3 functions (called by level 2 functions) ------------------------------
 
@@ -110,18 +113,23 @@ def _build_feedforward_layer_interpreter(
     """
     Build a Captum interpreter for feedforward layer-level attribution.
     """
-    if method == "layer_conductance":
-        return LayerConductance(
+    if method in FEEDFORWARD_NODE_INTERPRETERS_WITH_CONSTRUCTOR_KWARGS:
+        interpreter_class = (
+            FEEDFORWARD_NODE_INTERPRETERS_WITH_CONSTRUCTOR_KWARGS[method]
+        )
+        return interpreter_class(
             model,
             layer_block,
             **constructor_kwargs,
         )
 
-    if method == "layer_integrated_gradients":
-        return LayerIntegratedGradients(
+    if method in FEEDFORWARD_NODE_INTERPRETERS_WITHOUT_CONSTRUCTOR_KWARGS:
+        interpreter_class = (
+            FEEDFORWARD_NODE_INTERPRETERS_WITHOUT_CONSTRUCTOR_KWARGS[method]
+        )
+        return interpreter_class(
             model,
             layer_block,
-            **constructor_kwargs,
         )
 
     raise KPNNError(f"Method '{method}' is not supported for target='nodes'.")

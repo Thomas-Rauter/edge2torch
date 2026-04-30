@@ -25,7 +25,18 @@ from captum.attr import (
     GuidedBackprop,
     InputXGradient,
     IntegratedGradients,
+    InternalInfluence,
     KernelShap,
+    LayerActivation,
+    LayerConductance,
+    LayerDeepLift,
+    LayerDeepLiftShap,
+    LayerFeatureAblation,
+    LayerFeaturePermutation,
+    LayerGradientShap,
+    LayerGradientXActivation,
+    LayerIntegratedGradients,
+    LayerLRP,
     Lime,
     Occlusion,
     Saliency,
@@ -59,9 +70,25 @@ FEATURE_METHODS = set(FEATURE_INTERPRETERS_WITH_CONSTRUCTOR_KWARGS) | set(
     FEATURE_INTERPRETERS_WITHOUT_CONSTRUCTOR_KWARGS
 )
 
-NODE_METHODS = {
-    "layer_conductance",
-    "layer_integrated_gradients",
+FEEDFORWARD_NODE_INTERPRETERS_WITH_CONSTRUCTOR_KWARGS = {
+    "layer_conductance": LayerConductance,
+    "internal_influence": InternalInfluence,
+    "layer_gradient_x_activation": LayerGradientXActivation,
+    "layer_deeplift": LayerDeepLift,
+    "layer_deeplift_shap": LayerDeepLiftShap,
+    "layer_gradient_shap": LayerGradientShap,
+    "layer_integrated_gradients": LayerIntegratedGradients,
 }
 
-SUPPORTED_METHODS = FEATURE_METHODS | NODE_METHODS
+FEEDFORWARD_NODE_INTERPRETERS_WITHOUT_CONSTRUCTOR_KWARGS = {
+    "layer_activation": LayerActivation,
+    "layer_feature_ablation": LayerFeatureAblation,
+    "layer_feature_permutation": LayerFeaturePermutation,
+    "layer_lrp": LayerLRP,
+}
+
+FEEDFORWARD_NODE_METHODS = set(
+    FEEDFORWARD_NODE_INTERPRETERS_WITH_CONSTRUCTOR_KWARGS
+) | set(FEEDFORWARD_NODE_INTERPRETERS_WITHOUT_CONSTRUCTOR_KWARGS)
+
+SUPPORTED_METHODS = FEATURE_METHODS | FEEDFORWARD_NODE_METHODS
