@@ -17,8 +17,9 @@ errors for unsupported or ambiguous usage. It should not contain PyTorch
 execution logic, model construction, or public API orchestration.
 """
 
-from torch import nn
 from typing import Any
+
+from torch import nn
 
 from ..utils.errors import KPNNError
 

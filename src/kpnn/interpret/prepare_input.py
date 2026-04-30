@@ -28,6 +28,7 @@ try:
 except ImportError:
     ad = None
 
+from ..compile.artifact import KPNNArtifact
 from ..utils.errors import KPNNError
 
 
@@ -44,7 +45,7 @@ class PreparedInterpretationInput:
 
 def prepare_interpretation_input(
     data,
-    artifact,
+    artifact: KPNNArtifact,
 ) -> PreparedInterpretationInput:
     """
     Convert interpretation input data into a standardized tensor form.
@@ -84,13 +85,6 @@ def prepare_interpretation_input(
 
     if ad is not None and isinstance(data, ad.AnnData):
         var_names = list(data.var_names)
-
-        missing_features = set(feature_names).difference(var_names)
-        if missing_features:
-            missing_str = ", ".join(sorted(missing_features))
-            raise KPNNError(
-                f"AnnData is missing required feature name(s): {missing_str}."
-            )
 
         order = [var_names.index(name) for name in feature_names]
         matrix = data.X[:, order]

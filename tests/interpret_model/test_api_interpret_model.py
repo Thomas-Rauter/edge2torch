@@ -451,7 +451,7 @@ def test_interpret_model_raises_for_missing_anndata_features():
     data.var_names = ["gene_1"]
     data.obs_names = ["cell_1", "cell_2"]
 
-    with pytest.raises(KPNNError, match="wrong number of variables"):
+    with pytest.raises(KPNNError, match="missing required variable name"):
         interpret_model(
             model=model,
             artifact=artifact,

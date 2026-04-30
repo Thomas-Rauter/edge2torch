@@ -36,7 +36,7 @@ def validate_interpret_model_inputs(
     target,
     method,
     quiet,
-):
+) -> None:
     """
     Validate the public inputs of ``interpret_model()``.
 
@@ -81,11 +81,17 @@ def validate_interpret_model_inputs(
     if not isinstance(quiet, bool):
         raise KPNNError("'quiet' must be a boolean value (True or False).")
 
+    if not isinstance(target, str):
+        raise KPNNError("'target' must be a string.")
+
     if target not in supported_targets:
         supported = ", ".join(sorted(supported_targets))
         raise KPNNError(
             f"Unsupported target '{target}'. Expected one of: {supported}."
         )
+
+    if not isinstance(method, str):
+        raise KPNNError("'method' must be a string.")
 
     if method not in supported_methods:
         supported = ", ".join(sorted(supported_methods))
@@ -140,22 +146,38 @@ def validate_interpret_model_inputs(
     if not isinstance(artifact.feature_names, list):
         raise KPNNError("'artifact.feature_names' must be a list.")
 
+    if not artifact.feature_names:
+        raise KPNNError(
+            "'artifact.feature_names' must contain at least one feature name."
+        )
+
     if not all(isinstance(name, str) for name in artifact.feature_names):
         raise KPNNError("'artifact.feature_names' must contain only strings.")
+
+    if len(set(artifact.feature_names)) != len(artifact.feature_names):
+        raise KPNNError(
+            "'artifact.feature_names' must not contain duplicate names."
+        )
 
     if not isinstance(artifact.node_names_by_layer, dict):
         raise KPNNError("'artifact.node_names_by_layer' must be a dictionary.")
 
-    supported_data_types = (pd.DataFrame, torch.Tensor)
-    if ad is not None:
-        supported_data_types += (ad.AnnData,)
+    if target == "nodes" and not artifact.node_names_by_layer:
+        raise KPNNError(
+            "'artifact.node_names_by_layer' must not be empty for "
+            "node interpretation."
+        )
 
-    if not isinstance(data, supported_data_types):
+    is_supported_data = isinstance(data, (pd.DataFrame, torch.Tensor))
+
+    if ad is not None:
+        is_supported_data = is_supported_data or isinstance(data, ad.AnnData)
+
+    if not is_supported_data:
         if ad is None:
             raise KPNNError(
                 "'data' must be a pandas DataFrame or torch.Tensor. "
-                "AnnData support requires the optional 'anndata' "
-                "dependency."
+                "AnnData support requires the optional 'anndata' dependency."
             )
 
         raise KPNNError(
@@ -163,23 +185,67 @@ def validate_interpret_model_inputs(
             "or torch.Tensor."
         )
 
-    expected_n_features = len(artifact.feature_names)
+    feature_names = list(artifact.feature_names)
+    required_features = set(feature_names)
+    expected_n_features = len(feature_names)
 
     if isinstance(data, pd.DataFrame):
-        missing_columns = set(artifact.feature_names).difference(data.columns)
+        if data.columns.duplicated().any():
+            raise KPNNError(
+                "'data' DataFrame must not contain duplicate column names."
+            )
 
+        data_features = set(data.columns)
+
+        missing_columns = required_features.difference(data_features)
         if missing_columns:
             missing_str = ", ".join(sorted(missing_columns))
             raise KPNNError(
                 f"'data' is missing required feature column(s): {missing_str}."
             )
 
-    elif ad is not None and isinstance(data, ad.AnnData):
-        if data.n_vars != expected_n_features:
+        extra_columns = data_features.difference(required_features)
+        if extra_columns:
+            extra_str = ", ".join(sorted(extra_columns))
             raise KPNNError(
-                "'data' has the wrong number of variables. "
-                f"Expected {expected_n_features}, got "
-                f"{data.n_vars}."
+                "'data' contains feature column(s) that are not input nodes "
+                f"in the compiled model: {extra_str}."
+            )
+
+        non_numeric_columns = [
+            name
+            for name in feature_names
+            if not pd.api.types.is_numeric_dtype(data[name])
+        ]
+
+        if non_numeric_columns:
+            non_numeric_str = ", ".join(sorted(non_numeric_columns))
+            raise KPNNError(
+                f"'data' contains non-numeric feature column(s): "
+                f"{non_numeric_str}."
+            )
+
+    elif ad is not None and isinstance(data, ad.AnnData):
+        var_names = list(data.var_names)
+
+        if len(set(var_names)) != len(var_names):
+            raise KPNNError("'data.var_names' must not contain duplicates.")
+
+        data_features = set(var_names)
+
+        missing_vars = required_features.difference(data_features)
+        if missing_vars:
+            missing_str = ", ".join(sorted(missing_vars))
+            raise KPNNError(
+                f"'data' is missing required variable name(s): {missing_str}."
+            )
+
+        extra_vars = data_features.difference(required_features)
+        if extra_vars:
+            extra_str = ", ".join(sorted(extra_vars))
+            raise KPNNError(
+                "'data' contains variable name(s) that are not input nodes "
+                f"in the compiled model: {extra_str}."
             )
 
     elif isinstance(data, torch.Tensor):
@@ -189,6 +255,5 @@ def validate_interpret_model_inputs(
         if data.shape[1] != expected_n_features:
             raise KPNNError(
                 "'data' tensor has the wrong number of features. "
-                f"Expected {expected_n_features}, got "
-                f"{data.shape[1]}."
+                f"Expected {expected_n_features}, got {data.shape[1]}."
             )

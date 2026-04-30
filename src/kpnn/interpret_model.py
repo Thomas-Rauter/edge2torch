@@ -2,7 +2,9 @@
 API function
 """
 
-from typing import Any
+from typing import Any, Union
+
+import pandas as pd
 
 from .interpret.captum_adapter import run_captum_interpretation
 from .interpret.input_validation import validate_interpret_model_inputs
@@ -12,11 +14,11 @@ from .interpret.prepare_input import prepare_interpretation_input
 def interpret_model(
     model: Any,
     artifact: Any,
-    data,
+    data: Any,
     target: str = "nodes",
     method: str = "layer_conductance",
     quiet: bool = False,
-):
+) -> Union[pd.DataFrame, dict[str, pd.DataFrame]]:
     """
     Interpret a compiled KPNN model with a Captum-based method.
 
@@ -83,7 +85,6 @@ def interpret_model(
         feature_names=prepared_input.feature_names,
         target=target,
         method=method,
-        quiet=quiet,
     )
 
     if not quiet:
