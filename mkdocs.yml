@@ -1,10 +1,10 @@
-site_name: kpnn
+site_name: edge2torch
 site_description: >
   Compile prior-knowledge biological graphs into minimally opinionated
   PyTorch models and map trained models back to biological interpretations.
-site_url: https://Thomas-Rauter.github.io/kpnn/
-repo_url: https://github.com/Thomas-Rauter/kpnn
-repo_name: Thomas-Rauter/kpnn
+site_url: https://Thomas-Rauter.github.io/edge2torch/
+repo_url: https://github.com/Thomas-Rauter/edge2torch
+repo_name: Thomas-Rauter/edge2torch
 
 theme:
   name: material

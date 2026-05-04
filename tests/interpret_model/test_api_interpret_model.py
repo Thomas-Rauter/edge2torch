@@ -8,9 +8,9 @@ try:
 except ImportError:
     ad = None
 
-from kpnn.compile_graph import compile_graph
-from kpnn.interpret_model import interpret_model
-from kpnn.utils.errors import KPNNError
+from edge2torch.compile_graph import compile_graph
+from edge2torch.interpret_model import interpret_model
+from edge2torch.utils.errors import Edge2TorchError
 
 
 def test_interpret_model_returns_feature_dataframe():
@@ -192,7 +192,7 @@ def test_interpret_model_raises_for_incompatible_feature_method():
 
     data = pd.DataFrame({"gene_1": [1.0]})
 
-    with pytest.raises(KPNNError, match="compatible"):
+    with pytest.raises(Edge2TorchError, match="compatible"):
         interpret_model(
             model=model,
             artifact=artifact,
@@ -214,7 +214,7 @@ def test_interpret_model_raises_for_incompatible_node_method():
 
     data = pd.DataFrame({"gene_1": [1.0]})
 
-    with pytest.raises(KPNNError, match="compatible"):
+    with pytest.raises(Edge2TorchError, match="compatible"):
         interpret_model(
             model=model,
             artifact=artifact,
@@ -240,7 +240,7 @@ def test_interpret_model_raises_for_missing_dataframe_features():
         }
     )
 
-    with pytest.raises(KPNNError, match="missing required feature"):
+    with pytest.raises(Edge2TorchError, match="missing required feature"):
         interpret_model(
             model=model,
             artifact=artifact,
@@ -262,7 +262,7 @@ def test_interpret_model_raises_for_wrong_tensor_feature_count():
 
     data = torch.randn(3, 3)
 
-    with pytest.raises(KPNNError, match="wrong number of features"):
+    with pytest.raises(Edge2TorchError, match="wrong number of features"):
         interpret_model(
             model=model,
             artifact=artifact,
@@ -451,7 +451,7 @@ def test_interpret_model_raises_for_missing_anndata_features():
     data.var_names = ["gene_1"]
     data.obs_names = ["cell_1", "cell_2"]
 
-    with pytest.raises(KPNNError, match="missing required variable name"):
+    with pytest.raises(Edge2TorchError, match="missing required variable name"):
         interpret_model(
             model=model,
             artifact=artifact,
@@ -542,7 +542,7 @@ def test_interpret_model_raises_for_node_target_with_recurrent_backend():
     )
 
     with pytest.raises(
-        KPNNError,
+        Edge2TorchError,
         match="Node interpretation currently supports only",
     ):
         interpret_model(
@@ -573,7 +573,7 @@ def test_interpret_model_raises_for_node_target_with_graphnn_backend():
     )
 
     with pytest.raises(
-        KPNNError,
+        Edge2TorchError,
         match="Node interpretation currently supports only",
     ):
         interpret_model(
@@ -706,7 +706,7 @@ def test_interpret_model_rejects_invalid_constructor_kwargs():
         }
     )
 
-    with pytest.raises(KPNNError, match="constructor_kwargs"):
+    with pytest.raises(Edge2TorchError, match="constructor_kwargs"):
         interpret_model(
             model=model,
             artifact=artifact,
@@ -735,7 +735,7 @@ def test_interpret_model_rejects_invalid_attribute_kwargs():
         }
     )
 
-    with pytest.raises(KPNNError, match="attribute_kwargs"):
+    with pytest.raises(Edge2TorchError, match="attribute_kwargs"):
         interpret_model(
             model=model,
             artifact=artifact,
@@ -764,7 +764,7 @@ def test_interpret_model_rejects_return_convergence_delta():
         }
     )
 
-    with pytest.raises(KPNNError, match="return_convergence_delta=True"):
+    with pytest.raises(Edge2TorchError, match="return_convergence_delta=True"):
         interpret_model(
             model=model,
             artifact=artifact,
@@ -776,6 +776,9 @@ def test_interpret_model_rejects_return_convergence_delta():
         )
 
 
+@pytest.mark.filterwarnings(
+    "ignore:Input Tensor 0 did not already require gradients.*:UserWarning"
+)
 @pytest.mark.parametrize(
     "method",
     [
@@ -914,7 +917,9 @@ def test_interpret_model_rejects_constructor_kwargs_for_saliency():
         }
     )
 
-    with pytest.raises(KPNNError, match="does not support constructor_kwargs"):
+    with pytest.raises(
+        Edge2TorchError, match="does not support constructor_kwargs"
+    ):
         interpret_model(
             model=model,
             artifact=artifact,
@@ -978,7 +983,7 @@ def test_interpret_model_rejects_unknown_feature_method():
         }
     )
 
-    with pytest.raises(KPNNError, match="Unsupported method"):
+    with pytest.raises(Edge2TorchError, match="Unsupported method"):
         interpret_model(
             model=model,
             artifact=artifact,
@@ -1131,7 +1136,9 @@ def test_interpret_model_rejects_constructor_kwargs_for_layer_activation():
         }
     )
 
-    with pytest.raises(KPNNError, match="does not support constructor_kwargs"):
+    with pytest.raises(
+        Edge2TorchError, match="does not support constructor_kwargs"
+    ):
         interpret_model(
             model=model,
             artifact=artifact,

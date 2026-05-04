@@ -1,6 +1,6 @@
 # Interpretation
 
-`kpnn` provides `interpret_model()` as the model-to-interpretation bridge of
+`edge2torch` provides `interpret_model()` as the model-to-interpretation bridge of
 the package.
 
 It computes attribution scores for a compiled KPNN model and maps them back to
@@ -8,14 +8,14 @@ the named entities preserved by the compilation artifact.
 
 ## Overview
 
-Interpretation in `kpnn` is built around three ideas:
+Interpretation in `edge2torch` is built around three ideas:
 
 1. a compiled model is still an ordinary PyTorch model
 2. attribution is computed with Captum-based methods
 3. returned results are mapped back to graph-defined names through the
    `KPNNArtifact`
 
-This means that `kpnn` does not try to replace PyTorch or Captum. Instead, it
+This means that `edge2torch` does not try to replace PyTorch or Captum. Instead, it
 provides a thin, validated interface that connects:
 
 - compiled KPNN models
@@ -27,7 +27,7 @@ provides a thin, validated interface that connects:
 The main public entry point is:
 
 ```python
-from kpnn.interpret_model import interpret_model
+from edge2torch.interpret_model import interpret_model
 ```
 
 A typical call looks like:
@@ -145,8 +145,8 @@ A minimal feature-level example is:
 
 ```python
 import pandas as pd
-from kpnn.compile_graph import compile_graph
-from kpnn.interpret_model import interpret_model
+from edge2torch.compile_graph import compile_graph
+from edge2torch.interpret_model import interpret_model
 
 edgelist = pd.DataFrame(
     {
@@ -185,8 +185,8 @@ A minimal node-level example is:
 
 ```python
 import pandas as pd
-from kpnn.compile_graph import compile_graph
-from kpnn.interpret_model import interpret_model
+from edge2torch.compile_graph import compile_graph
+from edge2torch.interpret_model import interpret_model
 
 edgelist = pd.DataFrame(
     {
@@ -276,7 +276,7 @@ Those remain outside the core interpretation API.
 
 ## Relationship to the rest of the package
 
-`kpnn` is organized around three main public layers:
+`edge2torch` is organized around three main public layers:
 
 - `compile_graph()`  
   graph-to-model compiler

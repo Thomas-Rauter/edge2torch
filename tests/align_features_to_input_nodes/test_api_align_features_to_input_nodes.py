@@ -2,13 +2,15 @@ import pandas as pd
 import pytest
 import torch
 
-from kpnn.align_features_to_input_nodes import align_features_to_input_nodes
-from kpnn.compile.artifact import KPNNArtifact
-from kpnn.compile_graph import compile_graph
-from kpnn.utils.errors import KPNNError
+from edge2torch.align_features_to_input_nodes import (
+    align_features_to_input_nodes,
+)
+from edge2torch.compile.artifact import CompileArtifact
+from edge2torch.compile_graph import compile_graph
+from edge2torch.utils.errors import Edge2TorchError
 
 
-def _compile_simple_artifact() -> KPNNArtifact:
+def _compile_simple_artifact() -> CompileArtifact:
     edgelist = pd.DataFrame(
         {
             "source": ["gene_a", "gene_b"],
@@ -55,7 +57,7 @@ def test_align_features_to_input_nodes_rejects_missing_dataframe_features():
         }
     )
 
-    with pytest.raises(KPNNError, match="missing required feature"):
+    with pytest.raises(Edge2TorchError, match="missing required feature"):
         align_features_to_input_nodes(data, artifact)
 
 
@@ -70,7 +72,7 @@ def test_align_features_to_input_nodes_rejects_extra_dataframe_features():
         }
     )
 
-    with pytest.raises(KPNNError, match="not input nodes"):
+    with pytest.raises(Edge2TorchError, match="not input nodes"):
         align_features_to_input_nodes(data, artifact)
 
 
@@ -85,7 +87,7 @@ def test_align_features_to_input_nodes_rejects_duplicate_dataframe_columns():
         columns=["gene_a", "gene_b", "gene_b"],
     )
 
-    with pytest.raises(KPNNError, match="duplicate column names"):
+    with pytest.raises(Edge2TorchError, match="duplicate column names"):
         align_features_to_input_nodes(data, artifact)
 
 
@@ -99,7 +101,7 @@ def test_align_features_to_input_nodes_rejects_non_numeric_dataframe_columns():
         }
     )
 
-    with pytest.raises(KPNNError, match="non-numeric feature column"):
+    with pytest.raises(Edge2TorchError, match="non-numeric feature column"):
         align_features_to_input_nodes(data, artifact)
 
 
@@ -135,7 +137,7 @@ def test_align_features_to_input_nodes_rejects_1d_tensor():
 
     data = torch.tensor([1.0, 2.0])
 
-    with pytest.raises(KPNNError, match="2-dimensional"):
+    with pytest.raises(Edge2TorchError, match="2-dimensional"):
         align_features_to_input_nodes(data, artifact)
 
 
@@ -144,7 +146,7 @@ def test_align_features_to_input_nodes_rejects_tensor_with_wrong_width():
 
     data = torch.randn(3, 3)
 
-    with pytest.raises(KPNNError, match="wrong number of features"):
+    with pytest.raises(Edge2TorchError, match="wrong number of features"):
         align_features_to_input_nodes(data, artifact)
 
 
@@ -156,12 +158,12 @@ def test_align_features_to_input_nodes_rejects_invalid_artifact_type():
         }
     )
 
-    with pytest.raises(KPNNError, match="must be a KPNNArtifact"):
+    with pytest.raises(Edge2TorchError, match="must be a CompileArtifact"):
         align_features_to_input_nodes(data, artifact=object())
 
 
 def test_align_features_to_input_nodes_rejects_artifact_without_feature_names():
-    artifact = KPNNArtifact(
+    artifact = CompileArtifact(
         backend="feedforward",
         graph=object(),  # type: ignore[arg-type]
         execution_plan=object(),
@@ -171,12 +173,12 @@ def test_align_features_to_input_nodes_rejects_artifact_without_feature_names():
 
     data = pd.DataFrame()
 
-    with pytest.raises(KPNNError, match="does not define any input-node"):
+    with pytest.raises(Edge2TorchError, match="does not define any input-node"):
         align_features_to_input_nodes(data, artifact)
 
 
 def test_align_features_to_input_nodes_rejects_duplicate_artifact_features():
-    artifact = KPNNArtifact(
+    artifact = CompileArtifact(
         backend="feedforward",
         graph=object(),  # type: ignore[arg-type]
         execution_plan=object(),
@@ -190,12 +192,12 @@ def test_align_features_to_input_nodes_rejects_duplicate_artifact_features():
         }
     )
 
-    with pytest.raises(KPNNError, match="must not contain duplicate"):
+    with pytest.raises(Edge2TorchError, match="must not contain duplicate"):
         align_features_to_input_nodes(data, artifact)
 
 
 def test_align_features_to_input_nodes_rejects_unsupported_data_type():
     artifact = _compile_simple_artifact()
 
-    with pytest.raises(KPNNError, match="Unsupported input data type"):
+    with pytest.raises(Edge2TorchError, match="Unsupported input data type"):
         align_features_to_input_nodes([[1.0, 2.0]], artifact)

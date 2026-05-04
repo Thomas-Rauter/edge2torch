@@ -1,58 +1,71 @@
-# kpnn
+# edge2torch
 
-[![CI](https://github.com/Thomas-Rauter/kpnn/actions/workflows/ci.yml/badge.svg)](https://github.com/Thomas-Rauter/kpnn/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/Thomas-Rauter/kpnn/branch/main/graph/badge.svg)](https://app.codecov.io/gh/Thomas-Rauter/kpnn)
+[![CI](https://github.com/Thomas-Rauter/edge2torch/actions/workflows/ci.yml/badge.svg)](https://github.com/Thomas-Rauter/edge2torch/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/Thomas-Rauter/edge2torch/branch/main/graph/badge.svg)](https://app.codecov.io/gh/Thomas-Rauter/edge2torch)
 
-Compile prior-knowledge graphs into minimally opinionated PyTorch models
-and map trained models back to interpretable named entities.
+Build PyTorch models from edge lists of named neural architecture nodes.
 
-**Documentation:** https://Thomas-Rauter.github.io/kpnn/
+**Documentation:** https://Thomas-Rauter.github.io/edge2torch/
 
 ## Overview
 
-`kpnn` is a graph-to-model compiler plus model-to-interpretation bridge for
-knowledge-primed neural networks (KPNNs).
+`edge2torch` is an edge-list-to-PyTorch compiler for sparse neural network
+architectures with named nodes.
 
-The package is not tied to a single scientific domain. Its core abstraction is
-general: a graph with named entities is compiled into a PyTorch model, trained
-with ordinary PyTorch tools, and then interpreted back in the space of the
-original graph-defined entities.
+The core idea is simple: define a neural architecture as an edge list, compile
+it into a minimally opinionated PyTorch model, train it with standard PyTorch
+tools, and optionally map model behavior back to the named nodes and features
+that defined the architecture.
 
-Biology is currently a main application area, and many examples use biological
-entities such as genes, transcription factors, and kinases. But the same ideas
-can also be used in other domains wherever prior knowledge can be expressed as
-a graph, including chemistry.
+The package is designed for users who want to build sparse or structured neural
+networks from a predefined graph rather than manually wiring PyTorch modules.
+It is not tied to one scientific domain or one modeling workflow. Any setting
+where a model architecture can be represented as named edges can potentially use
+the same abstraction.
 
-The package is built around three main steps:
+A major application area is knowledge-primed neural networks (KPNNs), where
+prior knowledge defines the model structure. In biology, for example, edge
+lists may connect genes, transcription factors, pathways, kinases, or other
+biological entities. The same graph-to-model approach can also be useful in
+other domains, such as chemistry or any field where structured prior knowledge
+can be expressed as a graph.
 
-1. Compile a prior-knowledge graph into a backend-specific PyTorch model with
+`edge2torch` deliberately keeps the compiled model minimally opinionated. It
+builds the sparse PyTorch model implied by the edge list, while leaving training
+loops, losses, optimizers, task-specific heads, and advanced customization to
+standard PyTorch.
+
+The package is built around four main steps:
+
+1. Define a model architecture as an edge list with named `source` and `target`
+   nodes.
+2. Compile the edge list into a backend-specific PyTorch model with
    `compile_graph()`.
-2. Customize and train the compiled model with ordinary PyTorch or with
-   `customize_model()`.
-3. Interpret the trained model with `interpret_model()`.
+3. Align named input data features to the compiled model input nodes with
+   `align_features_to_input_nodes()`.
+4. Customize, train, and interpret the model with ordinary PyTorch,
+   `customize_model()`, and `interpret_model()`.
 
 ## Installation
 
-Install `kpnn` from PyPI with:
+Install `edge2torch` from PyPI with:
 
 ```bash
-pip install kpnn
+pip install edge2torch
 ```
 
 For optional `AnnData` support:
 
 ```bash
-pip install "kpnn[bio]"
+pip install "edge2torch[bio]"
 ```
 
 ## Minimal example
 
 ```python
 import pandas as pd
+import edge2torch as e2t
 
-from kpnn.compile_graph import compile_graph
-from kpnn.customize_model import customize_model
-from kpnn.interpret_model import interpret_model
 
 edgelist = pd.DataFrame(
     {
@@ -61,14 +74,14 @@ edgelist = pd.DataFrame(
     }
 )
 
-model, artifact = compile_graph(
+model, artifact = e2t.compile_graph(
     edgelist=edgelist,
     backend="feedforward",
 )
 
-customized_model = customize_model(model=model)
+customized_model = e2t.customize_model(model=model)
 
-result = interpret_model(
+result = e2t.interpret_model(
     model=customized_model,
     artifact=artifact,
     data=...,
@@ -79,7 +92,7 @@ result = interpret_model(
 
 ## Package philosophy
 
-`kpnn` is intentionally minimally opinionated.
+`edge2torch` is intentionally minimally opinionated.
 
 It defines the structural semantics required to compile a graph into a neural
 network backend, but it does not impose broader modeling choices such as:
@@ -95,9 +108,9 @@ These remain part of the normal PyTorch workflow.
 
 This keeps the package small in scope:
 
-- `kpnn` handles graph compilation
+- `edge2torch` handles graph compilation
 - PyTorch handles model training
-- `kpnn` maps trained models back to interpretable named entities
+- `edge2torch` maps trained models back to interpretable named entities
 
 ## Main public API
 
@@ -119,7 +132,7 @@ It includes:
 - interpretation guidance
 - API reference
 
-Documentation: https://Thomas-Rauter.github.io/kpnn/
+Documentation: https://Thomas-Rauter.github.io/edge2torch/
 
 ## License
 

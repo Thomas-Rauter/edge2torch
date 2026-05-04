@@ -2,7 +2,7 @@ import pandas as pd
 import torch
 from torch import nn
 
-from kpnn.compile_graph import compile_graph
+from edge2torch.compile_graph import compile_graph
 
 
 def test_recurrent_model_runs_forward_pass():

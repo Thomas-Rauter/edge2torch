@@ -26,7 +26,7 @@ jobs:
       - name: Run tests with coverage
         run: |
           pytest \
-            --cov=kpnn \
+            --cov=edge2torch \
             --cov-report=term-missing \
             --cov-report=xml \
             --cov-report=html

@@ -2,16 +2,16 @@
 
 ## Install from PyPI
 
-Install `kpnn` from PyPI with:
+Install `edge2torch` from PyPI with:
 
 ```bash
-pip install kpnn
+pip install edge2torch
 ```
 
 For optional `AnnData` support:
 
 ```bash
-pip install "kpnn[bio]"
+pip install "edge2torch[bio]"
 ```
 
 ## Development installation
@@ -20,8 +20,8 @@ To work on the package locally, clone the repository and install it in
 editable mode from the project root:
 
 ```bash
-git clone git@github.com:Thomas-Rauter/kpnn.git
-cd kpnn
+git clone git@github.com:Thomas-Rauter/edge2torch.git
+cd edge2torch
 pip install -e .
 ```
 
@@ -62,5 +62,5 @@ sudo apt install graphviz
 A minimal smoke test is:
 
 ```bash
-python -c "import kpnn; print('kpnn imported successfully')"
+python -c "import edge2torch; print('edge2torch imported successfully')"
 ```

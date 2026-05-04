@@ -2,11 +2,11 @@ import pandas as pd
 import pytest
 import torch
 
-from kpnn.compile.artifact import KPNNArtifact
-from kpnn.compile.execution_plan import RecurrentExecutionPlan
-from kpnn.compile_graph import compile_graph
-from kpnn.nn.model import KPNNRecurrentModel
-from kpnn.utils.errors import KPNNError
+from edge2torch.compile.artifact import CompileArtifact
+from edge2torch.compile.execution_plan import RecurrentExecutionPlan
+from edge2torch.compile_graph import compile_graph
+from edge2torch.nn.model import RecurrentEdgeModel
+from edge2torch.utils.errors import Edge2TorchError
 
 
 def test_compile_graph_returns_recurrent_model_and_artifact():
@@ -19,8 +19,8 @@ def test_compile_graph_returns_recurrent_model_and_artifact():
 
     model, artifact = compile_graph(edgelist, backend="recurrent")
 
-    assert isinstance(model, KPNNRecurrentModel)
-    assert isinstance(artifact, KPNNArtifact)
+    assert isinstance(model, RecurrentEdgeModel)
+    assert isinstance(artifact, CompileArtifact)
     assert artifact.backend == "recurrent"
     assert isinstance(artifact.execution_plan, RecurrentExecutionPlan)
 
@@ -81,5 +81,5 @@ def test_recurrent_model_raises_for_wrong_input_width():
 
     x = torch.randn(4, len(artifact.feature_names) + 1)
 
-    with pytest.raises(KPNNError, match="wrong number of features"):
+    with pytest.raises(Edge2TorchError, match="wrong number of features"):
         model(x)

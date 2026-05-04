@@ -1,8 +1,8 @@
 import pandas as pd
 import pytest
 
-from kpnn.compile.input_validation import validate_compile_graph_inputs
-from kpnn.utils.errors import KPNNError
+from edge2torch.compile.input_validation import validate_compile_graph_inputs
+from edge2torch.utils.errors import Edge2TorchError
 
 
 def test_validate_compile_graph_inputs_accepts_valid_inputs():
@@ -25,7 +25,7 @@ def test_validate_compile_graph_inputs_raises_for_non_dataframe():
         {"source": "gene_1", "target": "pathway_1"},
     ]
 
-    with pytest.raises(KPNNError, match="pandas DataFrame"):
+    with pytest.raises(Edge2TorchError, match="pandas DataFrame"):
         validate_compile_graph_inputs(
             edgelist=edgelist,
             backend="feedforward",
@@ -40,7 +40,7 @@ def test_validate_compile_graph_inputs_raises_for_missing_source_column():
         }
     )
 
-    with pytest.raises(KPNNError, match="Missing: source"):
+    with pytest.raises(Edge2TorchError, match="Missing: source"):
         validate_compile_graph_inputs(
             edgelist=edgelist,
             backend="feedforward",
@@ -55,7 +55,7 @@ def test_validate_compile_graph_inputs_raises_for_missing_target_column():
         }
     )
 
-    with pytest.raises(KPNNError, match="Missing: target"):
+    with pytest.raises(Edge2TorchError, match="Missing: target"):
         validate_compile_graph_inputs(
             edgelist=edgelist,
             backend="feedforward",
@@ -71,7 +71,7 @@ def test_validate_compile_graph_inputs_raises_for_duplicate_source_column():
         columns=["source", "source", "target"],
     )
 
-    with pytest.raises(KPNNError, match="exactly once"):
+    with pytest.raises(Edge2TorchError, match="exactly once"):
         validate_compile_graph_inputs(
             edgelist=edgelist,
             backend="feedforward",
@@ -87,7 +87,7 @@ def test_validate_compile_graph_inputs_raises_for_duplicate_target_column():
         columns=["source", "target", "target"],
     )
 
-    with pytest.raises(KPNNError, match="exactly once"):
+    with pytest.raises(Edge2TorchError, match="exactly once"):
         validate_compile_graph_inputs(
             edgelist=edgelist,
             backend="feedforward",
@@ -103,7 +103,9 @@ def test_validate_compile_graph_inputs_raises_for_missing_values():
         }
     )
 
-    with pytest.raises(KPNNError, match="must not contain missing values"):
+    with pytest.raises(
+        Edge2TorchError, match="must not contain missing values"
+    ):
         validate_compile_graph_inputs(
             edgelist=edgelist,
             backend="feedforward",
@@ -119,7 +121,7 @@ def test_validate_compile_graph_inputs_raises_for_empty_source_name():
         }
     )
 
-    with pytest.raises(KPNNError, match="empty node names"):
+    with pytest.raises(Edge2TorchError, match="empty node names"):
         validate_compile_graph_inputs(
             edgelist=edgelist,
             backend="feedforward",
@@ -135,7 +137,7 @@ def test_validate_compile_graph_inputs_raises_for_whitespace_target_name():
         }
     )
 
-    with pytest.raises(KPNNError, match="empty node names"):
+    with pytest.raises(Edge2TorchError, match="empty node names"):
         validate_compile_graph_inputs(
             edgelist=edgelist,
             backend="feedforward",
@@ -151,7 +153,7 @@ def test_validate_compile_graph_inputs_raises_for_non_string_backend():
         }
     )
 
-    with pytest.raises(KPNNError, match="'backend' must be a string"):
+    with pytest.raises(Edge2TorchError, match="'backend' must be a string"):
         validate_compile_graph_inputs(
             edgelist=edgelist,
             backend=1,
@@ -167,7 +169,7 @@ def test_validate_compile_graph_inputs_raises_for_unsupported_backend():
         }
     )
 
-    with pytest.raises(KPNNError, match="Unsupported backend"):
+    with pytest.raises(Edge2TorchError, match="Unsupported backend"):
         validate_compile_graph_inputs(
             edgelist=edgelist,
             backend="unknown_backend",
@@ -183,7 +185,7 @@ def test_validate_compile_graph_inputs_raises_for_non_boolean_quiet():
         }
     )
 
-    with pytest.raises(KPNNError, match="'quiet' must be a boolean"):
+    with pytest.raises(Edge2TorchError, match="'quiet' must be a boolean"):
         validate_compile_graph_inputs(
             edgelist=edgelist,
             backend="feedforward",

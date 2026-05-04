@@ -2,11 +2,11 @@ import pandas as pd
 import pytest
 import torch
 
-from kpnn.compile.artifact import KPNNArtifact
-from kpnn.compile.execution_plan import GraphNNExecutionPlan
-from kpnn.compile_graph import compile_graph
-from kpnn.nn.model import KPNNGraphNNModel
-from kpnn.utils.errors import KPNNError
+from edge2torch.compile.artifact import CompileArtifact
+from edge2torch.compile.execution_plan import GraphNNExecutionPlan
+from edge2torch.compile_graph import compile_graph
+from edge2torch.nn.model import EdgeGraphNNModel
+from edge2torch.utils.errors import Edge2TorchError
 
 
 def test_compile_graph_returns_graphnn_model_and_artifact():
@@ -19,8 +19,8 @@ def test_compile_graph_returns_graphnn_model_and_artifact():
 
     model, artifact = compile_graph(edgelist, backend="graphnn")
 
-    assert isinstance(model, KPNNGraphNNModel)
-    assert isinstance(artifact, KPNNArtifact)
+    assert isinstance(model, EdgeGraphNNModel)
+    assert isinstance(artifact, CompileArtifact)
     assert artifact.backend == "graphnn"
     assert isinstance(artifact.execution_plan, GraphNNExecutionPlan)
 
@@ -81,5 +81,5 @@ def test_graphnn_model_raises_for_wrong_input_width():
 
     x = torch.randn(4, len(artifact.feature_names) + 1)
 
-    with pytest.raises(KPNNError, match="wrong number of features"):
+    with pytest.raises(Edge2TorchError, match="wrong number of features"):
         model(x)

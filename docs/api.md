@@ -1,6 +1,6 @@
 # API reference
 
-::: kpnn.compile_graph
+::: edge2torch.compile_graph
     options:
       show_root_heading: false
       show_root_toc_entry: false
@@ -11,7 +11,7 @@
       separate_signature: true
       show_source: false
 
-::: kpnn.customize_model
+::: edge2torch.customize_model
     options:
       show_root_heading: false
       show_root_toc_entry: false
@@ -22,7 +22,7 @@
       separate_signature: true
       show_source: false
 
-::: kpnn.interpret_model
+::: edge2torch.interpret_model
     options:
       show_root_heading: false
       show_root_toc_entry: false

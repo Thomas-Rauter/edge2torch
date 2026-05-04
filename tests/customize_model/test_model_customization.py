@@ -3,9 +3,9 @@ import pytest
 import torch
 from torch import nn
 
-from kpnn.compile_graph import compile_graph
-from kpnn.customize_model import customize_model
-from kpnn.utils.errors import KPNNError
+from edge2torch.compile_graph import compile_graph
+from edge2torch.customize_model import customize_model
+from edge2torch.utils.errors import Edge2TorchError
 
 
 def test_customize_model_wraps_feedforward_model_and_runs():
@@ -283,7 +283,7 @@ def test_customize_model_rejects_invalid_activation():
         backend="feedforward",
     )
 
-    with pytest.raises(KPNNError, match="activation"):
+    with pytest.raises(Edge2TorchError, match="activation"):
         customize_model(
             model=base_model,
             activation="relu",
@@ -303,7 +303,7 @@ def test_customize_model_rejects_invalid_dropout_type():
         backend="feedforward",
     )
 
-    with pytest.raises(KPNNError, match="dropout"):
+    with pytest.raises(Edge2TorchError, match="dropout"):
         customize_model(
             model=base_model,
             dropout="0.2",
@@ -323,7 +323,7 @@ def test_customize_model_rejects_invalid_dropout_range():
         backend="feedforward",
     )
 
-    with pytest.raises(KPNNError, match="0 <= dropout < 1"):
+    with pytest.raises(Edge2TorchError, match="0 <= dropout < 1"):
         customize_model(
             model=base_model,
             dropout=1.0,
@@ -343,7 +343,7 @@ def test_customize_model_rejects_invalid_head():
         backend="feedforward",
     )
 
-    with pytest.raises(KPNNError, match="head"):
+    with pytest.raises(Edge2TorchError, match="head"):
         customize_model(
             model=base_model,
             head="linear",

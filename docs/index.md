@@ -1,13 +1,13 @@
-# kpnn
+# edge2torch
 
 Compile prior-knowledge graphs into minimally opinionated PyTorch models
 and map trained models back to interpretable named entities.
 
-![Graphical abstract of kpnn](figures/graphical_abstract.svg)
+![Graphical abstract of edge2torch](figures/graphical_abstract.svg)
 
 ## Overview
 
-`kpnn` is a graph-to-model compiler plus model-to-interpretation bridge for
+`edge2torch` is a graph-to-model compiler plus model-to-interpretation bridge for
 knowledge-primed neural networks.
 
 The package is **not tied to a specific scientific domain**. Its core
@@ -42,9 +42,9 @@ A minimal workflow looks like:
 ```python
 import pandas as pd
 
-from kpnn.compile_graph import compile_graph
-from kpnn.customize_model import customize_model
-from kpnn.interpret_model import interpret_model
+from edge2torch.compile_graph import compile_graph
+from edge2torch.customize_model import customize_model
+from edge2torch.interpret_model import interpret_model
 
 edgelist = pd.DataFrame(
     {
@@ -73,7 +73,7 @@ result = interpret_model(
 
 ## Package philosophy
 
-`kpnn` is intentionally **minimally opinionated**.
+`edge2torch` is intentionally **minimally opinionated**.
 
 It defines the structural semantics required to compile a graph into a neural
 network backend, but it does not impose broader modeling choices such as:
@@ -89,13 +89,13 @@ These remain part of the normal PyTorch workflow.
 
 This keeps the package small in scope:
 
-- `kpnn` handles graph compilation
+- `edge2torch` handles graph compilation
 - PyTorch handles model training
-- `kpnn` maps trained models back to interpretable named entities
+- `edge2torch` maps trained models back to interpretable named entities
 
 ## Current backends
 
-`kpnn` currently implements three backends:
+`edge2torch` currently implements three backends:
 
 - `feedforward`
 - `recurrent`

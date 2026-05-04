@@ -1,6 +1,6 @@
 # Backends
 
-`kpnn` can compile the same prior-knowledge graph into different backend-
+`edge2torch` can compile the same prior-knowledge graph into different backend-
 specific PyTorch model classes.
 
 Each backend answers a slightly different question:
@@ -9,7 +9,7 @@ Each backend answers a slightly different question:
 - which graph properties are allowed?
 - what internal execution structure should be created?
 
-The goal of `kpnn` is to stay **minimally opinionated**. This means that a
+The goal of `edge2torch` is to stay **minimally opinionated**. This means that a
 backend defines only the structural semantics required for compilation, while
 broader modeling choices such as activations, heads, losses, optimizers, and
 training loops remain the user's responsibility.
@@ -264,7 +264,7 @@ A good rule of thumb is:
 
 ## Design principle
 
-All backends in `kpnn` follow the same design principle:
+All backends in `edge2torch` follow the same design principle:
 
 - the backend defines only the structural semantics needed for compilation
 - the returned object is still an ordinary PyTorch model
