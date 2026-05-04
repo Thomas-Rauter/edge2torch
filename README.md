@@ -12,28 +12,24 @@ Build PyTorch models from edge lists of named neural architecture nodes.
 `edge2torch` is an edge-list-to-PyTorch compiler for sparse neural network
 architectures with named nodes.
 
-The core idea is simple: define a neural architecture as an edge list, compile
-it into a minimally opinionated PyTorch model, train it with standard PyTorch
-tools, and optionally map model behavior back to the named nodes and features
-that defined the architecture.
+Define a model architecture as an edge list, compile it into a minimally
+opinionated PyTorch model, train it with standard PyTorch tools, and optionally
+map model behavior back to the named nodes and features that defined the
+architecture.
 
 The package is designed for users who want to build sparse or structured neural
 networks from a predefined graph rather than manually wiring PyTorch modules.
-It is not tied to one scientific domain or one modeling workflow. Any setting
-where a model architecture can be represented as named edges can potentially use
-the same abstraction.
+It is domain-agnostic: any setting where a neural architecture can be
+represented as named edges can use the same graph-to-model abstraction.
 
 A major application area is knowledge-primed neural networks (KPNNs), where
-prior knowledge defines the model structure. In biology, for example, edge
-lists may connect genes, transcription factors, pathways, kinases, or other
-biological entities. The same graph-to-model approach can also be useful in
-other domains, such as chemistry or any field where structured prior knowledge
-can be expressed as a graph.
+prior knowledge defines the model structure. In biology, for example, edge lists
+may connect genes, transcription factors, pathways, kinases, or other biological
+entities. The same approach can also apply in domains such as chemistry or other
+fields with graph-structured prior knowledge.
 
-`edge2torch` deliberately keeps the compiled model minimally opinionated. It
-builds the sparse PyTorch model implied by the edge list, while leaving training
-loops, losses, optimizers, task-specific heads, and advanced customization to
-standard PyTorch.
+`edge2torch` deliberately leaves training loops, losses, optimizers,
+task-specific heads, and advanced customization to standard PyTorch.
 
 The package is built around four main steps:
 
@@ -64,8 +60,10 @@ pip install "edge2torch[bio]"
 
 ```python
 import pandas as pd
-import edge2torch as e2t
+import torch
+from torch import nn
 
+import edge2torch as e2t
 
 edgelist = pd.DataFrame(
     {
@@ -79,12 +77,44 @@ model, artifact = e2t.compile_graph(
     backend="feedforward",
 )
 
-customized_model = e2t.customize_model(model=model)
+data = pd.DataFrame(
+    {
+        "entity_1": [0.1, 0.2, 0.3],
+        "entity_2": [1.0, 1.1, 1.2],
+    }
+)
 
-result = e2t.interpret_model(
+x = e2t.align_features_to_input_nodes(
+    data=data,
+    artifact=artifact,
+)
+
+outputs = model(x)
+```
+
+The returned `model` is a standard PyTorch `nn.Module`. It can be trained,
+wrapped, optimized, saved, and inspected with ordinary PyTorch tooling.
+
+Optional convenience wrappers can be used for common downstream additions:
+
+```python
+customized_model = e2t.customize_model(
+    model=model,
+    activation=nn.ReLU(),
+    head=nn.Linear(1, 1),
+)
+
+optimizer = torch.optim.Adam(customized_model.parameters(), lr=1e-3)
+```
+
+After training, the model can optionally be interpreted with Captum-based
+attribution methods:
+
+```python
+feature_attributions = e2t.interpret_model(
     model=customized_model,
     artifact=artifact,
-    data=...,
+    data=data,
     target="features",
     method="integrated_gradients",
 )
@@ -117,8 +147,22 @@ This keeps the package small in scope:
 The current public API is centered on:
 
 - `compile_graph()`
+- `align_features_to_input_nodes()`
 - `customize_model()`
 - `interpret_model()`
+
+## Supported backends
+
+`compile_graph()` currently supports:
+
+- `feedforward`
+- `recurrent`
+- `graphnn`
+
+Feature attribution is available through Captum-based methods. Feedforward
+models also support broad node-level attribution. Recurrent and graph neural
+network backends can be compiled and trained, while node-level interpretation
+for these backends is planned for a future release.
 
 ## Documentation
 
