@@ -1148,3 +1148,65 @@ def test_interpret_model_rejects_constructor_kwargs_for_layer_activation():
             quiet=True,
             constructor_kwargs={"multiply_by_inputs": True},
         )
+
+
+def test_interpret_model_restores_training_mode_after_interpretation():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2"],
+            "target": ["output_1", "output_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist, quiet=True)
+    model.train()
+
+    data = pd.DataFrame(
+        {
+            "gene_1": [1.0, 2.0],
+            "gene_2": [3.0, 4.0],
+        }
+    )
+
+    interpret_model(
+        model=model,
+        artifact=artifact,
+        data=data,
+        target="features",
+        method="integrated_gradients",
+        quiet=True,
+        attribute_kwargs={"n_steps": 8},
+    )
+
+    assert model.training is True
+
+
+def test_interpret_model_restores_eval_mode_after_interpretation():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2"],
+            "target": ["output_1", "output_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist, quiet=True)
+    model.eval()
+
+    data = pd.DataFrame(
+        {
+            "gene_1": [1.0, 2.0],
+            "gene_2": [3.0, 4.0],
+        }
+    )
+
+    interpret_model(
+        model=model,
+        artifact=artifact,
+        data=data,
+        target="features",
+        method="integrated_gradients",
+        quiet=True,
+        attribute_kwargs={"n_steps": 8},
+    )
+
+    assert model.training is False

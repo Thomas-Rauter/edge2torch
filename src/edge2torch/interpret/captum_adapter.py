@@ -66,6 +66,11 @@ def run_captum_interpretation(
     attribute_kwargs
         Keyword arguments passed to the selected Captum ``attribute()`` call.
 
+    Notes
+    -----
+    The model is temporarily switched to evaluation mode during interpretation.
+    Its original training/evaluation state is restored before returning.
+
     Returns
     -------
     pd.DataFrame | dict[str, pd.DataFrame]
@@ -76,30 +81,37 @@ def run_captum_interpretation(
     Edge2TorchError
         If interpretation fails or outputs have unexpected shape.
     """
-    if target == "features":
-        return run_feature_attribution(
-            model=model,
-            artifact=artifact,
-            inputs=inputs,
-            sample_names=sample_names,
-            feature_names=feature_names,
-            method=method,
-            constructor_kwargs=constructor_kwargs,
-            attribute_kwargs=attribute_kwargs,
-        )
+    was_training = model.training
+    model.eval()
 
-    if target == "nodes":
-        return _run_node_interpretation(
-            model=model,
-            artifact=artifact,
-            inputs=inputs,
-            sample_names=sample_names,
-            method=method,
-            constructor_kwargs=constructor_kwargs,
-            attribute_kwargs=attribute_kwargs,
-        )
+    try:
+        if target == "features":
+            return run_feature_attribution(
+                model=model,
+                artifact=artifact,
+                inputs=inputs,
+                sample_names=sample_names,
+                feature_names=feature_names,
+                method=method,
+                constructor_kwargs=constructor_kwargs,
+                attribute_kwargs=attribute_kwargs,
+            )
 
-    raise Edge2TorchError(f"Unsupported interpretation target '{target}'.")
+        if target == "nodes":
+            return _run_node_interpretation(
+                model=model,
+                artifact=artifact,
+                inputs=inputs,
+                sample_names=sample_names,
+                method=method,
+                constructor_kwargs=constructor_kwargs,
+                attribute_kwargs=attribute_kwargs,
+            )
+
+        raise Edge2TorchError(f"Unsupported interpretation target '{target}'.")
+
+    finally:
+        model.train(was_training)
 
 
 # Level 2 functions (called by level 1 functions) ------------------------------

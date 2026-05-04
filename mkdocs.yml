@@ -33,11 +33,14 @@ plugins:
           paths: [src]
           options:
             docstring_style: numpy
-            show_root_heading: true
+            show_root_heading: false
             show_root_toc_entry: false
+            show_symbol_type_heading: false
+            show_symbol_type_toc: false
             show_signature: true
             show_signature_annotations: true
             separate_signature: true
+            line_length: 60
             show_source: false
             merge_init_into_class: true
   - mkdocs-jupyter

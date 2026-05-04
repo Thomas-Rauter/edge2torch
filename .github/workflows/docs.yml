@@ -42,9 +42,18 @@ jobs:
 
       - name: Execute documentation notebooks
         run: |
-          jupyter nbconvert --to notebook --execute --inplace \
+          python -m jupyter nbconvert \
+            --to notebook \
+            --execute \
+            --inplace \
+            --ExecutePreprocessor.kernel_name=python3 \
             docs/getting-started.ipynb
-          jupyter nbconvert --to notebook --execute --inplace \
+
+          python -m jupyter nbconvert \
+            --to notebook \
+            --execute \
+            --inplace \
+            --ExecutePreprocessor.kernel_name=python3 \
             docs/feedforward-skip-edges.ipynb
 
       - name: Build docs
