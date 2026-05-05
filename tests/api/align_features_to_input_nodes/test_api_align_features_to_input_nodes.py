@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import pytest
 import torch
@@ -201,3 +202,126 @@ def test_align_features_to_input_nodes_rejects_unsupported_data_type():
 
     with pytest.raises(Edge2TorchError, match="Unsupported input data type"):
         align_features_to_input_nodes([[1.0, 2.0]], artifact)
+
+
+def test_align_features_to_input_nodes_reorders_anndata_vars():
+    ad = pytest.importorskip("anndata")
+
+    artifact = _compile_simple_artifact()
+
+    data = ad.AnnData(
+        X=np.array(
+            [
+                [2.0, 1.0],
+                [4.0, 3.0],
+            ],
+            dtype=float,
+        ),
+        var=pd.DataFrame(index=["gene_b", "gene_a"]),
+    )
+
+    result = align_features_to_input_nodes(data, artifact)
+
+    expected = torch.tensor(
+        [
+            [1.0, 2.0],
+            [3.0, 4.0],
+        ],
+        dtype=torch.float32,
+    )
+
+    assert isinstance(result, torch.Tensor)
+    assert result.dtype == torch.float32
+    assert torch.equal(result, expected)
+
+
+def test_align_features_to_input_nodes_accepts_sparse_anndata_matrix():
+    ad = pytest.importorskip("anndata")
+    sparse = pytest.importorskip("scipy.sparse")
+
+    artifact = _compile_simple_artifact()
+
+    data = ad.AnnData(
+        X=sparse.csr_matrix(
+            [
+                [2.0, 1.0],
+                [4.0, 3.0],
+            ]
+        ),
+        var=pd.DataFrame(index=["gene_b", "gene_a"]),
+    )
+
+    result = align_features_to_input_nodes(data, artifact)
+
+    expected = torch.tensor(
+        [
+            [1.0, 2.0],
+            [3.0, 4.0],
+        ],
+        dtype=torch.float32,
+    )
+
+    assert isinstance(result, torch.Tensor)
+    assert result.dtype == torch.float32
+    assert torch.equal(result, expected)
+
+
+def test_align_features_to_input_nodes_rejects_duplicate_anndata_vars():
+    ad = pytest.importorskip("anndata")
+
+    artifact = _compile_simple_artifact()
+
+    with pytest.warns(UserWarning, match="Variable names are not unique"):
+        data = ad.AnnData(
+            X=np.array(
+                [
+                    [1.0, 2.0],
+                    [3.0, 4.0],
+                ],
+                dtype=float,
+            ),
+            var=pd.DataFrame(index=["gene_a", "gene_a"]),
+        )
+
+    with pytest.raises(Edge2TorchError, match="var_names must not contain"):
+        align_features_to_input_nodes(data, artifact)
+
+
+def test_align_features_to_input_nodes_rejects_missing_anndata_vars():
+    ad = pytest.importorskip("anndata")
+
+    artifact = _compile_simple_artifact()
+
+    data = ad.AnnData(
+        X=np.array(
+            [
+                [1.0],
+                [2.0],
+            ],
+            dtype=float,
+        ),
+        var=pd.DataFrame(index=["gene_a"]),
+    )
+
+    with pytest.raises(Edge2TorchError, match="missing required feature"):
+        align_features_to_input_nodes(data, artifact)
+
+
+def test_align_features_to_input_nodes_rejects_extra_anndata_vars():
+    ad = pytest.importorskip("anndata")
+
+    artifact = _compile_simple_artifact()
+
+    data = ad.AnnData(
+        X=np.array(
+            [
+                [1.0, 2.0, 3.0],
+                [4.0, 5.0, 6.0],
+            ],
+            dtype=float,
+        ),
+        var=pd.DataFrame(index=["gene_a", "gene_b", "gene_c"]),
+    )
+
+    with pytest.raises(Edge2TorchError, match="not input nodes"):
+        align_features_to_input_nodes(data, artifact)
