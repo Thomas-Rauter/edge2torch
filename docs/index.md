@@ -5,7 +5,9 @@
 
 Build PyTorch models from edge lists of named neural architecture nodes.
 
-![Graphical abstract of edge2torch](figures/graphical_abstract.svg)
+<img src="figures/graphical_abstract.svg"
+     alt="Graphical abstract of edge2torch"
+     style="width: 100%; max-width: 100%;">
 
 ## Overview
 
@@ -102,24 +104,12 @@ See the **Backends** page for details.
 
 If you are new to the package, start with:
 
-- **Installation** for package setup and optional extras
-- **Getting started** for a full end-to-end example
-- **Feedforward skip edges** for how non-adjacent feedforward edges are handled
-- **Backends** for backend semantics and current support
-- **Interpretation** for attribution targets, methods, and backend support
-- **API reference** for function-level documentation
-
-## Current scope
-
-The package currently focuses on:
-
-- compiling graph-defined architectures into PyTorch models
-- aligning named data features to compiled model input nodes
-- optional post-compilation model customization
-- feature-level and node-level interpretation
-- feedforward, recurrent, and graphnn backend support
-
-Interpretation support is currently most complete for the feedforward backend.
+- [**Installation**](installation.md) for package setup and optional extras
+- [**Getting started**](getting-started.ipynb) for a full end-to-end example
+- [**Feedforward skip edges**](feedforward-skip-edges.ipynb) for how non-adjacent feedforward edges are handled
+- [**Backends**](backends.md) for backend semantics and current support
+- [**Interpretation**](interpretation.md) for attribution targets, methods, and backend support
+- [**API reference**](api.md) for function-level documentation
 
 ## License
 

@@ -1,7 +1,3 @@
-"""
-API function
-"""
-
 from typing import Any, Union
 
 import pandas as pd
@@ -73,6 +69,32 @@ def interpret_model(
         If interpretation input validation fails, the requested
         target / method / backend combination is not supported, or Captum
         returns unsupported output.
+
+    Examples
+    --------
+    Compute feature-level attributions with integrated gradients.
+
+    >>> feature_attributions = interpret_model(
+    ...     model=trained_model,
+    ...     artifact=artifact,
+    ...     data=data,
+    ...     target="features",
+    ...     method="integrated_gradients",
+    ...     quiet=True,
+    ... )
+    >>> feature_attributions.head()
+
+    Compute node-level attributions for a feedforward model.
+
+    >>> node_attributions = interpret_model(
+    ...     model=trained_model,
+    ...     artifact=artifact,
+    ...     data=data,
+    ...     target="nodes",
+    ...     method="layer_conductance",
+    ...     quiet=True,
+    ... )
+    >>> node_attributions.keys()
     """
     validate_interpret_model_inputs(
         model=model,

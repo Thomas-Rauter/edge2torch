@@ -1,7 +1,3 @@
-"""
-API function
-"""
-
 from torch import nn
 
 from .customize.input_validation import validate_customize_model_inputs
@@ -46,6 +42,27 @@ def customize_model(
     ------
     Edge2TorchError
         If any input is invalid.
+
+    Examples
+    --------
+    Add an activation function after the compiled model.
+
+    >>> from torch import nn
+    >>> from edge2torch.customize_model import customize_model
+    >>>
+    >>> customized_model = customize_model(
+    ...     model=model,
+    ...     activation=nn.ReLU(),
+    ... )
+
+    Add an activation, dropout, and task-specific prediction head.
+
+    >>> customized_model = customize_model(
+    ...     model=model,
+    ...     activation=nn.ReLU(),
+    ...     dropout=0.2,
+    ...     head=nn.Linear(1, 1),
+    ... )
     """
     validate_customize_model_inputs(
         model=model,

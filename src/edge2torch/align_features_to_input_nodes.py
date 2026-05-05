@@ -1,7 +1,3 @@
-"""
-API function
-"""
-
 import pandas as pd
 import torch
 
@@ -64,9 +60,39 @@ def align_features_to_input_nodes(
 
     Examples
     --------
-    >>> model, artifact = compile_graph(edgelist)
-    >>> x = align_features_to_input_nodes(data_frame, artifact)
-    >>> y = model(x)
+    Align a DataFrame whose columns are named but not ordered like the compiled
+    model input nodes.
+
+    >>> import pandas as pd
+    >>> from edge2torch.align_features_to_input_nodes import (
+    ...     align_features_to_input_nodes,
+    ... )
+    >>>
+    >>> data = pd.DataFrame(
+    ...     {
+    ...         "gene_b": [2.0, 4.0],
+    ...         "gene_a": [1.0, 3.0],
+    ...     }
+    ... )
+    >>>
+    >>> artifact.feature_names
+    ['gene_a', 'gene_b']
+    >>>
+    >>> x = align_features_to_input_nodes(
+    ...     data=data,
+    ...     artifact=artifact,
+    ... )
+    >>> x
+    tensor([[1., 2.],
+            [3., 4.]])
+
+    Tensor inputs do not contain feature names, so they are only checked by
+    shape and are assumed to already follow ``artifact.feature_names``.
+
+    >>> x = align_features_to_input_nodes(
+    ...     data=x_tensor,
+    ...     artifact=artifact,
+    ... )
     """
     _validate_align_features_to_input_nodes_inputs(
         data=data,

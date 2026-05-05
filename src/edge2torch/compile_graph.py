@@ -1,7 +1,3 @@
-"""
-API function
-"""
-
 import pandas as pd
 
 from .compile.compiler import compile_backend
@@ -44,6 +40,29 @@ def compile_graph(
     ------
     Edge2TorchError
         If input validation, graph validation, or backend compilation fails.
+
+    Examples
+    --------
+    Compile a small feedforward architecture from an edgelist.
+
+    >>> import pandas as pd
+    >>> from edge2torch.compile_graph import compile_graph
+    >>>
+    >>> edgelist = pd.DataFrame(
+    ...     {
+    ...         "source": ["gene_a", "gene_b", "hidden_1"],
+    ...         "target": ["hidden_1", "hidden_1", "output_1"],
+    ...     }
+    ... )
+    >>>
+    >>> model, artifact = compile_graph(
+    ...     edgelist=edgelist,
+    ...     backend="feedforward",
+    ...     quiet=True,
+    ... )
+    >>>
+    >>> artifact.feature_names
+    ['gene_a', 'gene_b']
     """
     validate_compile_graph_inputs(
         edgelist=edgelist,
