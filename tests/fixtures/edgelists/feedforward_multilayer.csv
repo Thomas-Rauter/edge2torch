@@ -1,0 +1,14 @@
+source,target
+gene_a,tf_1
+gene_b,tf_1
+gene_c,tf_2
+gene_d,tf_2
+gene_e,tf_3
+gene_f,tf_3
+tf_1,pathway_1
+tf_2,pathway_1
+tf_2,pathway_2
+tf_3,pathway_2
+pathway_1,module_1
+pathway_2,module_1
+module_1,output_1

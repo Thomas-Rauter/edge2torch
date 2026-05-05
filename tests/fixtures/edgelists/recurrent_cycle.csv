@@ -1,0 +1,14 @@
+source,target
+input_a,state_1
+input_b,state_2
+input_c,state_3
+state_1,state_2
+state_2,state_3
+state_3,state_1
+state_2,state_4
+state_4,state_2
+state_3,state_5
+state_5,state_6
+state_6,state_5
+state_4,output_1
+state_6,output_2

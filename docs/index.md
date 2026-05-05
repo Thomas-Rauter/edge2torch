@@ -1,79 +1,66 @@
 # edge2torch
 
-Compile prior-knowledge graphs into minimally opinionated PyTorch models
-and map trained models back to interpretable named entities.
+[![CI](https://github.com/Thomas-Rauter/edge2torch/actions/workflows/ci.yml/badge.svg)](https://github.com/Thomas-Rauter/edge2torch/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/Thomas-Rauter/edge2torch/branch/main/graph/badge.svg)](https://app.codecov.io/gh/Thomas-Rauter/edge2torch)
+
+Build PyTorch models from edge lists of named neural architecture nodes.
 
 ![Graphical abstract of edge2torch](figures/graphical_abstract.svg)
 
 ## Overview
 
-`edge2torch` is a graph-to-model compiler plus model-to-interpretation bridge for
-knowledge-primed neural networks.
+`edge2torch` is an edge-list-to-PyTorch compiler for sparse neural network
+architectures with named nodes.
 
-The package is **not tied to a specific scientific domain**. Its core
-abstraction is general: a graph with named entities is compiled into a PyTorch
-model, trained with ordinary PyTorch tools, and then interpreted back in the
-space of the original graph-defined entities.
+Define a model architecture as an edge list, compile it into a minimally
+opinionated PyTorch model, train it with standard PyTorch tools, and optionally
+map model behavior back to the named nodes and features that defined the
+architecture.
 
-Biology is currently a main application area, and many examples in the
-documentation use biological entities such as genes, transcription factors, and
-kinases. But the same ideas can also be used in other domains wherever prior
-knowledge can be expressed as a graph. Chemistry is one example of such a
-setting.
+The package is designed for users who want to build sparse or structured neural
+networks from a predefined graph rather than manually wiring PyTorch modules.
+It is domain-agnostic: any setting where a neural architecture can be
+represented as named edges can use the same graph-to-model abstraction.
 
-The package is built around three main steps:
+Here, "graph" means the architecture specification, not necessarily a graph
+neural network. Feedforward models, recurrent models, and graph neural networks
+can all be represented by edge lists when their architecture is defined through
+directed connections between named nodes.
 
-1. **Compile** a graph into a backend-specific PyTorch model with
-   `compile_graph()`
-2. **Customize and train** the compiled model with ordinary PyTorch or with
-   `customize_model()`
-3. **Interpret** the trained model with `interpret_model()`
+A major application area is knowledge-primed neural networks (KPNNs), where
+prior knowledge defines the model structure. In biology, for example, edge lists
+may connect genes, transcription factors, pathways, kinases, or other biological
+entities. The same approach can also apply in domains such as chemistry or other
+fields with graph-structured prior knowledge.
+
+`edge2torch` deliberately leaves training loops, losses, optimizers,
+task-specific heads, and advanced customization to standard PyTorch.
+
+## Core workflow
+
+The package is built around four main steps:
+
+1. Define a model architecture as an edge list with named `source` and `target`
+   nodes.
+2. Compile the edge list into a backend-specific PyTorch model with
+   `compile_graph()`.
+3. Align named input data features to the compiled model input nodes with
+   `align_features_to_input_nodes()`.
+4. Customize, train, and interpret the model with ordinary PyTorch,
+   `customize_model()`, and `interpret_model()`.
 
 ## Main public API
 
 The current public API is centered on:
 
 - `compile_graph()`
+- `align_features_to_input_nodes()`
 - `customize_model()`
 - `interpret_model()`
 
-A minimal workflow looks like:
-
-```python
-import pandas as pd
-
-from edge2torch.compile_graph import compile_graph
-from edge2torch.customize_model import customize_model
-from edge2torch.interpret_model import interpret_model
-
-edgelist = pd.DataFrame(
-    {
-        "source": ["entity_1", "entity_2", "hidden_1"],
-        "target": ["hidden_1", "hidden_1", "output_1"],
-    }
-)
-
-model, artifact = compile_graph(
-    edgelist=edgelist,
-    backend="feedforward",
-)
-
-customized_model = customize_model(
-    model=model,
-)
-
-result = interpret_model(
-    model=customized_model,
-    artifact=artifact,
-    data=...,
-    target="features",
-    method="integrated_gradients",
-)
-```
-
 ## Package philosophy
 
-`edge2torch` is intentionally **minimally opinionated**.
+`edge2torch` is intentionally minimally opinionated.
 
 It defines the structural semantics required to compile a graph into a neural
 network backend, but it does not impose broader modeling choices such as:
@@ -93,25 +80,31 @@ This keeps the package small in scope:
 - PyTorch handles model training
 - `edge2torch` maps trained models back to interpretable named entities
 
-## Current backends
+## Supported backends
 
-`edge2torch` currently implements three backends:
+`compile_graph()` currently supports:
 
 - `feedforward`
 - `recurrent`
 - `graphnn`
 
-These backends share the same graph input format but differ in how graph
+These backends share the same edge-list input format but differ in how the graph
 structure is translated into neural-network computation.
+
+Feature attribution is available through Captum-based methods. Feedforward
+models also support broad node-level attribution. Recurrent and graph neural
+network backends can be compiled and trained, while node-level interpretation
+for these backends is planned for a future release.
 
 See the **Backends** page for details.
 
-## Documentation guide
+## Start here
 
-If you are new to the package, the best place to start is:
+If you are new to the package, start with:
 
-- **Getting started** for a full end-to-end example
 - **Installation** for package setup and optional extras
+- **Getting started** for a full end-to-end example
+- **Feedforward skip edges** for how non-adjacent feedforward edges are handled
 - **Backends** for backend semantics and current support
 - **Interpretation** for attribution targets, methods, and backend support
 - **API reference** for function-level documentation
@@ -120,9 +113,10 @@ If you are new to the package, the best place to start is:
 
 The package currently focuses on:
 
-- graph compilation into PyTorch models
+- compiling graph-defined architectures into PyTorch models
+- aligning named data features to compiled model input nodes
 - optional post-compilation model customization
-- feature- and node-level interpretation
+- feature-level and node-level interpretation
 - feedforward, recurrent, and graphnn backend support
 
 Interpretation support is currently most complete for the feedforward backend.
