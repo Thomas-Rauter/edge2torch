@@ -44,6 +44,7 @@ dev = [
     "ruff",
     "mypy",
     "build",
+    "anndata",
 ]
 docs = [
     "mkdocs",
@@ -53,6 +54,7 @@ docs = [
     "pymdown-extensions",
     "nbconvert",
     "ipykernel",
+    "ipywidgets",
     "graphviz",
     "IPython",
     "seaborn",

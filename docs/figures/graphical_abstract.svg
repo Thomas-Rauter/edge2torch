@@ -24,10 +24,10 @@
      inkscape:document-units="mm"
      showgrid="false"
      inkscape:zoom="2.5620932"
-     inkscape:cx="450.21781"
-     inkscape:cy="110.65171"
+     inkscape:cx="462.3173"
+     inkscape:cy="110.84687"
      inkscape:window-width="1920"
-     inkscape:window-height="1136"
+     inkscape:window-height="1163"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
@@ -829,5 +829,27 @@
        d="m 128.10517,14.206129 c -5.22767,-0.170031 -7.6612,-1.651303 -8.55358,-3.845403"
        id="path108857"
        sodipodi:nodetypes="cc" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:2.11667px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="47.063259"
+       y="24.958179"
+       id="text1087"><tspan
+         sodipodi:role="line"
+         id="tspan1085"
+         style="font-size:2.11667px;stroke-width:0.264583"
+         x="47.063259"
+         y="24.958179">PyTorch functions</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:2.11667px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="54.973328"
+       y="21.923481"
+       id="text4467"><tspan
+         sodipodi:role="line"
+         id="tspan4465"
+         style="font-size:2.11667px;stroke-width:0.264583"
+         x="54.973328"
+         y="21.923481">or</tspan></text>
   </g>
 </svg>
