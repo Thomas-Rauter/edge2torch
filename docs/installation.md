@@ -2,16 +2,38 @@
 
 ## Install from PyPI
 
-Install `edge2torch` from PyPI with:
+Install the core `edge2torch` package from PyPI with:
 
 ```bash
 pip install edge2torch
 ```
 
-For optional `AnnData` support:
+The core installation supports compiling sparse PyTorch models from edgelists,
+aligning named input features, customizing compiled models, and training with
+ordinary PyTorch.
+
+## Optional interpretation support
+
+`interpret_model()` uses Captum and is installed as an optional dependency.
+
+To install `edge2torch` with interpretation support:
 
 ```bash
-pip install "edge2torch[bio]"
+pip install "edge2torch[interpret]"
+```
+
+## Optional AnnData support
+
+For optional `AnnData` input support:
+
+```bash
+pip install "edge2torch[anndata]"
+```
+
+To install both interpretation and `AnnData` support:
+
+```bash
+pip install "edge2torch[interpret,anndata]"
 ```
 
 ## Development installation
@@ -25,10 +47,22 @@ cd edge2torch
 pip install -e .
 ```
 
+For optional interpretation support during development:
+
+```bash
+pip install -e ".[interpret]"
+```
+
 For optional `AnnData` support during development:
 
 ```bash
-pip install -e .[bio]
+pip install -e ".[anndata]"
+```
+
+For both optional interpretation and `AnnData` support:
+
+```bash
+pip install -e ".[interpret,anndata]"
 ```
 
 ## Optional dependency groups
@@ -36,13 +70,13 @@ pip install -e .[bio]
 Install development dependencies with:
 
 ```bash
-pip install -e .[dev]
+pip install -e ".[dev]"
 ```
 
 Install documentation dependencies with:
 
 ```bash
-pip install -e .[docs]
+pip install -e ".[docs]"
 ```
 
 ## Notebook and documentation note
@@ -59,8 +93,14 @@ sudo apt install graphviz
 
 ## Verify the installation
 
-A minimal smoke test is:
+A minimal core-installation smoke test is:
 
 ```bash
 python -c "import edge2torch; print('edge2torch imported successfully')"
+```
+
+To verify interpretation support, install `edge2torch[interpret]` and run:
+
+```bash
+python -c "from edge2torch import interpret_model; print(interpret_model)"
 ```

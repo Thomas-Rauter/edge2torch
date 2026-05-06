@@ -15,7 +15,6 @@ authors = [
 dependencies = [
     "pandas",
     "torch",
-    "captum",
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -35,7 +34,14 @@ Repository = "https://github.com/Thomas-Rauter/edge2torch"
 Issues = "https://github.com/Thomas-Rauter/edge2torch/issues"
 
 [project.optional-dependencies]
-bio = [
+all = [
+    "captum",
+    "anndata",
+]
+interpret = [
+    "captum",
+]
+anndata = [
     "anndata",
 ]
 dev = [
@@ -44,6 +50,7 @@ dev = [
     "ruff",
     "mypy",
     "build",
+    "captum",
     "anndata",
 ]
 docs = [
@@ -59,6 +66,8 @@ docs = [
     "IPython",
     "seaborn",
     "black",
+    "captum",
+    "anndata",
 ]
 
 [tool.setuptools]

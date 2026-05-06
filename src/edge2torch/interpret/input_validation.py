@@ -29,10 +29,10 @@ except ImportError:
 
 from ..utils.errors import Edge2TorchError
 from .method_registry import (
-    FEATURE_INTERPRETERS_WITHOUT_CONSTRUCTOR_KWARGS,
     FEATURE_METHODS,
-    FEEDFORWARD_NODE_INTERPRETERS_WITHOUT_CONSTRUCTOR_KWARGS,
+    FEATURE_METHODS_WITHOUT_CONSTRUCTOR_KWARGS,
     FEEDFORWARD_NODE_METHODS,
+    FEEDFORWARD_NODE_METHODS_WITHOUT_CONSTRUCTOR_KWARGS,
     SUPPORTED_METHODS,
 )
 
@@ -155,7 +155,7 @@ def _validate_interpret_options(
 
     if (
         target == "features"
-        and method in FEATURE_INTERPRETERS_WITHOUT_CONSTRUCTOR_KWARGS
+        and method in FEATURE_METHODS_WITHOUT_CONSTRUCTOR_KWARGS
         and constructor_kwargs
     ):
         raise Edge2TorchError(
@@ -165,7 +165,7 @@ def _validate_interpret_options(
 
     if (
         target == "nodes"
-        and method in FEEDFORWARD_NODE_INTERPRETERS_WITHOUT_CONSTRUCTOR_KWARGS
+        and method in FEEDFORWARD_NODE_METHODS_WITHOUT_CONSTRUCTOR_KWARGS
         and constructor_kwargs
     ):
         raise Edge2TorchError(

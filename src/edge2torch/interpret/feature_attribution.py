@@ -23,9 +23,10 @@ from torch import nn
 
 from ..compile.artifact import CompileArtifact
 from ..utils.errors import Edge2TorchError
+from .captum_classes import get_captum_class
 from .method_registry import (
-    FEATURE_INTERPRETERS_WITH_CONSTRUCTOR_KWARGS,
-    FEATURE_INTERPRETERS_WITHOUT_CONSTRUCTOR_KWARGS,
+    FEATURE_METHODS_WITH_CONSTRUCTOR_KWARGS,
+    FEATURE_METHODS_WITHOUT_CONSTRUCTOR_KWARGS,
 )
 
 # Level 2 functions (called by level 1 functions) ------------------------------
@@ -95,17 +96,15 @@ def _build_feature_interpreter(
     """
     Build a Captum interpreter for feature-level attribution.
     """
-    if method in FEATURE_INTERPRETERS_WITH_CONSTRUCTOR_KWARGS:
-        interpreter_class = FEATURE_INTERPRETERS_WITH_CONSTRUCTOR_KWARGS[method]
+    if method in FEATURE_METHODS_WITH_CONSTRUCTOR_KWARGS:
+        interpreter_class = get_captum_class(method)
         return interpreter_class(
             model,
             **constructor_kwargs,
         )
 
-    if method in FEATURE_INTERPRETERS_WITHOUT_CONSTRUCTOR_KWARGS:
-        interpreter_class = FEATURE_INTERPRETERS_WITHOUT_CONSTRUCTOR_KWARGS[
-            method
-        ]
+    if method in FEATURE_METHODS_WITHOUT_CONSTRUCTOR_KWARGS:
+        interpreter_class = get_captum_class(method)
         return interpreter_class(model)
 
     raise Edge2TorchError(
