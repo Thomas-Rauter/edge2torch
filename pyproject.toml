@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "edge2torch"
 version = "0.1.0"
-description = "Build PyTorch models from edge lists of named neural architecture nodes."
+description = "Build sparse PyTorch neural networks from edge lists of named nodes, with optional feature- and node-level attribution."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"

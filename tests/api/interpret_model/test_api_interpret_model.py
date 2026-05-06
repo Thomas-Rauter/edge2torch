@@ -36,7 +36,7 @@ def test_interpret_model_returns_feature_dataframe():
         artifact=artifact,
         data=data,
         target="features",
-        method="integrated_gradients",
+        method="IntegratedGradients",
     )
 
     assert isinstance(result, pd.DataFrame)
@@ -68,7 +68,7 @@ def test_interpret_model_returns_node_dataframes_for_layer_conductance():
         artifact=artifact,
         data=data,
         target="nodes",
-        method="layer_conductance",
+        method="LayerConductance",
     )
 
     assert isinstance(result, dict)
@@ -110,7 +110,7 @@ def test_interpret_model_returns_node_dataframes_for_layer_ig():
         artifact=artifact,
         data=data,
         target="nodes",
-        method="layer_integrated_gradients",
+        method="LayerIntegratedGradients",
     )
 
     assert isinstance(result, dict)
@@ -143,7 +143,7 @@ def test_interpret_model_accepts_tensor_input_for_feature_target():
         artifact=artifact,
         data=data,
         target="features",
-        method="integrated_gradients",
+        method="IntegratedGradients",
     )
 
     assert isinstance(result, pd.DataFrame)
@@ -174,7 +174,7 @@ def test_interpret_model_reorders_dataframe_columns_to_feature_names():
         artifact=artifact,
         data=data,
         target="features",
-        method="integrated_gradients",
+        method="IntegratedGradients",
     )
 
     assert list(result.columns) == artifact.feature_names
@@ -198,7 +198,7 @@ def test_interpret_model_raises_for_incompatible_feature_method():
             artifact=artifact,
             data=data,
             target="features",
-            method="layer_conductance",
+            method="LayerConductance",
         )
 
 
@@ -220,7 +220,7 @@ def test_interpret_model_raises_for_incompatible_node_method():
             artifact=artifact,
             data=data,
             target="nodes",
-            method="integrated_gradients",
+            method="IntegratedGradients",
         )
 
 
@@ -246,7 +246,7 @@ def test_interpret_model_raises_for_missing_dataframe_features():
             artifact=artifact,
             data=data,
             target="features",
-            method="integrated_gradients",
+            method="IntegratedGradients",
         )
 
 
@@ -268,7 +268,7 @@ def test_interpret_model_raises_for_wrong_tensor_feature_count():
             artifact=artifact,
             data=data,
             target="features",
-            method="integrated_gradients",
+            method="IntegratedGradients",
         )
 
 
@@ -304,7 +304,7 @@ def test_interpret_model_hides_pseudo_nodes_in_node_results():
         artifact=artifact,
         data=data,
         target="nodes",
-        method="layer_conductance",
+        method="LayerConductance",
     )
 
     assert isinstance(result, dict)
@@ -354,7 +354,7 @@ def test_interpret_model_hides_pseudo_nodes_for_layer_ig():
         artifact=artifact,
         data=data,
         target="nodes",
-        method="layer_integrated_gradients",
+        method="LayerIntegratedGradients",
     )
 
     assert isinstance(result, dict)
@@ -394,7 +394,7 @@ def test_interpret_model_accepts_anndata_for_feature_target():
         artifact=artifact,
         data=data,
         target="features",
-        method="integrated_gradients",
+        method="IntegratedGradients",
     )
 
     assert isinstance(result, pd.DataFrame)
@@ -425,7 +425,7 @@ def test_interpret_model_reorders_anndata_var_names():
         artifact=artifact,
         data=data,
         target="features",
-        method="integrated_gradients",
+        method="IntegratedGradients",
     )
 
     assert isinstance(result, pd.DataFrame)
@@ -457,7 +457,7 @@ def test_interpret_model_raises_for_missing_anndata_features():
             artifact=artifact,
             data=data,
             target="features",
-            method="integrated_gradients",
+            method="IntegratedGradients",
         )
 
 
@@ -483,7 +483,7 @@ def test_interpret_model_supports_feature_target_for_recurrent_backend():
         artifact=artifact,
         data=data,
         target="features",
-        method="integrated_gradients",
+        method="IntegratedGradients",
     )
 
     assert isinstance(result, pd.DataFrame)
@@ -515,7 +515,7 @@ def test_interpret_model_supports_feature_target_for_graphnn_backend():
         artifact=artifact,
         data=data,
         target="features",
-        method="integrated_gradients",
+        method="IntegratedGradients",
     )
 
     assert isinstance(result, pd.DataFrame)
@@ -550,7 +550,7 @@ def test_interpret_model_raises_for_node_target_with_recurrent_backend():
             artifact=artifact,
             data=data,
             target="nodes",
-            method="layer_conductance",
+            method="LayerConductance",
         )
 
 
@@ -581,7 +581,7 @@ def test_interpret_model_raises_for_node_target_with_graphnn_backend():
             artifact=artifact,
             data=data,
             target="nodes",
-            method="layer_conductance",
+            method="LayerConductance",
         )
 
 
@@ -608,7 +608,7 @@ def test_interpret_model_accepts_feature_constructor_kwargs():
         artifact=artifact,
         data=data,
         target="features",
-        method="integrated_gradients",
+        method="IntegratedGradients",
         quiet=True,
         constructor_kwargs={"multiply_by_inputs": True},
     )
@@ -642,7 +642,7 @@ def test_interpret_model_accepts_feature_attribute_kwargs():
         artifact=artifact,
         data=data,
         target="features",
-        method="integrated_gradients",
+        method="IntegratedGradients",
         quiet=True,
         attribute_kwargs={"n_steps": 4},
     )
@@ -676,7 +676,7 @@ def test_interpret_model_accepts_node_attribute_kwargs():
         artifact=artifact,
         data=data,
         target="nodes",
-        method="layer_integrated_gradients",
+        method="LayerIntegratedGradients",
         quiet=True,
         attribute_kwargs={"n_steps": 4},
     )
@@ -712,7 +712,7 @@ def test_interpret_model_rejects_invalid_constructor_kwargs():
             artifact=artifact,
             data=data,
             target="features",
-            method="integrated_gradients",
+            method="IntegratedGradients",
             quiet=True,
             constructor_kwargs=["not", "a", "dict"],
         )
@@ -741,7 +741,7 @@ def test_interpret_model_rejects_invalid_attribute_kwargs():
             artifact=artifact,
             data=data,
             target="features",
-            method="integrated_gradients",
+            method="IntegratedGradients",
             quiet=True,
             attribute_kwargs=["not", "a", "dict"],
         )
@@ -770,7 +770,7 @@ def test_interpret_model_rejects_return_convergence_delta():
             artifact=artifact,
             data=data,
             target="features",
-            method="integrated_gradients",
+            method="IntegratedGradients",
             quiet=True,
             attribute_kwargs={"return_convergence_delta": True},
         )
@@ -782,13 +782,13 @@ def test_interpret_model_rejects_return_convergence_delta():
 @pytest.mark.parametrize(
     "method",
     [
-        "integrated_gradients",
-        "saliency",
-        "input_x_gradient",
-        "feature_ablation",
-        "feature_permutation",
-        "shapley_value_sampling",
-        "shapley_values",
+        "IntegratedGradients",
+        "Saliency",
+        "InputXGradient",
+        "FeatureAblation",
+        "FeaturePermutation",
+        "ShapleyValueSampling",
+        "ShapleyValues",
     ],
 )
 def test_interpret_model_supports_basic_feature_methods(method):
@@ -849,7 +849,7 @@ def test_interpret_model_supports_gradient_shap_with_attribute_kwargs():
         artifact=artifact,
         data=data,
         target="features",
-        method="gradient_shap",
+        method="GradientShap",
         quiet=True,
         attribute_kwargs={
             "baselines": baselines,
@@ -887,7 +887,7 @@ def test_interpret_model_supports_occlusion_with_attribute_kwargs():
         artifact=artifact,
         data=data,
         target="features",
-        method="occlusion",
+        method="Occlusion",
         quiet=True,
         attribute_kwargs={
             "sliding_window_shapes": (1,),
@@ -925,7 +925,7 @@ def test_interpret_model_rejects_constructor_kwargs_for_saliency():
             artifact=artifact,
             data=data,
             target="features",
-            method="saliency",
+            method="Saliency",
             quiet=True,
             constructor_kwargs={"multiply_by_inputs": True},
         )
@@ -954,7 +954,7 @@ def test_interpret_model_accepts_constructor_kwargs_for_integrated_gradients():
         artifact=artifact,
         data=data,
         target="features",
-        method="integrated_gradients",
+        method="IntegratedGradients",
         quiet=True,
         constructor_kwargs={"multiply_by_inputs": True},
         attribute_kwargs={"n_steps": 4},
@@ -997,12 +997,12 @@ def test_interpret_model_rejects_unknown_feature_method():
 @pytest.mark.parametrize(
     "method",
     [
-        "layer_conductance",
-        "layer_activation",
-        "layer_gradient_x_activation",
-        "layer_feature_ablation",
-        "layer_feature_permutation",
-        "layer_integrated_gradients",
+        "LayerConductance",
+        "LayerActivation",
+        "LayerGradientXActivation",
+        "LayerFeatureAblation",
+        "LayerFeaturePermutation",
+        "LayerIntegratedGradients",
     ],
 )
 def test_interpret_model_supports_feedforward_node_methods(method):
@@ -1065,7 +1065,7 @@ def test_interpret_model_supports_layer_gradient_shap_with_attribute_kwargs():
         artifact=artifact,
         data=data,
         target="nodes",
-        method="layer_gradient_shap",
+        method="LayerGradientShap",
         quiet=True,
         attribute_kwargs={
             "baselines": baselines,
@@ -1105,7 +1105,7 @@ def test_interpret_model_accepts_layer_ig_constructor_kwargs():
         artifact=artifact,
         data=data,
         target="nodes",
-        method="layer_integrated_gradients",
+        method="LayerIntegratedGradients",
         quiet=True,
         constructor_kwargs={"multiply_by_inputs": True},
         attribute_kwargs={"n_steps": 4},
@@ -1144,7 +1144,7 @@ def test_interpret_model_rejects_constructor_kwargs_for_layer_activation():
             artifact=artifact,
             data=data,
             target="nodes",
-            method="layer_activation",
+            method="LayerActivation",
             quiet=True,
             constructor_kwargs={"multiply_by_inputs": True},
         )
@@ -1173,7 +1173,7 @@ def test_interpret_model_restores_training_mode_after_interpretation():
         artifact=artifact,
         data=data,
         target="features",
-        method="integrated_gradients",
+        method="IntegratedGradients",
         quiet=True,
         attribute_kwargs={"n_steps": 8},
     )
@@ -1204,7 +1204,7 @@ def test_interpret_model_restores_eval_mode_after_interpretation():
         artifact=artifact,
         data=data,
         target="features",
-        method="integrated_gradients",
+        method="IntegratedGradients",
         quiet=True,
         attribute_kwargs={"n_steps": 8},
     )

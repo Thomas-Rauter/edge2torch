@@ -45,25 +45,25 @@ from captum.attr import (
 )
 
 FEATURE_INTERPRETERS_WITH_CONSTRUCTOR_KWARGS = {
-    "integrated_gradients": IntegratedGradients,
-    "deeplift": DeepLift,
-    "deeplift_shap": DeepLiftShap,
-    "gradient_shap": GradientShap,
+    "IntegratedGradients": IntegratedGradients,
+    "DeepLift": DeepLift,
+    "DeepLiftShap": DeepLiftShap,
+    "GradientShap": GradientShap,
 }
 
 FEATURE_INTERPRETERS_WITHOUT_CONSTRUCTOR_KWARGS = {
-    "saliency": Saliency,
-    "input_x_gradient": InputXGradient,
-    "guided_backprop": GuidedBackprop,
-    "deconvolution": Deconvolution,
-    "feature_ablation": FeatureAblation,
-    "occlusion": Occlusion,
-    "feature_permutation": FeaturePermutation,
-    "shapley_value_sampling": ShapleyValueSampling,
-    "shapley_values": ShapleyValues,
-    "lime": Lime,
-    "kernel_shap": KernelShap,
-    "lrp": LRP,
+    "Saliency": Saliency,
+    "InputXGradient": InputXGradient,
+    "GuidedBackprop": GuidedBackprop,
+    "Deconvolution": Deconvolution,
+    "FeatureAblation": FeatureAblation,
+    "Occlusion": Occlusion,
+    "FeaturePermutation": FeaturePermutation,
+    "ShapleyValueSampling": ShapleyValueSampling,
+    "ShapleyValues": ShapleyValues,
+    "Lime": Lime,
+    "KernelShap": KernelShap,
+    "LRP": LRP,
 }
 
 FEATURE_METHODS = set(FEATURE_INTERPRETERS_WITH_CONSTRUCTOR_KWARGS) | set(
@@ -71,20 +71,20 @@ FEATURE_METHODS = set(FEATURE_INTERPRETERS_WITH_CONSTRUCTOR_KWARGS) | set(
 )
 
 FEEDFORWARD_NODE_INTERPRETERS_WITH_CONSTRUCTOR_KWARGS = {
-    "layer_conductance": LayerConductance,
-    "internal_influence": InternalInfluence,
-    "layer_gradient_x_activation": LayerGradientXActivation,
-    "layer_deeplift": LayerDeepLift,
-    "layer_deeplift_shap": LayerDeepLiftShap,
-    "layer_gradient_shap": LayerGradientShap,
-    "layer_integrated_gradients": LayerIntegratedGradients,
+    "LayerConductance": LayerConductance,
+    "InternalInfluence": InternalInfluence,
+    "LayerGradientXActivation": LayerGradientXActivation,
+    "LayerDeepLift": LayerDeepLift,
+    "LayerDeepLiftShap": LayerDeepLiftShap,
+    "LayerGradientShap": LayerGradientShap,
+    "LayerIntegratedGradients": LayerIntegratedGradients,
 }
 
 FEEDFORWARD_NODE_INTERPRETERS_WITHOUT_CONSTRUCTOR_KWARGS = {
-    "layer_activation": LayerActivation,
-    "layer_feature_ablation": LayerFeatureAblation,
-    "layer_feature_permutation": LayerFeaturePermutation,
-    "layer_lrp": LayerLRP,
+    "LayerActivation": LayerActivation,
+    "LayerFeatureAblation": LayerFeatureAblation,
+    "LayerFeaturePermutation": LayerFeaturePermutation,
+    "LayerLRP": LayerLRP,
 }
 
 FEEDFORWARD_NODE_METHODS = set(

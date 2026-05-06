@@ -54,7 +54,7 @@ def test_validate_interpret_options_rejects_non_bool_quiet():
     with pytest.raises(Edge2TorchError, match="'quiet' must be a boolean"):
         _validate_interpret_options(
             target="features",
-            method="integrated_gradients",
+            method="IntegratedGradients",
             quiet="yes",
             constructor_kwargs=None,
             attribute_kwargs=None,
@@ -65,7 +65,7 @@ def test_validate_interpret_options_rejects_non_string_target():
     with pytest.raises(Edge2TorchError, match="'target' must be a string"):
         _validate_interpret_options(
             target=1,
-            method="integrated_gradients",
+            method="IntegratedGradients",
             quiet=True,
             constructor_kwargs=None,
             attribute_kwargs=None,
@@ -76,7 +76,7 @@ def test_validate_interpret_options_rejects_unknown_target():
     with pytest.raises(Edge2TorchError, match="Unsupported target"):
         _validate_interpret_options(
             target="edges",
-            method="integrated_gradients",
+            method="IntegratedGradients",
             quiet=True,
             constructor_kwargs=None,
             attribute_kwargs=None,
@@ -112,7 +112,7 @@ def test_validate_interpret_options_rejects_node_method_for_feature_target():
     ):
         _validate_interpret_options(
             target="features",
-            method="layer_conductance",
+            method="LayerConductance",
             quiet=True,
             constructor_kwargs=None,
             attribute_kwargs=None,
@@ -126,7 +126,7 @@ def test_validate_interpret_options_rejects_feature_method_for_node_target():
     ):
         _validate_interpret_options(
             target="nodes",
-            method="integrated_gradients",
+            method="IntegratedGradients",
             quiet=True,
             constructor_kwargs=None,
             attribute_kwargs=None,
@@ -140,7 +140,7 @@ def test_validate_interpret_options_rejects_non_dict_constructor_kwargs():
     ):
         _validate_interpret_options(
             target="features",
-            method="integrated_gradients",
+            method="IntegratedGradients",
             quiet=True,
             constructor_kwargs=["bad"],
             attribute_kwargs=None,
@@ -154,7 +154,7 @@ def test_validate_interpret_options_rejects_feature_constructor_kwargs():
     ):
         _validate_interpret_options(
             target="features",
-            method="saliency",
+            method="Saliency",
             quiet=True,
             constructor_kwargs={"bad": True},
             attribute_kwargs=None,
@@ -168,7 +168,7 @@ def test_validate_interpret_options_rejects_node_constructor_kwargs():
     ):
         _validate_interpret_options(
             target="nodes",
-            method="layer_activation",
+            method="LayerActivation",
             quiet=True,
             constructor_kwargs={"bad": True},
             attribute_kwargs=None,
@@ -182,7 +182,7 @@ def test_validate_interpret_options_rejects_non_dict_attribute_kwargs():
     ):
         _validate_interpret_options(
             target="features",
-            method="integrated_gradients",
+            method="IntegratedGradients",
             quiet=True,
             constructor_kwargs=None,
             attribute_kwargs=["bad"],
@@ -196,7 +196,7 @@ def test_validate_interpret_options_rejects_return_convergence_delta():
     ):
         _validate_interpret_options(
             target="features",
-            method="integrated_gradients",
+            method="IntegratedGradients",
             quiet=True,
             constructor_kwargs=None,
             attribute_kwargs={"return_convergence_delta": True},

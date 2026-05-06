@@ -11,18 +11,18 @@ def customize_model(
     head: nn.Module | None = None,
 ) -> nn.Module:
     """
-    Wrap a compiled KPNN model with optional downstream PyTorch modules.
+    Wrap a compiled sparse neural network with optional PyTorch modules.
 
-    This function is a convenience layer for common post-compilation additions.
-    It applies the requested components sequentially to the output of the
-    compiled model. It does not modify the compiled graph structure, insert
-    modules inside graph-derived layers, or replace ordinary PyTorch
-    training/customization.
+    This function is a convenience layer for common post-compilation
+    additions. It applies the requested components sequentially to the
+    output of the compiled model. It does not modify the sparse graph
+    structure, insert modules inside graph-derived layers, or replace
+    ordinary PyTorch training and customization.
 
     Parameters
     ----------
     model : nn.Module
-        Compiled PyTorch model returned by ``compile_graph()``.
+        PyTorch model returned by ``compile_graph()``.
     activation : nn.Module | None, default=None
         Optional PyTorch activation module applied after the compiled model.
         This should be an instantiated module such as ``nn.ReLU()``.
@@ -36,7 +36,7 @@ def customize_model(
     Returns
     -------
     nn.Module
-        Wrapped PyTorch model with the requested architectural components.
+        Wrapped PyTorch model with the requested post-compilation modules.
 
     Raises
     ------
@@ -45,10 +45,19 @@ def customize_model(
 
     Examples
     --------
-    Add an activation function after the compiled model.
+    Add an activation function after the compiled sparse neural network.
 
+    >>> import pandas as pd
     >>> from torch import nn
-    >>> from edge2torch.customize_model import customize_model
+    >>> from edge2torch import compile_graph, customize_model
+    >>>
+    >>> edgelist = pd.DataFrame(
+    ...     {
+    ...         "source": ["feature_a", "feature_b", "hidden"],
+    ...         "target": ["hidden", "hidden", "prediction"],
+    ...     }
+    ... )
+    >>> model, artifact = compile_graph(edgelist, quiet=True)
     >>>
     >>> customized_model = customize_model(
     ...     model=model,

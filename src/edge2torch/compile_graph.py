@@ -12,29 +12,34 @@ def compile_graph(
     quiet: bool = False,
 ):
     """
-    Compile an edgelist into a PyTorch model and compilation artifact.
+    Compile an edgelist into a sparse PyTorch model and compilation artifact.
 
-    The edgelist must describe the full prior-knowledge computation graph,
-    including the input feature nodes. Input features are inferred as graph
-    nodes with no incoming edges. The returned artifact stores these names in
-    ``artifact.feature_names``; tensors passed to the compiled model must have
-    columns in that exact order.
+    The edgelist defines the architecture graph, including input feature
+    nodes, hidden nodes, and output nodes. Input features are inferred as
+    graph nodes with no incoming edges. The returned artifact stores these
+    names in ``artifact.feature_names``. Tensors passed to the compiled
+    model must have columns in that exact order.
 
     Parameters
     ----------
     edgelist : pd.DataFrame
-        Edge table with required columns 'source' and 'target'. The table should
-        include edges from input feature nodes into the rest of the graph.
+        Edge table with required columns ``"source"`` and ``"target"``.
+        Each row defines a directed connection from one named node to
+        another. The table should include edges from input feature nodes
+        into the rest of the architecture graph.
     backend : str, default="feedforward"
-        Backend to compile to. One of: "feedforward", "recurrent", "graphnn".
+        Backend to compile to. One of ``"feedforward"``, ``"recurrent"``,
+        or ``"graphnn"``.
     quiet : bool, default=False
         If False, emit informational notes during validation. If True,
-        suppress notes and only surface warnings and errors.
+        suppress informational notes.
 
     Returns
     -------
-    tuple
-        A tuple of (model, artifact).
+    tuple[torch.nn.Module, CompileArtifact]
+        Tuple ``(model, artifact)``. ``model`` is a PyTorch ``nn.Module``
+        compiled from the edgelist. ``artifact`` stores compilation metadata,
+        including ``artifact.feature_names``.
 
     Raises
     ------
@@ -46,12 +51,12 @@ def compile_graph(
     Compile a small feedforward architecture from an edgelist.
 
     >>> import pandas as pd
-    >>> from edge2torch.compile_graph import compile_graph
+    >>> from edge2torch import compile_graph
     >>>
     >>> edgelist = pd.DataFrame(
     ...     {
-    ...         "source": ["gene_a", "gene_b", "hidden_1"],
-    ...         "target": ["hidden_1", "hidden_1", "output_1"],
+    ...         "source": ["feature_a", "feature_b", "hidden_1"],
+    ...         "target": ["hidden_1", "hidden_1", "prediction"],
     ...     }
     ... )
     >>>
@@ -62,7 +67,7 @@ def compile_graph(
     ... )
     >>>
     >>> artifact.feature_names
-    ['gene_a', 'gene_b']
+    ['feature_a', 'feature_b']
     """
     validate_compile_graph_inputs(
         edgelist=edgelist,

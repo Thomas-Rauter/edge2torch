@@ -17,9 +17,10 @@ def align_features_to_input_nodes(
     """
     Align data features to the input-node order expected by a compiled model.
 
-    ``compile_graph()`` infers model input nodes from the graph structure.
-    These input-node names are stored in ``artifact.feature_names`` and define
-    the required column order for tensors passed to the compiled PyTorch model.
+    ``compile_graph()`` builds a sparse neural network from an edgelist.
+    Input nodes are inferred from the graph structure and stored in
+    ``artifact.feature_names``. These names define the required column order
+    for tensors passed to the compiled PyTorch model.
 
     For named data containers, this function validates exact feature-name
     compatibility and reorders features by name:
@@ -38,9 +39,9 @@ def align_features_to_input_nodes(
 
     Parameters
     ----------
-    data
-        Input data to align. Supported types are ``pandas.DataFrame``,
-        ``torch.Tensor``, and optionally ``anndata.AnnData``.
+    data : pd.DataFrame | torch.Tensor | anndata.AnnData
+        Input data to align. ``AnnData`` is supported when ``anndata`` is
+        installed.
     artifact : CompileArtifact
         Compilation artifact returned by ``compile_graph()``. Its
         ``feature_names`` field defines the required input-node order.
@@ -55,28 +56,36 @@ def align_features_to_input_nodes(
     ------
     Edge2TorchError
         If the input data type is unsupported, required features are missing,
-        extra features are present in named data containers, or tensor input
-        has an incompatible shape.
+        extra features are present in named data containers, non-numeric
+        DataFrame columns are present, or tensor input has an incompatible
+        shape.
 
     Examples
     --------
-    Align a DataFrame whose columns are named but not ordered like the compiled
-    model input nodes.
+    Align a DataFrame whose columns are named but not ordered like the
+    compiled model input nodes.
 
     >>> import pandas as pd
-    >>> from edge2torch.align_features_to_input_nodes import (
-    ...     align_features_to_input_nodes,
+    >>> import torch
+    >>> from edge2torch import align_features_to_input_nodes, compile_graph
+    >>>
+    >>> edgelist = pd.DataFrame(
+    ...     {
+    ...         "source": ["feature_a", "feature_b", "hidden"],
+    ...         "target": ["hidden", "hidden", "prediction"],
+    ...     }
     ... )
+    >>> model, artifact = compile_graph(edgelist, quiet=True)
     >>>
     >>> data = pd.DataFrame(
     ...     {
-    ...         "gene_b": [2.0, 4.0],
-    ...         "gene_a": [1.0, 3.0],
+    ...         "feature_b": [2.0, 4.0],
+    ...         "feature_a": [1.0, 3.0],
     ...     }
     ... )
     >>>
     >>> artifact.feature_names
-    ['gene_a', 'gene_b']
+    ['feature_a', 'feature_b']
     >>>
     >>> x = align_features_to_input_nodes(
     ...     data=data,
@@ -89,10 +98,18 @@ def align_features_to_input_nodes(
     Tensor inputs do not contain feature names, so they are only checked by
     shape and are assumed to already follow ``artifact.feature_names``.
 
-    >>> x = align_features_to_input_nodes(
+    >>> x_tensor = torch.tensor(
+    ...     [
+    ...         [1.0, 2.0],
+    ...         [3.0, 4.0],
+    ...     ]
+    ... )
+    >>> x_from_tensor = align_features_to_input_nodes(
     ...     data=x_tensor,
     ...     artifact=artifact,
     ... )
+    >>> torch.equal(x_from_tensor, x_tensor)
+    True
     """
     _validate_align_features_to_input_nodes_inputs(
         data=data,
