@@ -1,6 +1,6 @@
 build/
 *.egg-info/
-dev/
+notes/
 dist/
 .venv/
 .idea/
