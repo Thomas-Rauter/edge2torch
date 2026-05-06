@@ -22,7 +22,6 @@ nav:
   - Getting started: getting-started.ipynb
   - Feedforward skip edges: feedforward-skip-edges.ipynb
   - Backends: backends.md
-  - Interpretation: interpretation.md
   - API reference: api.md
 
 plugins:

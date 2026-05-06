@@ -58,6 +58,7 @@ docs = [
     "graphviz",
     "IPython",
     "seaborn",
+    "black",
 ]
 
 [tool.setuptools]

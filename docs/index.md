@@ -99,7 +99,7 @@ models also support broad node-level attribution. Recurrent and graph neural
 network backends can be compiled and trained, while node-level interpretation
 for these backends is planned for a future release.
 
-See the **Backends** page for details.
+See the [**Backends**](backends.md) page for details.
 
 ## Start here
 
@@ -109,9 +109,10 @@ If you are new to the package, start with:
 - [**Getting started**](getting-started.ipynb) for a full end-to-end example
 - [**Feedforward skip edges**](feedforward-skip-edges.ipynb) for how non-adjacent feedforward edges are handled
 - [**Backends**](backends.md) for backend semantics and current support
-- [**Interpretation**](interpretation.md) for attribution targets, methods, and backend support
 - [**API reference**](api.md) for function-level documentation
 
 ## License
 
-See `LICENSE`.
+This project is licensed under the MIT License. See the
+[LICENSE file on GitHub](https://github.com/Thomas-Rauter/edge2torch/blob/main/LICENSE)
+for details.
