@@ -14,19 +14,24 @@ def compile_graph(
     """
     Compile an edgelist into a sparse PyTorch model and compilation artifact.
 
-    The edgelist defines the architecture graph, including input feature
-    nodes, hidden nodes, and output nodes. Input features are inferred as
-    graph nodes with no incoming edges. The returned artifact stores these
-    names in ``artifact.feature_names``. Tensors passed to the compiled
-    model must have columns in that exact order.
+    The edgelist defines the architecture graph. Each row describes one
+    directed connection from ``source`` to ``target`` in the direction of
+    computation. In other words, edges should point from input feature nodes
+    toward hidden nodes and output nodes.
+
+    Input features are inferred as graph nodes with no incoming edges. Output
+    nodes are inferred as graph nodes with no outgoing edges. The returned
+    artifact stores the inferred input feature names in
+    ``artifact.feature_names``. Tensors passed to the compiled model must have
+    columns in that exact order.
 
     Parameters
     ----------
     edgelist : pd.DataFrame
         Edge table with required columns ``"source"`` and ``"target"``.
-        Each row defines a directed connection from one named node to
-        another. The table should include edges from input feature nodes
-        into the rest of the architecture graph.
+        Each row defines a directed connection from one named node to another,
+        following the direction of computation. The table must include edges
+        from input feature nodes into the rest of the architecture graph.
     backend : str, default="feedforward"
         Backend to compile to. One of ``"feedforward"``, ``"recurrent"``,
         or ``"graphnn"``.

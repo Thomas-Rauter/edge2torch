@@ -33,7 +33,7 @@ pip install "edge2torch[anndata]"
 To install both interpretation and `AnnData` support:
 
 ```bash
-pip install "edge2torch[interpret,anndata]"
+pip install "edge2torch[all]"
 ```
 
 ## Development installation
@@ -62,7 +62,7 @@ pip install -e ".[anndata]"
 For both optional interpretation and `AnnData` support:
 
 ```bash
-pip install -e ".[interpret,anndata]"
+pip install -e ".[all]"
 ```
 
 ## Optional dependency groups

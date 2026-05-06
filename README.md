@@ -51,10 +51,22 @@ Install `edge2torch` from PyPI with:
 pip install edge2torch
 ```
 
+To run the `interpret_model()` function:
+
+```bash
+pip install "edge2torch[interpret]"
+```
+
 For optional `AnnData` support:
 
 ```bash
-pip install "edge2torch[bio]"
+pip install "edge2torch[anndata]"
+```
+
+To install both optional extras:
+
+```bash
+pip install "edge2torch[all]"
 ```
 
 ## Minimal example
