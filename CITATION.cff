@@ -5,6 +5,7 @@ type: software
 authors:
   - family-names: "Rauter"
     given-names: "Thomas"
+    orcid: "https://orcid.org/0009-0004-5578-3628"
 repository-code: "https://github.com/Thomas-Rauter/edge2torch"
 url: "https://Thomas-Rauter.github.io/edge2torch/"
 abstract: "edge2torch is a Python package for building sparse PyTorch neural networks from edge lists of named nodes, with optional feature- and node-level attribution."

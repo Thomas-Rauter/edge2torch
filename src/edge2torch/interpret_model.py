@@ -44,13 +44,17 @@ def interpret_model(
         compiled backend. If an unsupported method is provided, edge2torch
         raises an error listing the supported method names.
     constructor_kwargs : dict[str, Any] | None, default=None
-        Optional keyword arguments passed directly to the selected Captum
-        attribution class constructor. These arguments are method-specific
-        and are not interpreted by edge2torch.
+        Optional keyword arguments passed directly to the constructor of the
+        selected Captum attribution class. These arguments are passed through
+        unchanged and are not interpreted, validated, or modified by
+        edge2torch. Refer to the Captum documentation for the selected method
+        to determine which constructor arguments are supported.
     attribute_kwargs : dict[str, Any] | None, default=None
         Optional keyword arguments passed directly to the selected Captum
-        method's ``attribute()`` call. These arguments are method-specific
-        and are not interpreted by edge2torch.
+        method's ``attribute()`` call. These arguments are passed through
+        unchanged and are not interpreted, validated, or modified by
+        edge2torch. Refer to the Captum documentation for the selected method
+        to determine which attribution arguments are supported.
     quiet : bool, default=False
         If False, emit informational notes. If True, suppress informational
         notes.

@@ -31,7 +31,7 @@ Useful feature requests usually describe:
 ## Ask a question
 
 For usage questions, please open a GitHub issue and mark it as a question, or
-use the available issue template if one exists.
+use the available issue template.
 
 ## Support the project
 
