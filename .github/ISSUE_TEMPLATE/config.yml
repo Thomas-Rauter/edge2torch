@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://Thomas-Rauter.github.io/edge2torch/
+    about: Read the edge2torch documentation.
+  - name: GitHub Discussions
+    url: https://github.com/Thomas-Rauter/edge2torch/discussions
+    about: Ask open-ended questions or discuss ideas.

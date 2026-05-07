@@ -191,6 +191,11 @@ It includes:
 
 Documentation: https://Thomas-Rauter.github.io/edge2torch/
 
+## Citation
+
+If you use `edge2torch` in research, please cite the software. Citation
+metadata is available in [`CITATION.cff`](CITATION.cff).
+
 ## License
 
 See `LICENSE`.

@@ -23,9 +23,13 @@ nav:
   - Feedforward skip edges: feedforward-skip-edges.ipynb
   - Backends: backends.md
   - API reference: api.md
+  - Changelog: changelog.md
+  - Citing: citing.md
+  - Feedback: feedback.md
 
 plugins:
   - search
+  - include-markdown
   - mkdocstrings:
       handlers:
         python:

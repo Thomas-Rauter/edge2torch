@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "edge2torch"
-version = "0.1.0rc1"
+version = "0.1.0rc2"
 description = "Build sparse PyTorch neural networks from edge lists of named nodes, with optional feature- and node-level attribution."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -52,12 +52,14 @@ dev = [
     "build",
     "captum",
     "anndata",
+    "scikit-learn",
 ]
 docs = [
     "mkdocs",
     "mkdocs-material",
     "mkdocstrings[python]",
     "mkdocs-jupyter",
+    "mkdocs-include-markdown-plugin",
     "pymdown-extensions",
     "nbconvert",
     "ipykernel",
@@ -88,3 +90,8 @@ select = ["E", "F", "I"]
 python_version = "3.10"
 files = ["src"]
 ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: tests that train models or use real datasets",
+]
