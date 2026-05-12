@@ -37,7 +37,7 @@ Across all backends, input and output nodes are inferred from graph structure:
 The current implementation enforces sparse graph-derived connectivity with
 masked dense PyTorch layers. This guarantees that compiled models respect the
 edgelist connectivity, but it should not be interpreted as sparse tensor
-acceleration.
+acceleration (which is planned as a future addition).
 
 ## Common input format
 
@@ -115,7 +115,7 @@ Use `feedforward` when:
 
 - the graph is naturally hierarchical or approximately hierarchical
 - you want a sparse layered architecture
-- you want the most mature current node-interpretation support
+
 
 ## Recurrent backend
 
@@ -233,18 +233,3 @@ feature-level Captum methods such as `IntegratedGradients`, `Saliency`, and
 Node attribution is currently available for the `feedforward` backend through
 layer-level Captum methods such as `LayerConductance` and
 `LayerIntegratedGradients`.
-
-## Choosing a backend
-
-A good rule of thumb is:
-
-- choose `feedforward` for hierarchical graphs and the most mature current
-  node-interpretation path
-- choose `recurrent` for cyclic graphs and recurrent state-update semantics
-- choose `graphnn` when you want a graph-oriented backend that preserves the
-  original topology more directly
-
-For an initial model, `feedforward` is usually the best starting point when the
-graph is acyclic and can be interpreted as a hierarchy. The `recurrent` and
-`graphnn` backends are useful when the graph topology itself is not naturally
-layerable.
