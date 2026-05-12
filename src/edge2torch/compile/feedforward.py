@@ -39,10 +39,14 @@ def compile_feedforward(
     tuple
         A tuple of (model, artifact).
     """
+    # Decides the structure
     execution_plan = build_feedforward_execution_plan(graph)
 
+    # Builds the actual PyTorch modules from that structure.
     model = EdgeModel(execution_plan=execution_plan)
 
+    # Stores the metadata needed later for alignment, interpretation, and
+    # inspection.
     artifact = CompileArtifact(
         backend="feedforward",
         graph=graph,

@@ -39,10 +39,14 @@ def compile_graphnn(
     tuple
         A tuple of (model, artifact).
     """
+    # Decides the structure
     execution_plan = build_graphnn_execution_plan(graph)
 
+    # Builds the actual PyTorch modules from that structure.
     model = EdgeGraphNNModel(execution_plan=execution_plan)
 
+    # Stores the metadata needed later for alignment, interpretation, and
+    # inspection.
     artifact = CompileArtifact(
         backend="graphnn",
         graph=graph,

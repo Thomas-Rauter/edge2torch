@@ -118,6 +118,7 @@ def align_features_to_input_nodes(
 
     feature_names = list(artifact.feature_names)
 
+    # Dataframe logic
     if isinstance(data, pd.DataFrame):
         ordered = data.loc[:, feature_names]
 
@@ -126,11 +127,17 @@ def align_features_to_input_nodes(
             dtype=torch.float32,
         )
 
+    # AnnData logic
     if ad is not None and isinstance(data, ad.AnnData):
+        # AnnData stores samples in rows and named variables/features in
+        # columns.
+        # Reorder data.X columns to match artifact.feature_names.
         var_names = list(data.var_names)
         order = [var_names.index(name) for name in feature_names]
         matrix = data.X[:, order]
 
+        # AnnData.X is often a SciPy sparse matrix; convert it to a dense array
+        # before constructing a standard PyTorch tensor.
         if hasattr(matrix, "toarray"):
             matrix = matrix.toarray()
 
@@ -139,10 +146,19 @@ def align_features_to_input_nodes(
             dtype=torch.float32,
         )
 
+    # Tensor logic
     if isinstance(data, torch.Tensor):
+        # Tensor inputs have no feature names. Validation has already checked
+        # that the tensor is 2-dimensional and has the expected number of
+        # columns.
+        # The column order is assumed to match artifact.feature_names.
         return data.to(dtype=torch.float32)
 
-    raise Edge2TorchError("Unsupported input data type.")
+    raise Edge2TorchError(
+        "Unsupported input data type. Expected pandas DataFrame, torch Tensor, "
+        "or AnnData if the optional anndata dependency is installed with "
+        "'pip install \"edge2torch[anndata]\"'."
+    )
 
 
 # Level 1 functions (functions called by API functions) ------------------------

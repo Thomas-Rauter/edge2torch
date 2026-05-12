@@ -1,5 +1,5 @@
 """
-Internal graph schema for KPNN compilation.
+Internal graph schema for edge2torch compilation.
 
 Why this file exists
 --------------------
@@ -24,7 +24,7 @@ import pandas as pd
 
 class EdgeGraph:
     """
-    Internal graph representation used throughout the KPNN package.
+    Internal graph representation used throughout the edge2torch package.
 
     Parameters
     ----------

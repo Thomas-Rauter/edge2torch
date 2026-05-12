@@ -102,7 +102,7 @@ def test_validate_common_graph_structure_reports_empty_node_names():
     assert any("empty node names" in error for error in report.errors)
 
 
-def test_validate_common_graph_structure_warns_for_duplicate_edges():
+def test_validate_common_graph_structure_errors_for_duplicate_edges():
     graph = _Graph(
         [
             ("a", "b"),
@@ -113,7 +113,12 @@ def test_validate_common_graph_structure_warns_for_duplicate_edges():
 
     _validate_common_graph_structure(graph=graph, report=report)
 
-    assert report.warnings == ["The graph contains 1 duplicate edge(s)."]
+    assert report.errors == [
+        "The graph contains 1 duplicate edge(s). "
+        "Duplicate edges are not supported because edge2torch treats the "
+        "edgelist as a binary connectivity graph."
+    ]
+    assert report.warnings == []
     assert report.notes == ["Graph contains 2 node(s) and 2 edge(s)."]
 
 

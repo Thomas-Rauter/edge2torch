@@ -173,8 +173,10 @@ def _validate_common_graph_structure(
     n_duplicate_edges = int(duplicate_edges.sum())
 
     if n_duplicate_edges > 0:
-        report.warnings.append(
-            f"The graph contains {n_duplicate_edges} duplicate edge(s)."
+        report.errors.append(
+            f"The graph contains {n_duplicate_edges} duplicate edge(s). "
+            "Duplicate edges are not supported because edge2torch treats the "
+            "edgelist as a binary connectivity graph."
         )
 
     n_nodes = len(graph.nodes)
@@ -277,62 +279,12 @@ def _validate_recurrent_graph(
     """
     report.notes.append("Recurrent backend selected. Cycles may be allowed.")
 
-    self_loops = graph.edges["source"] == graph.edges["target"]
-    n_self_loops = int(self_loops.sum())
-
-    if n_self_loops > 0:
-        report.warnings.append(
-            f"The graph contains {n_self_loops} self-loop edge(s)."
-        )
-
-    node_names = list(graph.nodes)
-
-    children: dict[str, list[str]] = {node: [] for node in node_names}
-    parents: dict[str, list[str]] = {node: [] for node in node_names}
-
-    for row in graph.edges.itertuples(index=False):
-        source = str(row.source)
-        target = str(row.target)
-
-        if source not in children:
-            report.errors.append(
-                f"Unknown source node '{source}' in recurrent graph."
-            )
-            continue
-
-        if target not in parents:
-            report.errors.append(
-                f"Unknown target node '{target}' in recurrent graph."
-            )
-            continue
-
-        children[source].append(target)
-        parents[target].append(source)
-
-    if report.has_errors:
-        return
-
-    input_node_names = sorted(
-        node for node in node_names if len(parents[node]) == 0
+    _validate_state_update_graph(
+        graph=graph,
+        report=report,
+        backend_name="Recurrent",
+        backend_label="recurrent",
     )
-
-    output_node_names = sorted(
-        node for node in node_names if len(children[node]) == 0
-    )
-
-    if not input_node_names:
-        report.errors.append(
-            "Recurrent compilation requires at least one input node. "
-            "Cycles are allowed, but the graph must include at least one "
-            "node with no incoming edges."
-        )
-
-    if not output_node_names:
-        report.errors.append(
-            "Recurrent compilation requires at least one output node. "
-            "Cycles are allowed, but the graph must include at least one "
-            "node with no outgoing edges."
-        )
 
 
 def _validate_graphnn_graph(
@@ -347,6 +299,31 @@ def _validate_graphnn_graph(
         "for message passing."
     )
 
+    _validate_state_update_graph(
+        graph=graph,
+        report=report,
+        backend_name="GraphNN",
+        backend_label="graphnn",
+    )
+
+
+# Level 3 functions (functions called by level 2 functions) --------------------
+
+
+def _validate_state_update_graph(
+    graph: EdgeGraph,
+    report: ValidationReport,
+    backend_name: str,
+    backend_label: str,
+) -> None:
+    """
+    Validate graph constraints shared by state-update backends.
+
+    Recurrent and graphnn backends both allow cycles, but they still require
+    at least one input node and at least one output node. Input nodes are
+    inferred as nodes with no incoming edges. Output nodes are inferred as
+    nodes with no outgoing edges.
+    """
     self_loops = graph.edges["source"] == graph.edges["target"]
     n_self_loops = int(self_loops.sum())
 
@@ -366,13 +343,13 @@ def _validate_graphnn_graph(
 
         if source not in children:
             report.errors.append(
-                f"Unknown source node '{source}' in graphnn graph."
+                f"Unknown source node '{source}' in {backend_label} graph."
             )
             continue
 
         if target not in parents:
             report.errors.append(
-                f"Unknown target node '{target}' in graphnn graph."
+                f"Unknown target node '{target}' in {backend_label} graph."
             )
             continue
 
@@ -392,14 +369,14 @@ def _validate_graphnn_graph(
 
     if not input_node_names:
         report.errors.append(
-            "GraphNN compilation requires at least one input node. "
+            f"{backend_name} compilation requires at least one input node. "
             "Cycles are allowed, but the graph must include at least one "
             "node with no incoming edges."
         )
 
     if not output_node_names:
         report.errors.append(
-            "GraphNN compilation requires at least one output node. "
+            f"{backend_name} compilation requires at least one output node. "
             "Cycles are allowed, but the graph must include at least one "
             "node with no outgoing edges."
         )
