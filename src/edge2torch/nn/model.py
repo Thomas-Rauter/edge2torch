@@ -96,7 +96,10 @@ class EdgeModel(nn.Module):
 
         return x
 
-    def get_layer_block(self, layer_name: str) -> FeedforwardLayerBlock:
+    def _edge2torch_get_feedforward_layer_block(
+        self,
+        layer_name: str,
+    ) -> FeedforwardLayerBlock:
         """
         Return the feedforward block that produces the given layer.
 

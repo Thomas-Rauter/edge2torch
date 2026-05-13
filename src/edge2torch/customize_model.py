@@ -19,6 +19,11 @@ def customize_model(
     structure, insert modules inside graph-derived layers, or replace
     ordinary PyTorch training and customization.
 
+    `customize_model()` wraps the provided model. Calling it repeatedly creates
+    nested wrappers; it does not replace earlier customization modules. To
+    change a customization, call `customize_model()` again on the original
+    compiled model.
+
     Parameters
     ----------
     model : nn.Module
