@@ -208,9 +208,7 @@ def test_fixed_weight_is_not_trainable():
 def test_gradients_flow_to_trainable_raw_weight():
     mask = torch.ones(1, 2)
     initial_weight = torch.tensor([[0.5, 1.0]])
-    constraint = torch.tensor(
-        [[CONSTRAINT_POSITIVE, CONSTRAINT_UNCONSTRAINED]]
-    )
+    constraint = torch.tensor([[CONSTRAINT_POSITIVE, CONSTRAINT_UNCONSTRAINED]])
 
     layer = ConstrainedMaskedLinear(
         in_features=2,
@@ -233,9 +231,7 @@ def test_gradients_flow_to_trainable_raw_weight():
 def test_fixed_edges_do_not_change_after_optimizer_step():
     mask = torch.ones(1, 2)
     initial_weight = torch.tensor([[0.5, 1.0]])
-    constraint = torch.tensor(
-        [[CONSTRAINT_FIXED, CONSTRAINT_UNCONSTRAINED]]
-    )
+    constraint = torch.tensor([[CONSTRAINT_FIXED, CONSTRAINT_UNCONSTRAINED]])
 
     layer = ConstrainedMaskedLinear(
         in_features=2,
