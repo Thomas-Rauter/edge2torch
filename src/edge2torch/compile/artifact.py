@@ -32,7 +32,9 @@ class CompileArtifact:
     backend : str
         Backend used for compilation.
     graph : EdgeGraph
-        Internal KPNN graph object used for compilation.
+        Internal edge2torch graph object used for compilation. The graph
+        contains the normalized edge table and may include optional edge-level
+        metadata such as ``initial_weight`` and ``constraint``.
     execution_plan
         Compiled execution plan used to build the model.
     node_names_by_layer : dict[str, list[str]]

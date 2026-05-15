@@ -115,8 +115,8 @@ def test_validate_common_graph_structure_errors_for_duplicate_edges():
 
     assert report.errors == [
         "The graph contains 1 duplicate edge(s). "
-        "Duplicate edges are not supported because edge2torch treats the "
-        "edgelist as a binary connectivity graph."
+        "Duplicate edges are not supported because edge2torch expects "
+        "at most one connection for each source-target pair."
     ]
     assert report.warnings == []
     assert report.notes == ["Graph contains 2 node(s) and 2 edge(s)."]

@@ -175,8 +175,8 @@ def _validate_common_graph_structure(
     if n_duplicate_edges > 0:
         report.errors.append(
             f"The graph contains {n_duplicate_edges} duplicate edge(s). "
-            "Duplicate edges are not supported because edge2torch treats the "
-            "edgelist as a binary connectivity graph."
+            "Duplicate edges are not supported because edge2torch expects at"
+            " most one connection for each source-target pair."
         )
 
     n_nodes = len(graph.nodes)

@@ -25,6 +25,15 @@ def compile_graph(
     ``artifact.feature_names``. Tensors passed to the compiled model must have
     columns in that exact order.
 
+    The edgelist may optionally include edge-level parameter metadata using the
+    columns ``"initial_weight"`` and ``"constraint"``. These columns allow
+    individual edges to define their initial effective weight and, where
+    supported by the selected backend, constrain the trainable edge weight
+    during optimization. Supported constraint values are ``"unconstrained"``,
+    ``"positive"``, ``"negative"``, and ``"fixed"``. If omitted, edges use the
+    backend's default trainable weight initialization and unconstrained weight
+    behavior.
+
     Parameters
     ----------
     edgelist : pd.DataFrame
@@ -32,6 +41,26 @@ def compile_graph(
         Each row defines a directed connection from one named node to another,
         following the direction of computation. The table must include edges
         from input feature nodes into the rest of the architecture graph.
+
+        The table may also include optional columns ``"initial_weight"`` and
+        ``"constraint"``. If provided, ``"initial_weight"`` defines the initial
+        effective edge weight, and ``"constraint"`` defines how that edge weight
+        is parameterized during training. Supported constraints are:
+
+        - ``"unconstrained"``: the edge weight is trainable and may become
+          positive or negative.
+        - ``"positive"``: the edge weight is trainable and constrained to remain
+          positive.
+        - ``"negative"``: the edge weight is trainable and constrained to remain
+          negative.
+        - ``"fixed"``: the edge weight is fixed to ``"initial_weight"`` and is
+          not trainable.
+
+        If either optional column is provided, both ``"initial_weight"`` and
+        ``"constraint"`` must be provided for all edges. Positive-constrained
+        edges must have positive initial weights, negative-constrained edges
+        must have negative initial weights, and fixed edges use the provided
+        initial weight as a constant connection value.
     backend : str, default="feedforward"
         Backend to compile to. One of ``"feedforward"``, ``"recurrent"``,
         or ``"graphnn"``.
@@ -73,6 +102,24 @@ def compile_graph(
     >>>
     >>> artifact.feature_names
     ['feature_a', 'feature_b']
+
+    Compile a recurrent architecture with edge-level initial weights and
+    constraints.
+
+    >>> edgelist = pd.DataFrame(
+    ...     {
+    ...         "source": ["feature_a", "feature_b", "hidden_1"],
+    ...         "target": ["hidden_1", "hidden_1", "prediction"],
+    ...         "initial_weight": [0.1, -0.2, 0.5],
+    ...         "constraint": ["positive", "negative", "fixed"],
+    ...     }
+    ... )
+    >>>
+    >>> model, artifact = compile_graph(
+    ...     edgelist=edgelist,
+    ...     backend="recurrent",
+    ...     quiet=True,
+    ... )
     """
     validate_compile_graph_inputs(
         edgelist=edgelist,

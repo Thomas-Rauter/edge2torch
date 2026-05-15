@@ -32,7 +32,12 @@ from ..compile.execution_plan import (
 )
 from ..utils.errors import Edge2TorchError
 from .blocks import FeedforwardLayerBlock
-from .masked_linear import MaskedLinear
+from .masked_linear import (
+    CONSTRAINT_UNCONSTRAINED,
+    ConstrainedMaskedLinear,
+    MaskedLinear,
+    constraint_name_to_code,
+)
 
 
 class EdgeModel(nn.Module):
@@ -232,6 +237,29 @@ class RecurrentEdgeModel(nn.Module):
 
         mask = torch.zeros(n_nodes, n_nodes, dtype=torch.float32)
 
+        has_initial_weight = (
+            "initial_weight" in execution_plan.original_edges.columns
+        )
+        has_constraint = "constraint" in execution_plan.original_edges.columns
+        has_edge_metadata = has_initial_weight or has_constraint
+
+        initial_weight = None
+        constraint = None
+
+        if has_initial_weight:
+            initial_weight = torch.full(
+                (n_nodes, n_nodes),
+                fill_value=float("nan"),
+                dtype=torch.float32,
+            )
+
+        if has_constraint:
+            constraint = torch.full(
+                (n_nodes, n_nodes),
+                fill_value=CONSTRAINT_UNCONSTRAINED,
+                dtype=torch.long,
+            )
+
         for row in execution_plan.original_edges.itertuples(index=False):
             source = str(row.source)
             target = str(row.target)
@@ -241,12 +269,39 @@ class RecurrentEdgeModel(nn.Module):
 
             mask[target_idx, source_idx] = 1.0
 
-        self.recurrent = MaskedLinear(
-            in_features=n_nodes,
-            out_features=n_nodes,
-            mask=mask,
-            bias=bias,
-        )
+            if has_initial_weight:
+                assert initial_weight is not None
+                row_initial_weight = getattr(row, "initial_weight")
+
+                if pd.notna(row_initial_weight):
+                    initial_weight[target_idx, source_idx] = float(
+                        row_initial_weight
+                    )
+
+            if has_constraint:
+                assert constraint is not None
+                constraint[target_idx, source_idx] = constraint_name_to_code(
+                    str(row.constraint)
+                )
+
+        self.recurrent: ConstrainedMaskedLinear | MaskedLinear
+
+        if has_edge_metadata:
+            self.recurrent = ConstrainedMaskedLinear(
+                in_features=n_nodes,
+                out_features=n_nodes,
+                mask=mask,
+                initial_weight=initial_weight,
+                constraint=constraint,
+                bias=bias,
+            )
+        else:
+            self.recurrent = MaskedLinear(
+                in_features=n_nodes,
+                out_features=n_nodes,
+                mask=mask,
+                bias=bias,
+            )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """

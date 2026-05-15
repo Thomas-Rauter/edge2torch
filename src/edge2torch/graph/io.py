@@ -29,17 +29,43 @@ def edgelist_to_graph(edgelist: pd.DataFrame) -> EdgeGraph:
     Parameters
     ----------
     edgelist : pd.DataFrame
-        Edge table with validated 'source' and 'target' columns.
+        Edge table with validated ``source`` and ``target`` columns.
+        May also contain optional sparse ``initial_weight`` and
+        ``constraint`` columns.
 
     Returns
     -------
     EdgeGraph
-        Internal graph object with normalized source and target columns.
+        Internal graph object with normalized source and target columns and,
+        when provided, normalized edge-level metadata.
     """
-    edges = edgelist.loc[:, ["source", "target"]].copy()
+    edge_columns = ["source", "target"]
+
+    if "initial_weight" in edgelist.columns:
+        edge_columns.append("initial_weight")
+
+    if "constraint" in edgelist.columns:
+        edge_columns.append("constraint")
+
+    edges = edgelist.loc[:, edge_columns].copy()
 
     edges["source"] = edges["source"].astype(str).str.strip()
     edges["target"] = edges["target"].astype(str).str.strip()
+
+    if "initial_weight" in edges.columns:
+        edges["initial_weight"] = pd.to_numeric(
+            edges["initial_weight"],
+            errors="coerce",
+        )
+
+    if "constraint" in edges.columns:
+        edges["constraint"] = (
+            edges["constraint"]
+            .astype("string")
+            .str.strip()
+            .str.lower()
+            .fillna("unconstrained")
+        )
 
     edges = edges.reset_index(drop=True)
 

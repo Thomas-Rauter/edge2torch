@@ -206,7 +206,20 @@ def build_feedforward_execution_plan(
 @dataclass
 class RecurrentExecutionPlan:
     """
-    Execution plan for a recurrent KPNN model.
+    Execution plan for a recurrent edge2torch model.
+
+    Attributes
+    ----------
+    original_edges : pd.DataFrame
+        Normalized edge table used for recurrent compilation. Always contains
+        ``source`` and ``target`` columns. May also contain optional edge-level
+        metadata columns such as ``initial_weight`` and ``constraint``.
+    node_names : list[str]
+        Names of all graph nodes in model state order.
+    input_node_names : list[str]
+        Names of input nodes inferred as nodes with no incoming edges.
+    output_node_names : list[str]
+        Names of output nodes inferred as nodes with no outgoing edges.
     """
 
     original_edges: pd.DataFrame
@@ -219,16 +232,20 @@ def build_recurrent_execution_plan(
     graph: EdgeGraph,
 ) -> RecurrentExecutionPlan:
     """
-    Build a recurrent execution plan from a KPNN graph.
+    Build a recurrent execution plan from an edge2torch graph.
 
     In the recurrent backend, the graph is kept in its original form rather
     than expanded into adjacent feedforward layers. Cycles are allowed, but the
     graph must expose at least one input node and one output node.
 
+    Edge-level metadata stored in ``graph.edges``, such as ``initial_weight``
+    and ``constraint``, is preserved in ``original_edges`` and consumed later
+    by the recurrent model constructor.
+
     Parameters
     ----------
     graph
-        Internal KPNN graph object.
+        Internal edge2torch graph object.
 
     Returns
     -------
