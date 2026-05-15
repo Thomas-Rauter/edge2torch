@@ -25,7 +25,12 @@ from torch import nn
 
 from ..utils.constants import PSEUDO_NODE_PREFIX
 from ..utils.errors import Edge2TorchError
-from .masked_linear import MaskedLinear
+from .masked_linear import (
+    CONSTRAINT_UNCONSTRAINED,
+    ConstrainedMaskedLinear,
+    MaskedLinear,
+    constraint_name_to_code,
+)
 
 
 class FeedforwardLayerBlock(nn.Module):
@@ -61,6 +66,27 @@ class FeedforwardLayerBlock(nn.Module):
 
         mask = torch.zeros(out_features, in_features, dtype=torch.float32)
 
+        has_initial_weight = "initial_weight" in block_edges.columns
+        has_constraint = "constraint" in block_edges.columns
+        has_edge_metadata = has_initial_weight or has_constraint
+
+        initial_weight = None
+        constraint = None
+
+        if has_initial_weight:
+            initial_weight = torch.full(
+                (out_features, in_features),
+                fill_value=float("nan"),
+                dtype=torch.float32,
+            )
+
+        if has_constraint:
+            constraint = torch.full(
+                (out_features, in_features),
+                fill_value=CONSTRAINT_UNCONSTRAINED,
+                dtype=torch.long,
+            )
+
         pseudo_targets_seen = set()
         pseudo_input_indices = []
         pseudo_output_indices = []
@@ -74,6 +100,21 @@ class FeedforwardLayerBlock(nn.Module):
 
             mask[target_idx, source_idx] = 1.0
 
+            if has_initial_weight:
+                assert initial_weight is not None
+                row_initial_weight = row["initial_weight"]
+
+                if pd.notna(row_initial_weight):
+                    initial_weight[target_idx, source_idx] = float(
+                        row_initial_weight
+                    )
+
+            if has_constraint:
+                assert constraint is not None
+                constraint[target_idx, source_idx] = constraint_name_to_code(
+                    str(row["constraint"])
+                )
+
             if target.startswith(PSEUDO_NODE_PREFIX):
                 if target in pseudo_targets_seen:
                     raise Edge2TorchError(
@@ -84,12 +125,24 @@ class FeedforwardLayerBlock(nn.Module):
                 pseudo_input_indices.append(source_idx)
                 pseudo_output_indices.append(target_idx)
 
-        self.linear = MaskedLinear(
-            in_features=in_features,
-            out_features=out_features,
-            mask=mask,
-            bias=bias,
-        )
+        self.linear: ConstrainedMaskedLinear | MaskedLinear
+
+        if has_edge_metadata:
+            self.linear = ConstrainedMaskedLinear(
+                in_features=in_features,
+                out_features=out_features,
+                mask=mask,
+                initial_weight=initial_weight,
+                constraint=constraint,
+                bias=bias,
+            )
+        else:
+            self.linear = MaskedLinear(
+                in_features=in_features,
+                out_features=out_features,
+                mask=mask,
+                bias=bias,
+            )
 
         self.register_buffer(
             "pseudo_input_indices",
@@ -104,11 +157,10 @@ class FeedforwardLayerBlock(nn.Module):
         """
         Compute one layer transition and overwrite pseudo node outputs.
         """
-        linear = cast(MaskedLinear, self.linear)
         pseudo_input_indices = cast(torch.Tensor, self.pseudo_input_indices)
         pseudo_output_indices = cast(torch.Tensor, self.pseudo_output_indices)
 
-        y = linear(x)
+        y = self.linear(x)
 
         if pseudo_output_indices.numel() > 0:
             y[:, pseudo_output_indices] = x[:, pseudo_input_indices]

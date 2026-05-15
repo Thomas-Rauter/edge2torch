@@ -141,7 +141,18 @@ def build_feedforward_execution_plan(
         node for node in graph.nodes if len(children[node]) == 0
     )
 
-    expanded_edges_records: list[dict[str, str]] = []
+    has_initial_weight = "initial_weight" in original_edges.columns
+    has_constraint = "constraint" in original_edges.columns
+
+    expanded_edge_columns = ["source", "target"]
+
+    if has_initial_weight:
+        expanded_edge_columns.append("initial_weight")
+
+    if has_constraint:
+        expanded_edge_columns.append("constraint")
+
+    expanded_edges_records: list[dict[str, object]] = []
     pseudo_nodes: list[str] = []
 
     for row in original_edges.itertuples(index=False):
@@ -158,8 +169,22 @@ def build_feedforward_execution_plan(
                 "earlier to later layers."
             )
 
+        edge_metadata: dict[str, object] = {}
+
+        if has_initial_weight:
+            edge_metadata["initial_weight"] = getattr(row, "initial_weight")
+
+        if has_constraint:
+            edge_metadata["constraint"] = getattr(row, "constraint")
+
         if depth_gap == 1:
-            expanded_edges_records.append({"source": source, "target": target})
+            expanded_edges_records.append(
+                {
+                    "source": source,
+                    "target": target,
+                    **edge_metadata,
+                }
+            )
             continue
 
         previous_node = source
@@ -174,14 +199,27 @@ def build_feedforward_execution_plan(
             node_names_by_layer[layer_name].append(pseudo_node)
             node_to_layer[pseudo_node] = layer_name
 
-            expanded_edges_records.append(
-                {"source": previous_node, "target": pseudo_node}
-            )
+            pseudo_edge_record: dict[str, object] = {
+                "source": previous_node,
+                "target": pseudo_node,
+            }
+
+            if has_initial_weight:
+                pseudo_edge_record["initial_weight"] = float("nan")
+
+            if has_constraint:
+                pseudo_edge_record["constraint"] = "unconstrained"
+
+            expanded_edges_records.append(pseudo_edge_record)
 
             previous_node = pseudo_node
 
         expanded_edges_records.append(
-            {"source": previous_node, "target": target}
+            {
+                "source": previous_node,
+                "target": target,
+                **edge_metadata,
+            }
         )
 
     for layer_name, layer_nodes in node_names_by_layer.items():
@@ -189,7 +227,7 @@ def build_feedforward_execution_plan(
 
     expanded_edges = pd.DataFrame(
         expanded_edges_records,
-        columns=["source", "target"],
+        columns=expanded_edge_columns,
     )
 
     return FeedforwardExecutionPlan(
