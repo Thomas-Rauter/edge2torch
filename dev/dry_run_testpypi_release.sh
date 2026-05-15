@@ -58,7 +58,7 @@ echo "Step 8: Installing edge2torch from TestPyPI"
 python -m pip install \
   --index-url https://test.pypi.org/simple/ \
   --extra-index-url https://pypi.org/simple/ \
-  edge2torch
+  "edge2torch[interpret]"
 
 echo "Step 9: Running installed-package smoke test outside repository"
 cd /tmp

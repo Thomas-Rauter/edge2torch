@@ -79,12 +79,8 @@ def test_skip_internal_edges_get_default_metadata():
 
     plan = _build_plan(edgelist)
 
-    first_pseudo = (
-        "__edge2torch_pseudo__feature_a__prediction__layer_1"
-    )
-    second_pseudo = (
-        "__edge2torch_pseudo__feature_a__prediction__layer_2"
-    )
+    first_pseudo = "__edge2torch_pseudo__feature_a__prediction__layer_1"
+    second_pseudo = "__edge2torch_pseudo__feature_a__prediction__layer_2"
 
     first_internal_edge = plan.expanded_edges[
         (plan.expanded_edges["source"] == "feature_a")
@@ -135,9 +131,7 @@ def test_skip_final_edge_gets_original_metadata():
 
     plan = _build_plan(edgelist)
 
-    second_pseudo = (
-        "__edge2torch_pseudo__feature_a__prediction__layer_2"
-    )
+    second_pseudo = "__edge2torch_pseudo__feature_a__prediction__layer_2"
 
     final_skip_edge = plan.expanded_edges[
         (plan.expanded_edges["source"] == second_pseudo)
@@ -188,9 +182,7 @@ def test_sparse_metadata_is_preserved_through_expansion():
     assert pd.isna(direct_edge["initial_weight"])
     assert direct_edge["constraint"] == "positive"
 
-    second_pseudo = (
-        "__edge2torch_pseudo__feature_a__prediction__layer_2"
-    )
+    second_pseudo = "__edge2torch_pseudo__feature_a__prediction__layer_2"
 
     final_skip_edge = plan.expanded_edges[
         (plan.expanded_edges["source"] == second_pseudo)
