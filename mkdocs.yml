@@ -21,6 +21,7 @@ nav:
   - Installation: installation.md
   - Getting started: getting-started.ipynb
   - Feedforward skip edges: feedforward-skip-edges.ipynb
+  - Edge-weight metadata: edge-weight-metadata.ipynb
   - Backends: backends.md
   - API reference: api.md
   - Changelog: changelog.md
@@ -55,3 +56,9 @@ markdown_extensions:
   - pymdownx.highlight
   - pymdownx.superfences
   - pymdownx.inlinehilite
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js

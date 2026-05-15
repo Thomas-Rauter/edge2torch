@@ -1,4 +1,5 @@
 build/
+site/
 *.egg-info/
 notes/
 dist/
