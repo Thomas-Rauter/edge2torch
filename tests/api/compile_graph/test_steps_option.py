@@ -127,7 +127,7 @@ def test_compile_graph_rejects_non_positive_steps(steps: int):
         )
 
 
-@pytest.mark.parametrize("steps", [1.5, "3", None])
+@pytest.mark.parametrize("steps", [1.5, "3", None, True, False])
 def test_compile_graph_rejects_non_integer_steps(steps):
     with pytest.raises(Edge2TorchError, match="'steps' must be an integer"):
         compile_graph(

@@ -380,3 +380,50 @@ def _validate_state_update_graph(
             "Cycles are allowed, but the graph must include at least one "
             "node with no outgoing edges."
         )
+
+    if input_node_names and output_node_names:
+        _validate_outputs_reachable_from_inputs(
+            children=children,
+            input_node_names=input_node_names,
+            output_node_names=output_node_names,
+            backend_name=backend_name,
+            report=report,
+        )
+
+
+# Level 4 functions (functions called by level 3 functions) --------------------
+
+
+def _validate_outputs_reachable_from_inputs(
+    children: dict[str, list[str]],
+    input_node_names: list[str],
+    output_node_names: list[str],
+    backend_name: str,
+    report: ValidationReport,
+) -> None:
+    """
+    Validate that every output node is reachable from at least one input node.
+    """
+    reachable_nodes: set[str] = set()
+    stack = list(input_node_names)
+
+    while stack:
+        node = stack.pop()
+
+        if node in reachable_nodes:
+            continue
+
+        reachable_nodes.add(node)
+        stack.extend(children[node])
+
+    unreachable_outputs = sorted(
+        node for node in output_node_names if node not in reachable_nodes
+    )
+
+    if unreachable_outputs:
+        unreachable_str = ", ".join(unreachable_outputs)
+        report.errors.append(
+            f"{backend_name} compilation requires every output node to be "
+            "reachable from at least one input node. Unreachable output "
+            f"node(s): {unreachable_str}."
+        )

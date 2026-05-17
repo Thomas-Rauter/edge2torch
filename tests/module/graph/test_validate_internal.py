@@ -347,3 +347,86 @@ def test_validate_graphnn_graph_rejects_graph_without_output_nodes():
     _validate_graphnn_graph(graph=graph, report=report)
 
     assert any("at least one output node" in error for error in report.errors)
+
+
+@pytest.mark.parametrize(
+    ("backend", "backend_name"),
+    [
+        ("recurrent", "Recurrent"),
+        ("graphnn", "GraphNN"),
+    ],
+)
+def test_state_update_graph_errors_for_unreachable_output(
+    backend: str,
+    backend_name: str,
+):
+    graph = _Graph(
+        [
+            ("feature", "prediction_good"),
+            ("a", "b"),
+            ("b", "a"),
+            ("b", "prediction_bad"),
+        ]
+    )
+
+    report = validate_graph(graph=graph, backend=backend)
+
+    assert (
+        f"{backend_name} compilation requires every output node to be "
+        "reachable from at least one input node. Unreachable output "
+        "node(s): prediction_bad."
+    ) in report.errors
+
+
+@pytest.mark.parametrize(
+    "backend",
+    [
+        "recurrent",
+        "graphnn",
+    ],
+)
+def test_state_update_graph_accepts_reachable_output_through_cycle(
+    backend: str,
+):
+    graph = _Graph(
+        [
+            ("feature", "a"),
+            ("a", "b"),
+            ("b", "a"),
+            ("b", "prediction"),
+        ]
+    )
+
+    report = validate_graph(graph=graph, backend=backend)
+
+    assert report.errors == []
+
+
+@pytest.mark.parametrize(
+    ("backend", "backend_name"),
+    [
+        ("recurrent", "Recurrent"),
+        ("graphnn", "GraphNN"),
+    ],
+)
+def test_state_update_graph_reports_multiple_unreachable_outputs(
+    backend: str,
+    backend_name: str,
+):
+    graph = _Graph(
+        [
+            ("feature", "prediction_good"),
+            ("a", "b"),
+            ("b", "a"),
+            ("b", "prediction_bad_a"),
+            ("b", "prediction_bad_b"),
+        ]
+    )
+
+    report = validate_graph(graph=graph, backend=backend)
+
+    assert (
+        f"{backend_name} compilation requires every output node to be "
+        "reachable from at least one input node. Unreachable output "
+        "node(s): prediction_bad_a, prediction_bad_b."
+    ) in report.errors

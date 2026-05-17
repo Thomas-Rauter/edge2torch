@@ -51,8 +51,8 @@ dev = [
     "ruff",
     "mypy",
     "build",
-    "captum",
-    "anndata",
+    "captum>=0.7,<1",
+    "anndata>=0.10,<1",
     "scikit-learn",
 ]
 docs = [
@@ -69,8 +69,8 @@ docs = [
     "IPython",
     "seaborn",
     "black",
-    "captum",
-    "anndata",
+    "captum>=0.7,<1",
+    "anndata>=0.10,<1",
 ]
 
 [tool.setuptools]

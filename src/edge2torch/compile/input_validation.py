@@ -226,7 +226,7 @@ def _validate_steps(steps: Any, backend: Any) -> None:
     """
     Validate recurrent/message-passing step count.
     """
-    if not isinstance(steps, int):
+    if isinstance(steps, bool) or not isinstance(steps, int):
         raise Edge2TorchError("'steps' must be an integer.")
 
     if steps <= 0:
