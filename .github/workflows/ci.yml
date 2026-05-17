@@ -58,3 +58,92 @@ jobs:
       - name: Build package
         run: |
           python -m build
+
+      - name: Smoke test installed wheel
+        run: |
+          python -m venv /tmp/edge2torch-wheel-test
+          /tmp/edge2torch-wheel-test/bin/python -m pip install --upgrade pip
+          /tmp/edge2torch-wheel-test/bin/python -m pip install dist/*.whl
+          cd /tmp
+          /tmp/edge2torch-wheel-test/bin/python - <<'PY'
+          import pandas as pd
+          import torch
+
+          from edge2torch import (
+              CompileArtifact,
+              align_features_to_input_nodes,
+              compile_graph,
+              customize_model,
+              interpret_model,
+          )
+
+          edgelist = pd.DataFrame(
+              {
+                  "source": ["feature_a", "feature_b", "hidden"],
+                  "target": ["hidden", "hidden", "prediction"],
+              }
+          )
+
+          model, artifact = compile_graph(
+              edgelist,
+              backend="feedforward",
+              quiet=True,
+              bias=False,
+          )
+
+          assert isinstance(artifact, CompileArtifact)
+          assert artifact.feature_names == ["feature_a", "feature_b"]
+
+          x = torch.ones(2, len(artifact.feature_names))
+          y = model(x)
+
+          assert y.shape == (2, 1)
+          assert callable(align_features_to_input_nodes)
+          assert callable(customize_model)
+          assert callable(interpret_model)
+
+          print("installed wheel smoke test passed")
+          PY
+
+  docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install system Graphviz
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y graphviz
+
+      - name: Install package and docs dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[docs]
+
+      - name: Execute docs notebooks
+        run: |
+          jupyter nbconvert \
+            --to notebook \
+            --execute docs/getting-started.ipynb \
+            --inplace
+
+          jupyter nbconvert \
+            --to notebook \
+            --execute docs/feedforward-skip-edges.ipynb \
+            --inplace
+
+          jupyter nbconvert \
+            --to notebook \
+            --execute docs/edge-weight-metadata.ipynb \
+            --inplace
+
+      - name: Build documentation
+        run: |
+          mkdocs build --strict
