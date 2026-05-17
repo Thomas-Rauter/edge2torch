@@ -35,9 +35,17 @@ Across all backends, input and output nodes are inferred from graph structure:
 - output nodes are nodes with no outgoing edges
 
 The current implementation enforces sparse graph-derived connectivity with
-masked dense PyTorch layers. This guarantees that compiled models respect the
-edgelist connectivity, but it should not be interpreted as sparse tensor
-acceleration (which is planned as a future addition).
+masked dense PyTorch layers. These masks constrain trainable edge weights: a
+source-to-target weighted connection can contribute only where the compiled
+graph contains the corresponding directed edge.
+
+Compiled layers include bias terms by default. Biases are node-level offsets,
+not graph edges, and are not constrained by the edge mask. Set `bias=False` in
+`compile_graph()` to remove these offsets so node updates depend only on
+graph-defined weighted inputs.
+
+The use of masked dense layers should not be interpreted as sparse tensor
+acceleration, which is planned as a future addition.
 
 ## Common input format
 
@@ -97,7 +105,9 @@ perceptron whose connectivity pattern is derived from the edgelist.
 
 The compiled model contains one computation block per adjacent layer pair.
 Each block applies a masked linear transformation so that only graph-defined
-connections contribute to the forward pass.
+weighted connections contribute through edge weights. If `bias=True`, target
+nodes may also have learned node-level offsets. Set `bias=False` to remove
+these offsets.
 
 ### Pseudo nodes
 
