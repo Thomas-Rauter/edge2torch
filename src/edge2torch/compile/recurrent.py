@@ -26,6 +26,7 @@ from .execution_plan import build_recurrent_execution_plan
 def compile_recurrent(
     graph: EdgeGraph,
     bias: bool = True,
+    steps: int = 3,
 ) -> tuple[RecurrentEdgeModel, CompileArtifact]:
     """
     Compile a KPNN graph into a recurrent PyTorch model.
@@ -40,6 +41,9 @@ def compile_recurrent(
         graph-defined weighted inputs. If False, node updates are computed only
         from graph-defined weighted inputs. Disabling bias gives the graph
         structure stricter control over node activations.
+    steps
+        Number of recurrent/message-passing update steps for the ``recurrent``
+        and ``graphnn`` backends.
 
     Returns
     -------
@@ -52,6 +56,7 @@ def compile_recurrent(
     # Builds the actual PyTorch modules from that structure.
     model = RecurrentEdgeModel(
         execution_plan=execution_plan,
+        steps=steps,
         bias=bias,
     )
 

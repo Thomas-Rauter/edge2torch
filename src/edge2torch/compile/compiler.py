@@ -30,6 +30,7 @@ def compile_backend(
     graph: EdgeGraph,
     backend: str,
     bias: bool = True,
+    steps: int = 3,
 ) -> tuple[nn.Module, CompileArtifact]:
     """
     Compile a graph into a backend-specific PyTorch model.
@@ -46,6 +47,9 @@ def compile_backend(
         graph-defined weighted inputs. If False, node updates are computed only
         from graph-defined weighted inputs. Disabling bias gives the graph
         structure stricter control over node activations.
+    steps
+        Number of recurrent/message-passing update steps for the ``recurrent``
+        and ``graphnn`` backends.
 
     Returns
     -------
@@ -67,12 +71,14 @@ def compile_backend(
         return compile_recurrent(
             graph=graph,
             bias=bias,
+            steps=steps,
         )
 
     if backend == "graphnn":
         return compile_graphnn(
             graph=graph,
             bias=bias,
+            steps=steps,
         )
 
     raise Edge2TorchError(f"Unsupported backend '{backend}'.")

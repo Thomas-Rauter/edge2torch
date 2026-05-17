@@ -18,6 +18,7 @@ def test_validate_compile_graph_inputs_accepts_valid_inputs():
         backend="feedforward",
         quiet=False,
         bias=True,
+        steps=3,
     )
 
 
@@ -34,6 +35,7 @@ def test_validate_compile_graph_inputs_accepts_bias_false():
         backend="feedforward",
         quiet=False,
         bias=False,
+        steps=3,
     )
 
 
@@ -48,6 +50,7 @@ def test_validate_compile_graph_inputs_raises_for_non_dataframe():
             backend="feedforward",
             quiet=False,
             bias=True,
+            steps=3,
         )
 
 
@@ -64,6 +67,7 @@ def test_validate_compile_graph_inputs_raises_for_missing_source_column():
             backend="feedforward",
             quiet=False,
             bias=True,
+            steps=3,
         )
 
 
@@ -80,6 +84,7 @@ def test_validate_compile_graph_inputs_raises_for_missing_target_column():
             backend="feedforward",
             quiet=False,
             bias=True,
+            steps=3,
         )
 
 
@@ -97,6 +102,7 @@ def test_validate_compile_graph_inputs_raises_for_duplicate_source_column():
             backend="feedforward",
             quiet=False,
             bias=True,
+            steps=3,
         )
 
 
@@ -114,6 +120,7 @@ def test_validate_compile_graph_inputs_raises_for_duplicate_target_column():
             backend="feedforward",
             quiet=False,
             bias=True,
+            steps=3,
         )
 
 
@@ -133,6 +140,7 @@ def test_validate_compile_graph_inputs_raises_for_missing_values():
             backend="feedforward",
             quiet=False,
             bias=True,
+            steps=3,
         )
 
 
@@ -150,6 +158,7 @@ def test_validate_compile_graph_inputs_raises_for_empty_source_name():
             backend="feedforward",
             quiet=False,
             bias=True,
+            steps=3,
         )
 
 
@@ -167,6 +176,7 @@ def test_validate_compile_graph_inputs_raises_for_whitespace_target_name():
             backend="feedforward",
             quiet=False,
             bias=True,
+            steps=3,
         )
 
 
@@ -184,6 +194,7 @@ def test_validate_compile_graph_inputs_raises_for_non_string_backend():
             backend=1,
             quiet=False,
             bias=True,
+            steps=3,
         )
 
 
@@ -201,6 +212,7 @@ def test_validate_compile_graph_inputs_raises_for_unsupported_backend():
             backend="unknown_backend",
             quiet=False,
             bias=True,
+            steps=3,
         )
 
 
@@ -218,6 +230,7 @@ def test_validate_compile_graph_inputs_raises_for_non_boolean_quiet():
             backend="feedforward",
             quiet="no",
             bias=True,
+            steps=3,
         )
 
 
@@ -235,4 +248,82 @@ def test_validate_compile_graph_inputs_raises_for_non_boolean_bias():
             backend="feedforward",
             quiet=False,
             bias="no",
+            steps=3,
+        )
+
+
+def test_validate_compile_graph_inputs_accepts_valid_steps():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1"],
+            "target": ["pathway_1"],
+        }
+    )
+
+    validate_compile_graph_inputs(
+        edgelist=edgelist,
+        backend="recurrent",
+        quiet=False,
+        bias=True,
+        steps=5,
+    )
+
+
+def test_validate_compile_graph_inputs_rejects_zero_steps():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1"],
+            "target": ["pathway_1"],
+        }
+    )
+
+    with pytest.raises(
+        Edge2TorchError,
+        match="'steps' must be a positive integer",
+    ):
+        validate_compile_graph_inputs(
+            edgelist=edgelist,
+            backend="recurrent",
+            quiet=False,
+            bias=True,
+            steps=0,
+        )
+
+
+def test_validate_compile_graph_inputs_rejects_non_integer_steps():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1"],
+            "target": ["pathway_1"],
+        }
+    )
+
+    with pytest.raises(Edge2TorchError, match="'steps' must be an integer"):
+        validate_compile_graph_inputs(
+            edgelist=edgelist,
+            backend="recurrent",
+            quiet=False,
+            bias=True,
+            steps="3",
+        )
+
+
+def test_validate_compile_graph_inputs_rejects_feedforward_steps():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1"],
+            "target": ["pathway_1"],
+        }
+    )
+
+    with pytest.raises(
+        Edge2TorchError,
+        match="'steps' is only used by the 'recurrent' and 'graphnn'",
+    ):
+        validate_compile_graph_inputs(
+            edgelist=edgelist,
+            backend="feedforward",
+            quiet=False,
+            bias=True,
+            steps=5,
         )

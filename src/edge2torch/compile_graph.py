@@ -11,6 +11,7 @@ def compile_graph(
     backend: str = "feedforward",
     quiet: bool = False,
     bias: bool = True,
+    steps: int = 3,
 ):
     """
     Compile an edgelist into a sparse PyTorch model and compilation artifact.
@@ -40,6 +41,11 @@ def compile_graph(
     node-level parameters, not graph edges, and are not constrained by the edge
     mask. Set ``bias=False`` to remove these offsets so node updates depend only
     on graph-defined weighted inputs.
+
+    The ``recurrent`` and ``graphnn`` backends apply a fixed number of graph
+    state-update steps during each forward pass. The ``steps`` argument controls
+    this update count. It is not a training epoch count and does not represent a
+    sequence length in the input data.
 
     Parameters
     ----------
@@ -85,6 +91,12 @@ def compile_graph(
         graph-defined weighted inputs. If False, node updates are computed only
         from graph-defined weighted inputs. Disabling bias gives the graph
         structure stricter control over node activations.
+    steps : int, default=3
+        Number of recurrent/message-passing update steps for the ``recurrent``
+        and ``graphnn`` backends. Larger values allow information to propagate
+        through longer graph paths and revisit cycles more times. This parameter
+        is not used by the ``feedforward`` backend; non-default values with
+        ``backend="feedforward"`` are rejected.
 
     Returns
     -------
@@ -144,6 +156,7 @@ def compile_graph(
         backend=backend,
         quiet=quiet,
         bias=bias,
+        steps=steps,
     )
 
     graph = edgelist_to_graph(edgelist)
@@ -162,6 +175,7 @@ def compile_graph(
         graph=graph,
         backend=backend,
         bias=bias,
+        steps=steps,
     )
 
     return model, artifact

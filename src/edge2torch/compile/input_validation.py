@@ -32,6 +32,7 @@ def validate_compile_graph_inputs(
     backend: Any,
     quiet: Any,
     bias: Any,
+    steps: Any,
 ) -> None:
     """
     Validate the public inputs of ``compile_graph()``.
@@ -48,6 +49,9 @@ def validate_compile_graph_inputs(
         Whether informational notes should be suppressed.
     bias
         Whether compiled masked linear layers should include bias terms.
+    steps
+        Number of recurrent/message-passing update steps for the ``recurrent``
+        and ``graphnn`` backends.
 
     Raises
     ------
@@ -61,6 +65,7 @@ def validate_compile_graph_inputs(
     _validate_backend(backend)
     _validate_quiet(quiet)
     _validate_bias(bias)
+    _validate_steps(steps, backend)
 
 
 # Level 2 functions (functions called by level 1 functions) --------------------
@@ -215,6 +220,22 @@ def _validate_bias(bias: Any) -> None:
     """
     if not isinstance(bias, bool):
         raise Edge2TorchError("'bias' must be a boolean value (True or False).")
+
+
+def _validate_steps(steps: Any, backend: Any) -> None:
+    """
+    Validate recurrent/message-passing step count.
+    """
+    if not isinstance(steps, int):
+        raise Edge2TorchError("'steps' must be an integer.")
+
+    if steps <= 0:
+        raise Edge2TorchError("'steps' must be a positive integer.")
+
+    if backend == "feedforward" and steps != 3:
+        raise Edge2TorchError(
+            "'steps' is only used by the 'recurrent' and 'graphnn' backends."
+        )
 
 
 # Level 3 functions (functions called by level 2 functions) --------------------

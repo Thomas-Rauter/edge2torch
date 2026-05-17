@@ -3,7 +3,7 @@ import pytest
 import torch
 
 from edge2torch import compile_graph
-from edge2torch.nn.masked_linear import ConstrainedMaskedLinear, MaskedLinear
+from edge2torch.nn.masked_linear import ConstrainedMaskedLinear
 from edge2torch.utils.errors import Edge2TorchError
 
 
