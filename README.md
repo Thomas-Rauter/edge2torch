@@ -164,6 +164,13 @@ The current public API is centered on:
 - `customize_model()`
 - `interpret_model()`
 
+`CompileArtifact` is also exported as a public type because it is returned by
+`compile_graph()` and consumed by helper functions. Its stable user-facing
+fields are `backend` and `feature_names`; other fields expose compilation
+internals for inspection and debugging and may change across releases.
+
+`__version__` is exported for version reporting.
+
 ## Supported backends
 
 `compile_graph()` currently supports:

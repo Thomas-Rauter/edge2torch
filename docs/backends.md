@@ -125,7 +125,7 @@ The `recurrent` backend compiles the graph into a recurrent node-state model.
 
 Instead of layering the graph into a sequence of feedforward blocks, this
 backend keeps the original graph topology and applies repeated state updates
-over the graph for a fixed number of steps.
+over the graph for a configurable number of steps.
 
 ### Structural properties
 
@@ -133,9 +133,16 @@ The `recurrent` backend:
 
 - allows cyclic graphs
 - keeps the original graph topology
+- requires at least one inferred input node
+- requires at least one inferred output node
+- requires every output node to be reachable from at least one inferred input
+  node
 - updates node states repeatedly over multiple steps
 - uses masks to enforce graph-defined recurrent connectivity
 - re-injects input-node values after each recurrent update step
+
+Cycles are allowed, but output nodes in disconnected cyclic components are
+rejected because they cannot depend on the provided input features.
 
 ### Internal execution pattern
 
@@ -146,6 +153,10 @@ Each node has a position in a global node-state vector. At each step, the model
 updates node states using the graph-defined connectivity mask. Input nodes are
 then re-injected so that external inputs remain anchored across recurrent
 updates.
+
+The `steps` argument to `compile_graph()` controls how many recurrent update
+steps are applied during each forward pass. It is not a training epoch count
+and does not represent a sequence length in the input data.
 
 ### Pseudo nodes
 
@@ -173,8 +184,8 @@ state-update model over named node states.
 Like the recurrent backend, it keeps the original graph topology instead of
 forcing the graph into a layer-wise feedforward structure. In the current
 implementation, `graphnn` is intentionally close to `recurrent`: both use a
-single node-state vector, masked dense updates, fixed-step iteration, and
-input-node re-injection.
+single node-state vector, masked dense updates, configurable fixed-step
+iteration, and input-node re-injection.
 
 The `graphnn` backend should therefore be understood as a lightweight
 message-passing-style interface and extension point, not as a full-featured
@@ -186,21 +197,32 @@ The `graphnn` backend:
 
 - allows cyclic or non-layerable graphs
 - keeps the original graph structure
+- requires at least one inferred input node
+- requires at least one inferred output node
+- requires every output node to be reachable from at least one inferred input
+  node
 - performs repeated graph-defined node-state updates
 - uses masks to enforce graph-derived connectivity
 - re-injects input-node values after each update step
 - currently uses the same minimal masked-update primitive as the recurrent
   backend
 
+Cycles are allowed, but output nodes in disconnected cyclic components are
+rejected because they cannot depend on the provided input features.
+
 ### Internal execution pattern
 
-Conceptually, the current `graphnn` backend applies a fixed number of
+Conceptually, the current `graphnn` backend applies a configurable number of
 message-passing-style updates over scalar node states.
 
 It provides a conservative graph-oriented backend that fits the same
 compile/train/interpret interface as the other backends, while leaving room for
 future backend-specific extensions such as richer message functions,
 aggregation choices, normalization, residual updates, or edge features.
+
+The `steps` argument to `compile_graph()` controls how many graph update steps
+are applied during each forward pass. It is not a training epoch count and does
+not represent a sequence length in the input data.
 
 ### Pseudo nodes
 
