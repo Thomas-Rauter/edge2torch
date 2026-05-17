@@ -6,6 +6,7 @@ def test_public_api_exports_expected_names():
     assert hasattr(edge2torch, "customize_model")
     assert hasattr(edge2torch, "interpret_model")
     assert hasattr(edge2torch, "CompileArtifact")
+    assert hasattr(edge2torch, "__version__")
 
 
 def test_public_api_all_contains_expected_names():
@@ -17,6 +18,7 @@ def test_public_api_all_contains_expected_names():
         "customize_model",
         "interpret_model",
         "CompileArtifact",
+        "__version__",
     }
 
 
