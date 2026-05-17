@@ -112,6 +112,61 @@ jobs:
           print("installed wheel smoke test passed")
           PY
 
+      - name: Smoke test installed wheel with interpret extra
+        run: |
+          python -m venv /tmp/edge2torch-interpret-test
+          /tmp/edge2torch-interpret-test/bin/python -m pip install --upgrade pip
+          wheel=$(ls dist/*.whl)
+          /tmp/edge2torch-interpret-test/bin/python -m pip install "${wheel}[interpret]"
+          cd /tmp
+          /tmp/edge2torch-interpret-test/bin/python - <<'PY'
+          import pandas as pd
+
+          from edge2torch import (
+              align_features_to_input_nodes,
+              compile_graph,
+              interpret_model,
+          )
+
+          edgelist = pd.DataFrame(
+              {
+                  "source": ["feature_a", "feature_b", "hidden"],
+                  "target": ["hidden", "hidden", "prediction"],
+                  "initial_weight": [0.5, 0.5, 1.0],
+                  "constraint": ["fixed", "fixed", "fixed"],
+              }
+          )
+
+          model, artifact = compile_graph(
+              edgelist,
+              backend="feedforward",
+              quiet=True,
+              bias=False,
+          )
+
+          data = pd.DataFrame(
+              {
+                  "feature_a": [1.0, 2.0],
+                  "feature_b": [3.0, 4.0],
+              }
+          )
+
+          x = align_features_to_input_nodes(data, artifact)
+          assert x.shape == (2, 2)
+
+          attributions = interpret_model(
+              model=model,
+              artifact=artifact,
+              data=data,
+              target="features",
+              method="IntegratedGradients",
+          )
+
+          assert attributions.shape[0] == 2
+
+          print("installed wheel interpret extra smoke test passed")
+          PY
+
   docs:
     runs-on: ubuntu-latest
 
