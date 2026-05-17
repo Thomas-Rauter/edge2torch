@@ -248,12 +248,15 @@ def _validate_feedforward_graph(
         return
 
     visited_nodes: set[str] = set()
+    node_to_depth: dict[str, int] = {}
+    depth = 0
 
     while current_layer_nodes:
         next_layer_candidates: set[str] = set()
 
         for node in current_layer_nodes:
             visited_nodes.add(node)
+            node_to_depth[node] = depth
 
             for child in children[node]:
                 in_degree[child] -= 1
@@ -261,6 +264,7 @@ def _validate_feedforward_graph(
                 if in_degree[child] == 0:
                     next_layer_candidates.add(child)
 
+        depth += 1
         current_layer_nodes = sorted(next_layer_candidates)
 
     if len(visited_nodes) != len(node_names):
@@ -268,6 +272,30 @@ def _validate_feedforward_graph(
             "Feedforward compilation requires an acyclic, layerable graph. "
             "The graph contains at least one cycle or unresolved dependency."
         )
+        return
+
+    output_node_depths = {
+        node: node_to_depth[node]
+        for node in node_names
+        if len(children[node]) == 0
+    }
+
+    if output_node_depths:
+        final_output_depth = max(output_node_depths.values())
+        early_output_nodes = sorted(
+            node
+            for node, node_depth in output_node_depths.items()
+            if node_depth != final_output_depth
+        )
+
+        if early_output_nodes:
+            early_output_str = ", ".join(early_output_nodes)
+            report.errors.append(
+                "Feedforward compilation requires all terminal output nodes "
+                "to be at the same layer depth. Output node(s) at earlier "
+                "depth than the final output layer are not supported: "
+                f"{early_output_str}."
+            )
 
 
 def _validate_recurrent_graph(

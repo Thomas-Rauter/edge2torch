@@ -141,6 +141,27 @@ def build_feedforward_execution_plan(
         node for node in graph.nodes if len(children[node]) == 0
     )
 
+    output_node_depths = {
+        node: node_to_depth[node] for node in output_node_names
+    }
+
+    if output_node_depths:
+        final_output_depth = max(output_node_depths.values())
+        early_output_nodes = sorted(
+            node
+            for node, node_depth in output_node_depths.items()
+            if node_depth != final_output_depth
+        )
+
+        if early_output_nodes:
+            early_output_str = ", ".join(early_output_nodes)
+            raise Edge2TorchError(
+                "Feedforward compilation requires all terminal output nodes "
+                "to be at the same layer depth. Output node(s) at earlier "
+                "depth than the final output layer are not supported: "
+                f"{early_output_str}."
+            )
+
     has_initial_weight = "initial_weight" in original_edges.columns
     has_constraint = "constraint" in original_edges.columns
 

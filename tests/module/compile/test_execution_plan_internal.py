@@ -23,6 +23,22 @@ class _Graph:
 # build_feedforward_execution_plan --------------------------------------------
 
 
+def test_build_feedforward_execution_plan_rejects_terminal_out_multi_depths():
+    graph = _Graph(
+        [
+            ("input", "early_output"),
+            ("input", "hidden"),
+            ("hidden", "late_output"),
+        ]
+    )
+
+    with pytest.raises(
+        Edge2TorchError,
+        match="terminal output nodes.*same layer depth",
+    ):
+        build_feedforward_execution_plan(graph)
+
+
 def test_build_feedforward_execution_plan_rejects_no_input_nodes():
     graph = _Graph(
         [

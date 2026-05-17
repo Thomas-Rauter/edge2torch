@@ -9,6 +9,25 @@ from edge2torch.nn.model import EdgeModel
 from edge2torch.utils.errors import Edge2TorchError
 
 
+def test_compile_graph_rejects_feedforward_terminal_outputs_at_multi_depths():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["input", "input", "hidden"],
+            "target": ["early_output", "hidden", "late_output"],
+        }
+    )
+
+    with pytest.raises(
+        Edge2TorchError,
+        match="terminal output nodes.*same layer depth",
+    ):
+        compile_graph(
+            edgelist=edgelist,
+            backend="feedforward",
+            quiet=True,
+        )
+
+
 def test_compile_graph_returns_model_and_artifact_for_valid_feedforward_graph():
     edgelist = pd.DataFrame(
         {

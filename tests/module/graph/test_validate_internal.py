@@ -122,6 +122,25 @@ def test_validate_common_graph_structure_errors_for_duplicate_edges():
     assert report.notes == ["Graph contains 2 node(s) and 2 edge(s)."]
 
 
+def test_validate_feedforward_graph_rejects_terminal_outputs_at_multi_depths():
+    graph = _Graph(
+        [
+            ("input", "early_output"),
+            ("input", "hidden"),
+            ("hidden", "late_output"),
+        ]
+    )
+    report = ValidationReport()
+
+    _validate_feedforward_graph(graph=graph, report=report)
+
+    assert any(
+        "all terminal output nodes to be at the same layer depth" in error
+        and "early_output" in error
+        for error in report.errors
+    )
+
+
 def test_validate_feedforward_graph_accepts_layerable_graph():
     graph = _Graph(
         [

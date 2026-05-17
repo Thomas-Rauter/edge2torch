@@ -129,7 +129,7 @@ feature_attributions = e2t.interpret_model(
     artifact=artifact,
     data=data,
     target="features",
-    method="integrated_gradients",
+    method="IntegratedGradients",
 )
 ```
 
