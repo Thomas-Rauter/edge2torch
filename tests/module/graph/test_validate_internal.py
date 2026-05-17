@@ -449,3 +449,32 @@ def test_state_update_graph_reports_multiple_unreachable_outputs(
         "reachable from at least one input node. Unreachable output "
         "node(s): prediction_bad_a, prediction_bad_b."
     ) in report.errors
+
+
+@pytest.mark.parametrize(
+    ("backend", "backend_name"),
+    [
+        ("recurrent", "Recurrent"),
+        ("graphnn", "GraphNN"),
+    ],
+)
+def test_state_update_graph_rejects_unreachable_output_relevant_nodes(
+    backend: str,
+    backend_name: str,
+):
+    graph = _Graph(
+        [
+            ("feature", "prediction"),
+            ("a", "b"),
+            ("b", "a"),
+            ("b", "prediction"),
+        ]
+    )
+
+    report = validate_graph(graph=graph, backend=backend)
+
+    assert (
+        f"{backend_name} compilation requires every node that can "
+        "influence an output node to be reachable from at least one "
+        "input node. Unreachable output-relevant node(s): a, b."
+    ) in report.errors

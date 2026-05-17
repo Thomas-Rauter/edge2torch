@@ -412,6 +412,7 @@ def _validate_state_update_graph(
     if input_node_names and output_node_names:
         _validate_outputs_reachable_from_inputs(
             children=children,
+            parents=parents,
             input_node_names=input_node_names,
             output_node_names=output_node_names,
             backend_name=backend_name,
@@ -424,28 +425,41 @@ def _validate_state_update_graph(
 
 def _validate_outputs_reachable_from_inputs(
     children: dict[str, list[str]],
+    parents: dict[str, list[str]],
     input_node_names: list[str],
     output_node_names: list[str],
     backend_name: str,
     report: ValidationReport,
 ) -> None:
     """
-    Validate that every output node is reachable from at least one input node.
+    Validate that output-relevant nodes are reachable from input nodes.
     """
-    reachable_nodes: set[str] = set()
+    reachable_from_inputs: set[str] = set()
     stack = list(input_node_names)
 
     while stack:
         node = stack.pop()
 
-        if node in reachable_nodes:
+        if node in reachable_from_inputs:
             continue
 
-        reachable_nodes.add(node)
+        reachable_from_inputs.add(node)
         stack.extend(children[node])
 
+    output_relevant_nodes: set[str] = set()
+    stack = list(output_node_names)
+
+    while stack:
+        node = stack.pop()
+
+        if node in output_relevant_nodes:
+            continue
+
+        output_relevant_nodes.add(node)
+        stack.extend(parents[node])
+
     unreachable_outputs = sorted(
-        node for node in output_node_names if node not in reachable_nodes
+        node for node in output_node_names if node not in reachable_from_inputs
     )
 
     if unreachable_outputs:
@@ -454,4 +468,19 @@ def _validate_outputs_reachable_from_inputs(
             f"{backend_name} compilation requires every output node to be "
             "reachable from at least one input node. Unreachable output "
             f"node(s): {unreachable_str}."
+        )
+
+    unreachable_output_relevant_nodes = sorted(
+        node
+        for node in output_relevant_nodes
+        if node not in reachable_from_inputs and node not in output_node_names
+    )
+
+    if unreachable_output_relevant_nodes:
+        unreachable_str = ", ".join(unreachable_output_relevant_nodes)
+        report.errors.append(
+            f"{backend_name} compilation requires every node that can "
+            "influence an output node to be reachable from at least one "
+            "input node. Unreachable output-relevant node(s): "
+            f"{unreachable_str}."
         )

@@ -83,3 +83,22 @@ def test_recurrent_model_raises_for_wrong_input_width():
 
     with pytest.raises(Edge2TorchError, match="wrong number of features"):
         model(x)
+
+
+def test_compile_graph_recurrent_rejects_unreachable_output_relevant_nodes():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["feature", "a", "b", "b"],
+            "target": ["prediction", "b", "a", "prediction"],
+        }
+    )
+
+    with pytest.raises(
+        Edge2TorchError,
+        match="Unreachable output-relevant node",
+    ):
+        compile_graph(
+            edgelist=edgelist,
+            backend="recurrent",
+            quiet=True,
+        )
