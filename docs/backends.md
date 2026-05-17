@@ -167,11 +167,18 @@ Use `recurrent` when:
 
 ### Meaning
 
-The `graphnn` backend compiles the graph into a graph-oriented
-message-passing-style model over node states.
+The `graphnn` backend compiles the graph into a minimal graph-oriented
+state-update model over named node states.
 
 Like the recurrent backend, it keeps the original graph topology instead of
-forcing the graph into a layer-wise feedforward structure.
+forcing the graph into a layer-wise feedforward structure. In the current
+implementation, `graphnn` is intentionally close to `recurrent`: both use a
+single node-state vector, masked dense updates, fixed-step iteration, and
+input-node re-injection.
+
+The `graphnn` backend should therefore be understood as a lightweight
+message-passing-style interface and extension point, not as a full-featured
+graph neural network library backend.
 
 ### Structural properties
 
@@ -180,25 +187,27 @@ The `graphnn` backend:
 - allows cyclic or non-layerable graphs
 - keeps the original graph structure
 - performs repeated graph-defined node-state updates
-- uses masks to enforce graph-derived message-passing connectivity
+- uses masks to enforce graph-derived connectivity
 - re-injects input-node values after each update step
+- currently uses the same minimal masked-update primitive as the recurrent
+  backend
 
 ### Internal execution pattern
 
-Conceptually, the current `graphnn` backend is a minimal graph-oriented
-message-passing model over named nodes.
+Conceptually, the current `graphnn` backend applies a fixed number of
+message-passing-style updates over scalar node states.
 
-It provides a conservative GraphNN-style backend that fits the same
+It provides a conservative graph-oriented backend that fits the same
 compile/train/interpret interface as the other backends, while leaving room for
-future backend-specific extensions.
+future backend-specific extensions such as richer message functions,
+aggregation choices, normalization, residual updates, or edge features.
 
 ### Pseudo nodes
 
 Pseudo nodes are not used by the `graphnn` backend.
 
-GraphNN-style models are generally intended to operate directly on the original
-graph topology, so pseudo-node expansion is not an obvious default mechanism
-for this backend.
+GraphNN-style models operate directly on the original graph topology, so
+pseudo-node expansion is not used as a default mechanism for this backend.
 
 ### When to use it
 
@@ -206,7 +215,9 @@ Use `graphnn` when:
 
 - you want to preserve the original graph topology
 - the graph is not naturally feedforward
-- you want a graph-oriented backend rather than a layered one
+- you want a minimal graph-oriented state-update backend
+- you want a backend that can serve as a future extension point for
+  message-passing-style models
 
 ## Summary of backend behavior
 
@@ -214,7 +225,7 @@ Use `graphnn` when:
 |---|---:|---:|---:|---|
 | `feedforward` | yes | no | yes | sparse layer-wise computation |
 | `recurrent` | no | yes | no | sparse recurrent node-state updates |
-| `graphnn` | no | yes | no | sparse message-passing node updates |
+| `graphnn` | no | yes | no | minimal message-passing-style node updates |
 
 ## Interpretation support
 

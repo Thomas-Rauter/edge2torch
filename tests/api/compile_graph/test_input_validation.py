@@ -17,6 +17,23 @@ def test_validate_compile_graph_inputs_accepts_valid_inputs():
         edgelist=edgelist,
         backend="feedforward",
         quiet=False,
+        bias=True,
+    )
+
+
+def test_validate_compile_graph_inputs_accepts_bias_false():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2"],
+            "target": ["pathway_1", "pathway_1"],
+        }
+    )
+
+    validate_compile_graph_inputs(
+        edgelist=edgelist,
+        backend="feedforward",
+        quiet=False,
+        bias=False,
     )
 
 
@@ -30,6 +47,7 @@ def test_validate_compile_graph_inputs_raises_for_non_dataframe():
             edgelist=edgelist,
             backend="feedforward",
             quiet=False,
+            bias=True,
         )
 
 
@@ -45,6 +63,7 @@ def test_validate_compile_graph_inputs_raises_for_missing_source_column():
             edgelist=edgelist,
             backend="feedforward",
             quiet=False,
+            bias=True,
         )
 
 
@@ -60,6 +79,7 @@ def test_validate_compile_graph_inputs_raises_for_missing_target_column():
             edgelist=edgelist,
             backend="feedforward",
             quiet=False,
+            bias=True,
         )
 
 
@@ -76,6 +96,7 @@ def test_validate_compile_graph_inputs_raises_for_duplicate_source_column():
             edgelist=edgelist,
             backend="feedforward",
             quiet=False,
+            bias=True,
         )
 
 
@@ -92,6 +113,7 @@ def test_validate_compile_graph_inputs_raises_for_duplicate_target_column():
             edgelist=edgelist,
             backend="feedforward",
             quiet=False,
+            bias=True,
         )
 
 
@@ -110,6 +132,7 @@ def test_validate_compile_graph_inputs_raises_for_missing_values():
             edgelist=edgelist,
             backend="feedforward",
             quiet=False,
+            bias=True,
         )
 
 
@@ -126,6 +149,7 @@ def test_validate_compile_graph_inputs_raises_for_empty_source_name():
             edgelist=edgelist,
             backend="feedforward",
             quiet=False,
+            bias=True,
         )
 
 
@@ -142,6 +166,7 @@ def test_validate_compile_graph_inputs_raises_for_whitespace_target_name():
             edgelist=edgelist,
             backend="feedforward",
             quiet=False,
+            bias=True,
         )
 
 
@@ -158,6 +183,7 @@ def test_validate_compile_graph_inputs_raises_for_non_string_backend():
             edgelist=edgelist,
             backend=1,
             quiet=False,
+            bias=True,
         )
 
 
@@ -174,6 +200,7 @@ def test_validate_compile_graph_inputs_raises_for_unsupported_backend():
             edgelist=edgelist,
             backend="unknown_backend",
             quiet=False,
+            bias=True,
         )
 
 
@@ -190,4 +217,22 @@ def test_validate_compile_graph_inputs_raises_for_non_boolean_quiet():
             edgelist=edgelist,
             backend="feedforward",
             quiet="no",
+            bias=True,
+        )
+
+
+def test_validate_compile_graph_inputs_raises_for_non_boolean_bias():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1"],
+            "target": ["pathway_1"],
+        }
+    )
+
+    with pytest.raises(Edge2TorchError, match="'bias' must be a boolean"):
+        validate_compile_graph_inputs(
+            edgelist=edgelist,
+            backend="feedforward",
+            quiet=False,
+            bias="no",
         )

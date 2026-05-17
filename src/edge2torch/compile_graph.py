@@ -10,6 +10,7 @@ def compile_graph(
     edgelist: pd.DataFrame,
     backend: str = "feedforward",
     quiet: bool = False,
+    bias: bool = True,
 ):
     """
     Compile an edgelist into a sparse PyTorch model and compilation artifact.
@@ -34,6 +35,12 @@ def compile_graph(
     backend's default trainable weight initialization and unconstrained weight
     behavior.
 
+    Graph-derived connectivity is enforced through masks on trainable edge
+    weights. By default, compiled layers also include bias terms. Biases are
+    node-level parameters, not graph edges, and are not constrained by the edge
+    mask. Set ``bias=False`` to remove these offsets so node updates depend only
+    on graph-defined weighted inputs.
+
     Parameters
     ----------
     edgelist : pd.DataFrame
@@ -56,17 +63,28 @@ def compile_graph(
         - ``"fixed"``: the edge weight is fixed to ``"initial_weight"`` and is
           not trainable.
 
-        If either optional column is provided, both ``"initial_weight"`` and
-        ``"constraint"`` must be provided for all edges. Positive-constrained
-        edges must have positive initial weights, negative-constrained edges
-        must have negative initial weights, and fixed edges use the provided
-        initial weight as a constant connection value.
+        The optional columns are independent and row-wise sparse. Missing
+        ``"initial_weight"`` values use the backend's default initialization
+        for that edge. Missing ``"constraint"`` values are treated as
+        ``"unconstrained"`` for that edge.
+
+        If both values are provided for an edge, positive-constrained edges
+        must have positive initial weights and negative-constrained edges must
+        have negative initial weights. Edges with ``constraint="fixed"`` must
+        provide an ``"initial_weight"`` value in the same row, because fixed
+        edges require an explicit constant value.
     backend : str, default="feedforward"
         Backend to compile to. One of ``"feedforward"``, ``"recurrent"``,
         or ``"graphnn"``.
     quiet : bool, default=False
         If False, emit informational notes during validation. If True,
         suppress informational notes.
+    bias : bool, default=True
+        Whether compiled masked linear layers include bias terms. If True,
+        each target node has a learned node-level offset in addition to its
+        graph-defined weighted inputs. If False, node updates are computed only
+        from graph-defined weighted inputs. Disabling bias gives the graph
+        structure stricter control over node activations.
 
     Returns
     -------
@@ -125,6 +143,7 @@ def compile_graph(
         edgelist=edgelist,
         backend=backend,
         quiet=quiet,
+        bias=bias,
     )
 
     graph = edgelist_to_graph(edgelist)
@@ -142,6 +161,7 @@ def compile_graph(
     model, artifact = compile_backend(
         graph=graph,
         backend=backend,
+        bias=bias,
     )
 
     return model, artifact

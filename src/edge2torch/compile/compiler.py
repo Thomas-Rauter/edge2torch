@@ -29,6 +29,7 @@ from .recurrent import compile_recurrent
 def compile_backend(
     graph: EdgeGraph,
     backend: str,
+    bias: bool = True,
 ) -> tuple[nn.Module, CompileArtifact]:
     """
     Compile a graph into a backend-specific PyTorch model.
@@ -39,6 +40,12 @@ def compile_backend(
         Internal KPNN graph object.
     backend
         The backend to compile to.
+    bias
+        Whether compiled masked linear layers include bias terms. If True,
+        each target node has a learned node-level offset in addition to its
+        graph-defined weighted inputs. If False, node updates are computed only
+        from graph-defined weighted inputs. Disabling bias gives the graph
+        structure stricter control over node activations.
 
     Returns
     -------
@@ -51,12 +58,21 @@ def compile_backend(
         If the backend is unsupported.
     """
     if backend == "feedforward":
-        return compile_feedforward(graph)
+        return compile_feedforward(
+            graph=graph,
+            bias=bias,
+        )
 
     if backend == "recurrent":
-        return compile_recurrent(graph)
+        return compile_recurrent(
+            graph=graph,
+            bias=bias,
+        )
 
     if backend == "graphnn":
-        return compile_graphnn(graph)
+        return compile_graphnn(
+            graph=graph,
+            bias=bias,
+        )
 
     raise Edge2TorchError(f"Unsupported backend '{backend}'.")

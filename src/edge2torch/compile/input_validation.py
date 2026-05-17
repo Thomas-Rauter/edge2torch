@@ -31,6 +31,7 @@ def validate_compile_graph_inputs(
     edgelist: Any,
     backend: Any,
     quiet: Any,
+    bias: Any,
 ) -> None:
     """
     Validate the public inputs of ``compile_graph()``.
@@ -45,6 +46,8 @@ def validate_compile_graph_inputs(
         The backend to compile to.
     quiet
         Whether informational notes should be suppressed.
+    bias
+        Whether compiled masked linear layers should include bias terms.
 
     Raises
     ------
@@ -57,6 +60,7 @@ def validate_compile_graph_inputs(
     _validate_optional_edge_metadata(edgelist)
     _validate_backend(backend)
     _validate_quiet(quiet)
+    _validate_bias(bias)
 
 
 # Level 2 functions (functions called by level 1 functions) --------------------
@@ -203,6 +207,14 @@ def _validate_quiet(quiet: Any) -> None:
         raise Edge2TorchError(
             "'quiet' must be a boolean value (True or False)."
         )
+
+
+def _validate_bias(bias: Any) -> None:
+    """
+    Validate bias flag.
+    """
+    if not isinstance(bias, bool):
+        raise Edge2TorchError("'bias' must be a boolean value (True or False).")
 
 
 # Level 3 functions (functions called by level 2 functions) --------------------

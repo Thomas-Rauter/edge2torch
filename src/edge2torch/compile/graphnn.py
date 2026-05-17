@@ -25,6 +25,7 @@ from .execution_plan import build_graphnn_execution_plan
 
 def compile_graphnn(
     graph: EdgeGraph,
+    bias: bool = True,
 ) -> tuple[EdgeGraphNNModel, CompileArtifact]:
     """
     Compile a KPNN graph into a graph neural network PyTorch model.
@@ -33,6 +34,12 @@ def compile_graphnn(
     ----------
     graph
         Internal KPNN graph object.
+    bias
+        Whether compiled masked linear layers include bias terms. If True,
+        each target node has a learned node-level offset in addition to its
+        graph-defined weighted inputs. If False, node updates are computed only
+        from graph-defined weighted inputs. Disabling bias gives the graph
+        structure stricter control over node activations.
 
     Returns
     -------
@@ -43,7 +50,10 @@ def compile_graphnn(
     execution_plan = build_graphnn_execution_plan(graph)
 
     # Builds the actual PyTorch modules from that structure.
-    model = EdgeGraphNNModel(execution_plan=execution_plan)
+    model = EdgeGraphNNModel(
+        execution_plan=execution_plan,
+        bias=bias,
+    )
 
     # Stores the metadata needed later for alignment, interpretation, and
     # inspection.

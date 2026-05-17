@@ -25,7 +25,17 @@ from ..graph.schema import EdgeGraph
 @dataclass
 class CompileArtifact:
     """
-    Compilation artifact returned together with the compiled PyTorch model.
+    Compilation metadata returned together with the compiled PyTorch model.
+
+    ``CompileArtifact`` is returned by ``compile_graph()`` and accepted by
+    public helper functions such as ``align_features_to_input_nodes()`` and
+    ``interpret_model()``. It is exported for user-facing type hints and
+    workflow integration.
+
+    The stable user-facing fields are ``backend`` and ``feature_names``.
+    Other fields expose compilation internals for inspection, testing, and
+    debugging. They may change across releases and should not be treated as
+    part of the stable public API.
 
     Parameters
     ----------
@@ -34,13 +44,17 @@ class CompileArtifact:
     graph : EdgeGraph
         Internal edge2torch graph object used for compilation. The graph
         contains the normalized edge table and may include optional edge-level
-        metadata such as ``initial_weight`` and ``constraint``.
+        metadata such as ``initial_weight`` and ``constraint``. This field is
+        intended for inspection and debugging and may change across releases.
     execution_plan
-        Compiled execution plan used to build the model.
+        Compiled execution plan used to build the model. This field exposes
+        backend-specific internals and may change across releases.
     node_names_by_layer : dict[str, list[str]]
-        Mapping from layer name to node names in that layer.
+        Mapping from layer name to node names in that layer. This field is
+        primarily intended for inspection and feedforward-backend internals.
     feature_names : list[str]
-        Names of the input features.
+        Names of the input features. This field defines the expected input
+        column order for tensors passed to the compiled model.
     """
 
     backend: str
