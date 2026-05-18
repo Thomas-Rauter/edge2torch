@@ -56,3 +56,34 @@ def test_graphnn_plan_rejects_unreachable_output():
         ),
     ):
         build_graphnn_execution_plan(graph)
+
+
+def _unreachable_output_relevant_graph():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["feature", "a", "b", "b"],
+            "target": ["prediction", "b", "a", "prediction"],
+        }
+    )
+
+    return edgelist_to_graph(edgelist)
+
+
+def test_recurrent_plan_rejects_unreachable_output_relevant_nodes():
+    graph = _unreachable_output_relevant_graph()
+
+    with pytest.raises(
+        Edge2TorchError,
+        match="Unreachable output-relevant node\\(s\\): a, b.",
+    ):
+        build_recurrent_execution_plan(graph)
+
+
+def test_graphnn_plan_rejects_unreachable_output_relevant_nodes():
+    graph = _unreachable_output_relevant_graph()
+
+    with pytest.raises(
+        Edge2TorchError,
+        match="Unreachable output-relevant node\\(s\\): a, b.",
+    ):
+        build_graphnn_execution_plan(graph)
