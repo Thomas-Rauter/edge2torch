@@ -145,14 +145,15 @@ The `recurrent` backend:
 - keeps the original graph topology
 - requires at least one inferred input node
 - requires at least one inferred output node
-- requires every output node to be reachable from at least one inferred input
-  node
+- requires every node that can influence an output node to be reachable from at
+  least one inferred input node
 - updates node states repeatedly over multiple steps
 - uses masks to enforce graph-defined recurrent connectivity
 - re-injects input-node values after each recurrent update step
 
-Cycles are allowed, but output nodes in disconnected cyclic components are
-rejected because they cannot depend on the provided input features.
+Cycles are allowed, but disconnected components that can influence an output are
+rejected because their contributions cannot depend on the provided input
+features.
 
 ### Internal execution pattern
 
@@ -209,16 +210,17 @@ The `graphnn` backend:
 - keeps the original graph structure
 - requires at least one inferred input node
 - requires at least one inferred output node
-- requires every output node to be reachable from at least one inferred input
-  node
+- requires every node that can influence an output node to be reachable from at
+  least one inferred input node
 - performs repeated graph-defined node-state updates
 - uses masks to enforce graph-derived connectivity
 - re-injects input-node values after each update step
 - currently uses the same minimal masked-update primitive as the recurrent
   backend
 
-Cycles are allowed, but output nodes in disconnected cyclic components are
-rejected because they cannot depend on the provided input features.
+Cycles are allowed, but disconnected components that can influence an output are
+rejected because their contributions cannot depend on the provided input
+features.
 
 ### Internal execution pattern
 
