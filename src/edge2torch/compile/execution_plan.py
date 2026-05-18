@@ -373,6 +373,13 @@ def build_recurrent_execution_plan(
             "node with no outgoing edges."
         )
 
+    _validate_outputs_reachable_from_inputs(
+        children=children,
+        input_node_names=input_node_names,
+        output_node_names=output_node_names,
+        backend_name="Recurrent",
+    )
+
     return RecurrentExecutionPlan(
         original_edges=original_edges,
         node_names=sorted(node_names),
@@ -470,9 +477,53 @@ def build_graphnn_execution_plan(
             "node with no outgoing edges."
         )
 
+    _validate_outputs_reachable_from_inputs(
+        children=children,
+        input_node_names=input_node_names,
+        output_node_names=output_node_names,
+        backend_name="GraphNN",
+    )
+
     return GraphNNExecutionPlan(
         original_edges=original_edges,
         node_names=sorted(node_names),
         input_node_names=input_node_names,
         output_node_names=output_node_names,
     )
+
+
+# Level 5 functions (functions called by level 4 functions) --------------------
+
+
+def _validate_outputs_reachable_from_inputs(
+    children: dict[str, list[str]],
+    input_node_names: list[str],
+    output_node_names: list[str],
+    backend_name: str,
+) -> None:
+    """
+    Validate that every output node is reachable from at least one input node.
+    """
+    reachable_nodes: set[str] = set()
+    stack = list(input_node_names)
+
+    while stack:
+        node = stack.pop()
+
+        if node in reachable_nodes:
+            continue
+
+        reachable_nodes.add(node)
+        stack.extend(children[node])
+
+    unreachable_outputs = sorted(
+        node for node in output_node_names if node not in reachable_nodes
+    )
+
+    if unreachable_outputs:
+        unreachable_str = ", ".join(unreachable_outputs)
+        raise Edge2TorchError(
+            f"{backend_name} compilation requires every output node "
+            "to be reachable from at least one input node. "
+            f"Unreachable output node(s): {unreachable_str}."
+        )
