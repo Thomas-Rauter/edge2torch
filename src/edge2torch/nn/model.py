@@ -200,7 +200,10 @@ class RecurrentEdgeModel(nn.Module):
     ) -> None:
         super().__init__()
 
-        if not isinstance(steps, int) or steps <= 0:
+        if isinstance(steps, bool) or not isinstance(steps, int):
+            raise Edge2TorchError("'steps' must be an integer.")
+
+        if steps <= 0:
             raise Edge2TorchError("'steps' must be a positive integer.")
 
         self.execution_plan = execution_plan
@@ -367,7 +370,10 @@ class EdgeGraphNNModel(nn.Module):
     ) -> None:
         super().__init__()
 
-        if not isinstance(steps, int) or steps <= 0:
+        if isinstance(steps, bool) or not isinstance(steps, int):
+            raise Edge2TorchError("'steps' must be an integer.")
+
+        if steps <= 0:
             raise Edge2TorchError("'steps' must be a positive integer.")
 
         self.execution_plan = execution_plan

@@ -181,7 +181,7 @@ def test_recurrent_edge_model_rejects_non_positive_steps():
 
 
 def test_recurrent_edge_model_rejects_non_integer_steps():
-    with pytest.raises(Edge2TorchError, match="positive integer"):
+    with pytest.raises(Edge2TorchError, match="must be an integer"):
         RecurrentEdgeModel(
             execution_plan=_RecurrentPlan(),
             steps=1.5,
@@ -242,7 +242,7 @@ def test_edge_graphnn_model_rejects_non_positive_steps():
 
 
 def test_edge_graphnn_model_rejects_non_integer_steps():
-    with pytest.raises(Edge2TorchError, match="positive integer"):
+    with pytest.raises(Edge2TorchError, match="must be an integer"):
         EdgeGraphNNModel(
             execution_plan=_GraphNNPlan(),
             steps=1.5,
@@ -289,3 +289,21 @@ def test_edge_graphnn_model_forward_returns_output_nodes():
     result = model(x)
 
     assert result.shape == (2, 1)
+
+
+@pytest.mark.parametrize("steps", [True, False])
+def test_recurrent_edge_model_rejects_boolean_steps(steps: bool):
+    with pytest.raises(Edge2TorchError, match="must be an integer"):
+        RecurrentEdgeModel(
+            execution_plan=_RecurrentPlan(),
+            steps=steps,
+        )
+
+
+@pytest.mark.parametrize("steps", [True, False])
+def test_edge_graphnn_model_rejects_boolean_steps(steps: bool):
+    with pytest.raises(Edge2TorchError, match="must be an integer"):
+        EdgeGraphNNModel(
+            execution_plan=_GraphNNPlan(),
+            steps=steps,
+        )
