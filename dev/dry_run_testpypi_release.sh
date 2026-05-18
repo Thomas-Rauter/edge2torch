@@ -54,7 +54,6 @@ source "$TEST_ENV/bin/activate"
 
 python -m pip install --upgrade pip
 
-echo "Step 8: Installing edge2torch ${PACKAGE_VERSION} from TestPyPI"
 PACKAGE_VERSION="$(python - <<'PY'
 import tomllib
 from pathlib import Path
@@ -64,6 +63,7 @@ print(pyproject["project"]["version"])
 PY
 )"
 
+echo "Step 8: Installing edge2torch ${PACKAGE_VERSION} from TestPyPI"
 python -m pip install \
   --index-url https://test.pypi.org/simple/ \
   --extra-index-url https://pypi.org/simple/ \
