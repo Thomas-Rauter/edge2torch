@@ -15,6 +15,11 @@ theme:
     - content.code.copy
     - search.suggest
     - search.highlight
+    
+extra:
+  version:
+    provider: mike
+    default: latest
 
 nav:
   - Home: index.md

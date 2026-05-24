@@ -202,20 +202,26 @@ jobs:
 
       - name: Execute docs notebooks
         run: |
-          jupyter nbconvert \
+          python -m jupyter nbconvert \
             --to notebook \
-            --execute docs/getting-started.ipynb \
-            --inplace
+            --execute \
+            --inplace \
+            --ExecutePreprocessor.kernel_name=python3 \
+            docs/getting-started.ipynb
 
-          jupyter nbconvert \
+          python -m jupyter nbconvert \
             --to notebook \
-            --execute docs/feedforward-skip-edges.ipynb \
-            --inplace
+            --execute \
+            --inplace \
+            --ExecutePreprocessor.kernel_name=python3 \
+            docs/feedforward-skip-edges.ipynb
 
-          jupyter nbconvert \
+          python -m jupyter nbconvert \
             --to notebook \
-            --execute docs/edge-weight-metadata.ipynb \
-            --inplace
+            --execute \
+            --inplace \
+            --ExecutePreprocessor.kernel_name=python3 \
+            docs/edge-weight-metadata.ipynb
 
       - name: Build documentation
         run: |

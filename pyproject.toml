@@ -71,6 +71,7 @@ docs = [
     "black",
     "captum>=0.7,<1",
     "anndata>=0.10,<1",
+    "mike>=2,<3",
 ]
 
 [tool.setuptools]
