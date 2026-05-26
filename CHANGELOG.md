@@ -12,7 +12,7 @@ This project follows semantic versioning.
 
 ### Fixed
 
-## [0.1.0] - 2026-MM-DD
+## [0.1.0] - 2026-05-26
 
 ### Added
 
