@@ -77,6 +77,13 @@ def interpret_model(
     Node interpretation is currently supported only for the ``"feedforward"``
     backend. Node interpretation methods use Captum layer attribution classes.
 
+    For feedforward node-level interpretation, edge2torch must access the
+    compiled model's internal feedforward layer blocks. This works for raw
+    models returned by ``compile_graph()``, models returned by
+    ``customize_model()``, and manually wrapped PyTorch models if the compiled
+    model remains registered as a submodule. Highly custom wrappers that hide,
+    replace, or bypass the compiled model may not support ``target="nodes"``.
+
     ``interpret_model()`` temporarily switches the model to evaluation mode
     while computing attributions and restores the previous training/evaluation
     mode afterward.
