@@ -16,6 +16,9 @@ def interpret_model(
     constructor_kwargs: dict[str, Any] | None = None,
     attribute_kwargs: dict[str, Any] | None = None,
     quiet: bool = False,
+    level: str = "sites",
+    nodes: str = "non_input",
+    site_aggregation: str = "max_abs",
 ) -> Union[pd.DataFrame, dict[str, pd.DataFrame]]:
     """
     Interpret a model compiled by edge2torch using a Captum attribution
@@ -135,6 +138,9 @@ def interpret_model(
         constructor_kwargs=constructor_kwargs,
         attribute_kwargs=attribute_kwargs,
         quiet=quiet,
+        level=level,
+        nodes=nodes,
+        site_aggregation=site_aggregation,
     )
 
     constructor_kwargs = (
@@ -159,6 +165,9 @@ def interpret_model(
         method=method,
         constructor_kwargs=constructor_kwargs,
         attribute_kwargs=attribute_kwargs,
+        level=level,
+        nodes=nodes,
+        site_aggregation=site_aggregation,
     )
 
     if not quiet:

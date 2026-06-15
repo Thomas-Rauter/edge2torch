@@ -23,6 +23,10 @@ class _Artifact:
         backend="feedforward",
         feature_names=None,
         node_names_by_layer=None,
+        interpretation_sites=None,
+        input_nodes=None,
+        output_nodes=None,
+        hidden_nodes=None,
         execution_plan=object(),
     ):
         self.backend = backend
@@ -37,6 +41,18 @@ class _Artifact:
             if node_names_by_layer is None
             else node_names_by_layer
         )
+        self.interpretation_sites = (
+            {"layer_1": ["output_1"]}
+            if interpretation_sites is None
+            else interpretation_sites
+        )
+        self.input_nodes = (
+            ["gene_a", "gene_b"] if input_nodes is None else input_nodes
+        )
+        self.output_nodes = (
+            ["output_1"] if output_nodes is None else output_nodes
+        )
+        self.hidden_nodes = [] if hidden_nodes is None else hidden_nodes
         self.execution_plan = execution_plan
 
 
@@ -242,17 +258,13 @@ def test_validate_interpret_artifact_rejects_unknown_backend():
         )
 
 
-def test_validate_interpret_artifact_reject_node_target_for_recurrent_backend():
+def test_validate_interpret_artifact_accepts_recurrent_node_target():
     artifact = _Artifact(backend="recurrent")
 
-    with pytest.raises(
-        Edge2TorchError,
-        match="Node interpretation currently supports only",
-    ):
-        _validate_interpret_artifact(
-            artifact=artifact,
-            target="nodes",
-        )
+    _validate_interpret_artifact(
+        artifact=artifact,
+        target="nodes",
+    )
 
 
 def test_validate_interpret_artifact_rejects_non_list_feature_names():
@@ -320,12 +332,12 @@ def test_validate_interpret_artifact_rejects_non_dict_node_names_by_layer():
         )
 
 
-def test_validate_interpret_artifact_rejects_empty_node_names_for_node_target():
-    artifact = _Artifact(node_names_by_layer={})
+def test_validate_interpret_artifact_rejects_empty_interpretation_sites():
+    artifact = _Artifact(interpretation_sites={})
 
     with pytest.raises(
         Edge2TorchError,
-        match="must not be empty for node interpretation",
+        match="interpretation_sites.*must not be empty",
     ):
         _validate_interpret_artifact(
             artifact=artifact,

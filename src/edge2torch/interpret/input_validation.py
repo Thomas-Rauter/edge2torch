@@ -31,8 +31,8 @@ from ..utils.errors import Edge2TorchError
 from .method_registry import (
     FEATURE_METHODS,
     FEATURE_METHODS_WITHOUT_CONSTRUCTOR_KWARGS,
-    FEEDFORWARD_NODE_METHODS,
-    FEEDFORWARD_NODE_METHODS_WITHOUT_CONSTRUCTOR_KWARGS,
+    NODE_METHODS,
+    NODE_METHODS_WITHOUT_CONSTRUCTOR_KWARGS,
     SUPPORTED_METHODS,
 )
 
@@ -48,6 +48,9 @@ def validate_interpret_model_inputs(
     constructor_kwargs,
     attribute_kwargs,
     quiet,
+    level="sites",
+    nodes="non_input",
+    site_aggregation="max_abs",
 ) -> None:
     """
     Validate the public inputs of ``interpret_model()``.
@@ -71,6 +74,13 @@ def validate_interpret_model_inputs(
         Optional keyword arguments passed to the Captum ``attribute()`` call.
     quiet
         Whether informational notes should be suppressed.
+    level
+        Node interpretation detail level.
+    nodes
+        Node filter for ``target="nodes"``.
+    site_aggregation
+        Aggregation rule for summary node interpretation in recurrent and
+        graphnn backends.
 
     Raises
     ------
@@ -83,6 +93,9 @@ def validate_interpret_model_inputs(
         quiet=quiet,
         constructor_kwargs=constructor_kwargs,
         attribute_kwargs=attribute_kwargs,
+        level=level,
+        nodes=nodes,
+        site_aggregation=site_aggregation,
     )
 
     _validate_interpret_model(model=model)
@@ -107,6 +120,9 @@ def _validate_interpret_options(
     quiet,
     constructor_kwargs,
     attribute_kwargs,
+    level="sites",
+    nodes="non_input",
+    site_aggregation="max_abs",
 ) -> None:
     """
     Validate interpretation target, method, verbosity, and Captum kwargs.
@@ -140,9 +156,16 @@ def _validate_interpret_options(
             f"Method '{method}' is not compatible with target='features'."
         )
 
-    if target == "nodes" and method not in FEEDFORWARD_NODE_METHODS:
+    if target == "nodes" and method not in NODE_METHODS:
         raise Edge2TorchError(
             f"Method '{method}' is not compatible with target='nodes'."
+        )
+
+    if target == "nodes":
+        _validate_node_interpretation_options(
+            level=level,
+            nodes=nodes,
+            site_aggregation=site_aggregation,
         )
 
     if constructor_kwargs is not None and not isinstance(
@@ -165,7 +188,7 @@ def _validate_interpret_options(
 
     if (
         target == "nodes"
-        and method in FEEDFORWARD_NODE_METHODS_WITHOUT_CONSTRUCTOR_KWARGS
+        and method in NODE_METHODS_WITHOUT_CONSTRUCTOR_KWARGS
         and constructor_kwargs
     ):
         raise Edge2TorchError(
@@ -219,6 +242,10 @@ def _validate_interpret_artifact(
         "backend",
         "feature_names",
         "node_names_by_layer",
+        "interpretation_sites",
+        "input_nodes",
+        "output_nodes",
+        "hidden_nodes",
         "execution_plan",
     }
     missing_attrs = [
@@ -238,11 +265,27 @@ def _validate_interpret_artifact(
             f"Expected one of: {supported}."
         )
 
-    if target == "nodes" and artifact.backend != "feedforward":
+    if target == "nodes" and not isinstance(
+        artifact.interpretation_sites, dict
+    ):
         raise Edge2TorchError(
-            "Node interpretation currently supports only the "
-            "'feedforward' backend."
+            "'artifact.interpretation_sites' must be a dictionary."
         )
+
+    if target == "nodes" and not artifact.interpretation_sites:
+        raise Edge2TorchError(
+            "'artifact.interpretation_sites' must not be empty for "
+            "node interpretation."
+        )
+
+    if target == "nodes" and not isinstance(artifact.input_nodes, list):
+        raise Edge2TorchError("'artifact.input_nodes' must be a list.")
+
+    if target == "nodes" and not isinstance(artifact.output_nodes, list):
+        raise Edge2TorchError("'artifact.output_nodes' must be a list.")
+
+    if target == "nodes" and not isinstance(artifact.hidden_nodes, list):
+        raise Edge2TorchError("'artifact.hidden_nodes' must be a list.")
 
     if not isinstance(artifact.feature_names, list):
         raise Edge2TorchError("'artifact.feature_names' must be a list.")
@@ -267,10 +310,35 @@ def _validate_interpret_artifact(
             "'artifact.node_names_by_layer' must be a dictionary."
         )
 
-    if target == "nodes" and not artifact.node_names_by_layer:
+
+def _validate_node_interpretation_options(
+    level,
+    nodes,
+    site_aggregation,
+) -> None:
+    """
+    Validate node-interpretation detail options.
+    """
+    supported_levels = {"sites", "summary"}
+    if level not in supported_levels:
+        supported = ", ".join(sorted(supported_levels))
         raise Edge2TorchError(
-            "'artifact.node_names_by_layer' must not be empty for "
-            "node interpretation."
+            f"Unsupported level '{level}'. Expected one of: {supported}."
+        )
+
+    supported_node_filters = {"hidden", "all", "non_input"}
+    if nodes not in supported_node_filters:
+        supported = ", ".join(sorted(supported_node_filters))
+        raise Edge2TorchError(
+            f"Unsupported nodes filter '{nodes}'. Expected one of: {supported}."
+        )
+
+    supported_aggregations = {"max_abs", "mean_abs", "last"}
+    if site_aggregation not in supported_aggregations:
+        supported = ", ".join(sorted(supported_aggregations))
+        raise Edge2TorchError(
+            f"Unsupported site_aggregation '{site_aggregation}'. "
+            f"Expected one of: {supported}."
         )
 
 

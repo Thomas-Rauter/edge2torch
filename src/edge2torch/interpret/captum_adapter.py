@@ -25,7 +25,7 @@ from torch import nn
 from ..compile.artifact import CompileArtifact
 from ..utils.errors import Edge2TorchError
 from .feature_attribution import run_feature_attribution
-from .feedforward_node_attribution import run_feedforward_node_attribution
+from .site_node_attribution import run_site_node_attribution
 
 # Level 1 functions (called by API functions) ----------------------------------
 
@@ -40,6 +40,10 @@ def run_captum_interpretation(
     method: str,
     constructor_kwargs: dict[str, Any],
     attribute_kwargs: dict[str, Any],
+    *,
+    nodes: str = "non_input",
+    level: str = "sites",
+    site_aggregation: str = "max_abs",
 ) -> Union[pd.DataFrame, dict[str, pd.DataFrame]]:
     """
     Run a Captum interpretation and map results back to named entities.
@@ -65,6 +69,13 @@ def run_captum_interpretation(
         constructor.
     attribute_kwargs
         Keyword arguments passed to the selected Captum ``attribute()`` call.
+    nodes
+        Node filter for ``target="nodes"``.
+    level
+        Node interpretation detail level.
+    site_aggregation
+        Aggregation rule for summary node interpretation in recurrent and
+        graphnn backends.
 
     Notes
     -----
@@ -98,7 +109,7 @@ def run_captum_interpretation(
             )
 
         if target == "nodes":
-            return _run_node_interpretation(
+            return run_site_node_attribution(
                 model=model,
                 artifact=artifact,
                 inputs=inputs,
@@ -106,54 +117,12 @@ def run_captum_interpretation(
                 method=method,
                 constructor_kwargs=constructor_kwargs,
                 attribute_kwargs=attribute_kwargs,
+                nodes=nodes,  # type: ignore[arg-type]
+                level=level,  # type: ignore[arg-type]
+                site_aggregation=site_aggregation,  # type: ignore[arg-type]
             )
 
         raise Edge2TorchError(f"Unsupported interpretation target '{target}'.")
 
     finally:
         model.train(was_training)
-
-
-# Level 2 functions (called by level 1 functions) ------------------------------
-
-
-def _run_node_interpretation(
-    model: nn.Module,
-    artifact: CompileArtifact,
-    inputs: torch.Tensor,
-    sample_names: list[str],
-    method: str,
-    constructor_kwargs: dict[str, Any],
-    attribute_kwargs: dict[str, Any],
-) -> dict[str, pd.DataFrame]:
-    """
-    Dispatch node-level interpretation by backend.
-    """
-    backend = artifact.backend
-
-    if backend == "feedforward":
-        return run_feedforward_node_attribution(
-            model=model,
-            artifact=artifact,
-            inputs=inputs,
-            sample_names=sample_names,
-            method=method,
-            constructor_kwargs=constructor_kwargs,
-            attribute_kwargs=attribute_kwargs,
-        )
-
-    if backend == "recurrent":
-        raise Edge2TorchError(
-            "Node interpretation is not yet implemented for the "
-            "'recurrent' backend."
-        )
-
-    if backend == "graphnn":
-        raise Edge2TorchError(
-            "Node interpretation is not yet implemented for the "
-            "'graphnn' backend."
-        )
-
-    raise Edge2TorchError(
-        f"Unsupported backend '{backend}' for target='nodes'."
-    )

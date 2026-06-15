@@ -524,7 +524,7 @@ def test_interpret_model_supports_feature_target_for_graphnn_backend():
     assert list(result.columns) == ["gene_1", "gene_2"]
 
 
-def test_interpret_model_raises_for_node_target_with_recurrent_backend():
+def test_interpret_model_supports_node_target_for_recurrent_backend():
     edgelist = pd.DataFrame(
         {
             "source": ["gene_1", "node_a", "node_b", "node_b"],
@@ -532,7 +532,7 @@ def test_interpret_model_raises_for_node_target_with_recurrent_backend():
         }
     )
 
-    model, artifact = compile_graph(edgelist, backend="recurrent")
+    model, artifact = compile_graph(edgelist, backend="recurrent", steps=2)
 
     data = pd.DataFrame(
         {
@@ -541,20 +541,23 @@ def test_interpret_model_raises_for_node_target_with_recurrent_backend():
         index=["cell_1", "cell_2"],
     )
 
-    with pytest.raises(
-        Edge2TorchError,
-        match="Node interpretation currently supports only",
-    ):
-        interpret_model(
-            model=model,
-            artifact=artifact,
-            data=data,
-            target="nodes",
-            method="LayerConductance",
-        )
+    result = interpret_model(
+        model=model,
+        artifact=artifact,
+        data=data,
+        target="nodes",
+        method="LayerConductance",
+        quiet=True,
+        nodes="hidden",
+    )
+
+    assert isinstance(result, dict)
+    assert list(result.keys()) == ["step_1", "step_2"]
+    assert list(result["step_1"].columns) == ["node_a", "node_b"]
+    assert result["step_1"].shape == (2, 2)
 
 
-def test_interpret_model_raises_for_node_target_with_graphnn_backend():
+def test_interpret_model_supports_node_target_for_graphnn_backend():
     edgelist = pd.DataFrame(
         {
             "source": ["gene_1", "gene_2", "node_a", "node_b"],
@@ -562,7 +565,7 @@ def test_interpret_model_raises_for_node_target_with_graphnn_backend():
         }
     )
 
-    model, artifact = compile_graph(edgelist, backend="graphnn")
+    model, artifact = compile_graph(edgelist, backend="graphnn", steps=2)
 
     data = pd.DataFrame(
         {
@@ -572,17 +575,20 @@ def test_interpret_model_raises_for_node_target_with_graphnn_backend():
         index=["cell_1", "cell_2"],
     )
 
-    with pytest.raises(
-        Edge2TorchError,
-        match="Node interpretation currently supports only",
-    ):
-        interpret_model(
-            model=model,
-            artifact=artifact,
-            data=data,
-            target="nodes",
-            method="LayerConductance",
-        )
+    result = interpret_model(
+        model=model,
+        artifact=artifact,
+        data=data,
+        target="nodes",
+        method="LayerConductance",
+        quiet=True,
+        nodes="hidden",
+    )
+
+    assert isinstance(result, dict)
+    assert list(result.keys()) == ["step_1", "step_2"]
+    assert list(result["step_1"].columns) == ["node_a", "node_b"]
+    assert result["step_1"].shape == (2, 2)
 
 
 def test_interpret_model_accepts_feature_constructor_kwargs():
