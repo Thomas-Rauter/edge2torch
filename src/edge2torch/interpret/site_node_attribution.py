@@ -48,8 +48,8 @@ def run_site_node_attribution(
     constructor_kwargs: dict[str, Any],
     attribute_kwargs: dict[str, Any],
     *,
-    nodes: NodeFilter = "non_input",
-    level: InterpretationLevel = "sites",
+    nodes: NodeFilter = "hidden",
+    level: InterpretationLevel = "summary",
     site_aggregation: SiteAggregation = "max_abs",
 ) -> Union[pd.DataFrame, dict[str, pd.DataFrame]]:
     """
@@ -139,10 +139,19 @@ def _run_site_wise_attribution(
             nodes=nodes,
         )
 
+        if not filtered_node_names:
+            continue
+
         results[site_id] = pd.DataFrame(
             filtered_attributions.detach().cpu().numpy(),
             index=sample_names,
             columns=filtered_node_names,
+        )
+
+    if not results:
+        raise Edge2TorchError(
+            "Node interpretation produced no visible nodes for the "
+            f"requested node filter '{nodes}'."
         )
 
     return results
@@ -255,10 +264,7 @@ def _filter_site_attributions(
     ]
 
     if not selected_indices:
-        raise Edge2TorchError(
-            "Node interpretation produced no visible nodes for the "
-            f"requested node filter '{nodes}'."
-        )
+        return [], attributions[:, :0]
 
     selected_node_names = [node_names[idx] for idx in selected_indices]
     selected_attributions = attributions[:, selected_indices]

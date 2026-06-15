@@ -48,8 +48,8 @@ def validate_interpret_model_inputs(
     constructor_kwargs,
     attribute_kwargs,
     quiet,
-    level="sites",
-    nodes="non_input",
+    level="summary",
+    nodes="hidden",
     site_aggregation="max_abs",
 ) -> None:
     """
@@ -120,8 +120,8 @@ def _validate_interpret_options(
     quiet,
     constructor_kwargs,
     attribute_kwargs,
-    level="sites",
-    nodes="non_input",
+    level="summary",
+    nodes="hidden",
     site_aggregation="max_abs",
 ) -> None:
     """

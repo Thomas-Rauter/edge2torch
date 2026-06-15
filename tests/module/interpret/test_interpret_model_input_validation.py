@@ -219,6 +219,42 @@ def test_validate_interpret_options_rejects_return_convergence_delta():
         )
 
 
+def test_validate_interpret_options_rejects_unknown_level():
+    with pytest.raises(Edge2TorchError, match="Unsupported level"):
+        _validate_interpret_options(
+            target="nodes",
+            method="LayerConductance",
+            quiet=True,
+            constructor_kwargs=None,
+            attribute_kwargs=None,
+            level="per_layer",
+        )
+
+
+def test_validate_interpret_options_rejects_unknown_nodes_filter():
+    with pytest.raises(Edge2TorchError, match="Unsupported nodes filter"):
+        _validate_interpret_options(
+            target="nodes",
+            method="LayerConductance",
+            quiet=True,
+            constructor_kwargs=None,
+            attribute_kwargs=None,
+            nodes="outputs_only",
+        )
+
+
+def test_validate_interpret_options_rejects_unknown_site_aggregation():
+    with pytest.raises(Edge2TorchError, match="Unsupported site_aggregation"):
+        _validate_interpret_options(
+            target="nodes",
+            method="LayerConductance",
+            quiet=True,
+            constructor_kwargs=None,
+            attribute_kwargs=None,
+            site_aggregation="sum",
+        )
+
+
 # _validate_interpret_model ----------------------------------------------------
 
 

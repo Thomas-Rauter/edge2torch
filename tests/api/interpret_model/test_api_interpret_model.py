@@ -45,7 +45,7 @@ def test_interpret_model_returns_feature_dataframe():
     assert list(result.columns) == ["gene_1", "gene_2"]
 
 
-def test_interpret_model_returns_node_dataframes_for_layer_conductance():
+def test_interpret_model_returns_node_summary_for_layer_conductance():
     edgelist = pd.DataFrame(
         {
             "source": ["gene_1", "gene_2", "pathway_1"],
@@ -71,6 +71,40 @@ def test_interpret_model_returns_node_dataframes_for_layer_conductance():
         method="LayerConductance",
     )
 
+    assert isinstance(result, pd.DataFrame)
+    assert result.shape == (2, 1)
+    assert list(result.index) == ["cell_1", "cell_2"]
+    assert list(result.columns) == ["pathway_1"]
+
+
+def test_interpret_model_returns_node_site_tables_for_layer_conductance():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2", "pathway_1"],
+            "target": ["pathway_1", "pathway_1", "output_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist)
+
+    data = pd.DataFrame(
+        {
+            "gene_1": [0.1, 0.2],
+            "gene_2": [1.0, 1.1],
+        },
+        index=["cell_1", "cell_2"],
+    )
+
+    result = interpret_model(
+        model=model,
+        artifact=artifact,
+        data=data,
+        target="nodes",
+        method="LayerConductance",
+        level="sites",
+        nodes="non_input",
+    )
+
     assert isinstance(result, dict)
     assert set(result.keys()) == {"layer_1", "layer_2"}
 
@@ -87,7 +121,7 @@ def test_interpret_model_returns_node_dataframes_for_layer_conductance():
     assert list(result["layer_2"].columns) == ["output_1"]
 
 
-def test_interpret_model_returns_node_dataframes_for_layer_ig():
+def test_interpret_model_returns_node_summary_for_layer_ig():
     edgelist = pd.DataFrame(
         {
             "source": ["gene_1", "gene_2", "pathway_1"],
@@ -113,14 +147,9 @@ def test_interpret_model_returns_node_dataframes_for_layer_ig():
         method="LayerIntegratedGradients",
     )
 
-    assert isinstance(result, dict)
-    assert set(result.keys()) == {"layer_1", "layer_2"}
-
-    assert result["layer_1"].shape == (2, 1)
-    assert result["layer_2"].shape == (2, 1)
-
-    assert list(result["layer_1"].columns) == ["pathway_1"]
-    assert list(result["layer_2"].columns) == ["output_1"]
+    assert isinstance(result, pd.DataFrame)
+    assert result.shape == (2, 1)
+    assert list(result.columns) == ["pathway_1"]
 
 
 def test_interpret_model_accepts_tensor_input_for_feature_target():
@@ -305,6 +334,8 @@ def test_interpret_model_hides_pseudo_nodes_in_node_results():
         data=data,
         target="nodes",
         method="LayerConductance",
+        level="sites",
+        nodes="non_input",
     )
 
     assert isinstance(result, dict)
@@ -355,6 +386,8 @@ def test_interpret_model_hides_pseudo_nodes_for_layer_ig():
         data=data,
         target="nodes",
         method="LayerIntegratedGradients",
+        level="sites",
+        nodes="non_input",
     )
 
     assert isinstance(result, dict)
@@ -548,13 +581,45 @@ def test_interpret_model_supports_node_target_for_recurrent_backend():
         target="nodes",
         method="LayerConductance",
         quiet=True,
-        nodes="hidden",
+    )
+
+    assert isinstance(result, pd.DataFrame)
+    assert list(result.columns) == ["node_a", "node_b"]
+    assert result.shape == (2, 2)
+
+
+def test_interpret_model_supports_node_sites_for_recurrent_backend():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "node_a", "node_b", "node_b"],
+            "target": ["node_a", "node_b", "node_a", "output_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist, backend="recurrent", steps=2)
+
+    data = pd.DataFrame(
+        {
+            "gene_1": [0.1, 0.2],
+        },
+        index=["cell_1", "cell_2"],
+    )
+
+    result = interpret_model(
+        model=model,
+        artifact=artifact,
+        data=data,
+        target="nodes",
+        method="LayerConductance",
+        quiet=True,
+        level="sites",
+        nodes="non_input",
     )
 
     assert isinstance(result, dict)
     assert list(result.keys()) == ["step_1", "step_2"]
-    assert list(result["step_1"].columns) == ["node_a", "node_b"]
-    assert result["step_1"].shape == (2, 2)
+    assert list(result["step_1"].columns) == ["node_a", "node_b", "output_1"]
+    assert result["step_1"].shape == (2, 3)
 
 
 def test_interpret_model_supports_node_target_for_graphnn_backend():
@@ -582,13 +647,46 @@ def test_interpret_model_supports_node_target_for_graphnn_backend():
         target="nodes",
         method="LayerConductance",
         quiet=True,
-        nodes="hidden",
+    )
+
+    assert isinstance(result, pd.DataFrame)
+    assert list(result.columns) == ["node_a", "node_b"]
+    assert result.shape == (2, 2)
+
+
+def test_interpret_model_supports_node_sites_for_graphnn_backend():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2", "node_a", "node_b"],
+            "target": ["node_a", "node_a", "node_b", "output_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist, backend="graphnn", steps=2)
+
+    data = pd.DataFrame(
+        {
+            "gene_1": [0.1, 0.2],
+            "gene_2": [1.0, 1.1],
+        },
+        index=["cell_1", "cell_2"],
+    )
+
+    result = interpret_model(
+        model=model,
+        artifact=artifact,
+        data=data,
+        target="nodes",
+        method="LayerConductance",
+        quiet=True,
+        level="sites",
+        nodes="non_input",
     )
 
     assert isinstance(result, dict)
     assert list(result.keys()) == ["step_1", "step_2"]
-    assert list(result["step_1"].columns) == ["node_a", "node_b"]
-    assert result["step_1"].shape == (2, 2)
+    assert list(result["step_1"].columns) == ["node_a", "node_b", "output_1"]
+    assert result["step_1"].shape == (2, 3)
 
 
 def test_interpret_model_accepts_feature_constructor_kwargs():
@@ -662,8 +760,8 @@ def test_interpret_model_accepts_feature_attribute_kwargs():
 def test_interpret_model_accepts_node_attribute_kwargs():
     edgelist = pd.DataFrame(
         {
-            "source": ["gene_1", "gene_2"],
-            "target": ["pathway_1", "pathway_1"],
+            "source": ["gene_1", "gene_2", "pathway_1"],
+            "target": ["pathway_1", "pathway_1", "output_1"],
         }
     )
 
@@ -687,12 +785,10 @@ def test_interpret_model_accepts_node_attribute_kwargs():
         attribute_kwargs={"n_steps": 4},
     )
 
-    assert isinstance(result, dict)
-    assert "layer_1" in result
-    assert isinstance(result["layer_1"], pd.DataFrame)
-    assert result["layer_1"].shape == (2, 1)
-    assert list(result["layer_1"].index) == ["cell_1", "cell_2"]
-    assert list(result["layer_1"].columns) == ["pathway_1"]
+    assert isinstance(result, pd.DataFrame)
+    assert result.shape == (2, 1)
+    assert list(result.index) == ["cell_1", "cell_2"]
+    assert list(result.columns) == ["pathway_1"]
 
 
 def test_interpret_model_rejects_invalid_constructor_kwargs():
@@ -1014,8 +1110,8 @@ def test_interpret_model_rejects_unknown_feature_method():
 def test_interpret_model_supports_feedforward_node_methods(method):
     edgelist = pd.DataFrame(
         {
-            "source": ["gene_1", "gene_2"],
-            "target": ["pathway_1", "pathway_1"],
+            "source": ["gene_1", "gene_2", "pathway_1"],
+            "target": ["pathway_1", "pathway_1", "output_1"],
         }
     )
 
@@ -1038,19 +1134,17 @@ def test_interpret_model_supports_feedforward_node_methods(method):
         quiet=True,
     )
 
-    assert isinstance(result, dict)
-    assert "layer_1" in result
-    assert isinstance(result["layer_1"], pd.DataFrame)
-    assert result["layer_1"].shape == (2, 1)
-    assert list(result["layer_1"].index) == ["cell_1", "cell_2"]
-    assert list(result["layer_1"].columns) == ["pathway_1"]
+    assert isinstance(result, pd.DataFrame)
+    assert result.shape == (2, 1)
+    assert list(result.index) == ["cell_1", "cell_2"]
+    assert list(result.columns) == ["pathway_1"]
 
 
 def test_interpret_model_supports_layer_gradient_shap_with_attribute_kwargs():
     edgelist = pd.DataFrame(
         {
-            "source": ["gene_1", "gene_2"],
-            "target": ["pathway_1", "pathway_1"],
+            "source": ["gene_1", "gene_2", "pathway_1"],
+            "target": ["pathway_1", "pathway_1", "output_1"],
         }
     )
 
@@ -1080,19 +1174,17 @@ def test_interpret_model_supports_layer_gradient_shap_with_attribute_kwargs():
         },
     )
 
-    assert isinstance(result, dict)
-    assert "layer_1" in result
-    assert isinstance(result["layer_1"], pd.DataFrame)
-    assert result["layer_1"].shape == (2, 1)
-    assert list(result["layer_1"].index) == ["cell_1", "cell_2"]
-    assert list(result["layer_1"].columns) == ["pathway_1"]
+    assert isinstance(result, pd.DataFrame)
+    assert result.shape == (2, 1)
+    assert list(result.index) == ["cell_1", "cell_2"]
+    assert list(result.columns) == ["pathway_1"]
 
 
 def test_interpret_model_accepts_layer_ig_constructor_kwargs():
     edgelist = pd.DataFrame(
         {
-            "source": ["gene_1", "gene_2"],
-            "target": ["pathway_1", "pathway_1"],
+            "source": ["gene_1", "gene_2", "pathway_1"],
+            "target": ["pathway_1", "pathway_1", "output_1"],
         }
     )
 
@@ -1117,12 +1209,10 @@ def test_interpret_model_accepts_layer_ig_constructor_kwargs():
         attribute_kwargs={"n_steps": 4},
     )
 
-    assert isinstance(result, dict)
-    assert "layer_1" in result
-    assert isinstance(result["layer_1"], pd.DataFrame)
-    assert result["layer_1"].shape == (2, 1)
-    assert list(result["layer_1"].index) == ["cell_1", "cell_2"]
-    assert list(result["layer_1"].columns) == ["pathway_1"]
+    assert isinstance(result, pd.DataFrame)
+    assert result.shape == (2, 1)
+    assert list(result.index) == ["cell_1", "cell_2"]
+    assert list(result.columns) == ["pathway_1"]
 
 
 def test_interpret_model_rejects_constructor_kwargs_for_layer_activation():

@@ -41,8 +41,8 @@ def run_captum_interpretation(
     constructor_kwargs: dict[str, Any],
     attribute_kwargs: dict[str, Any],
     *,
-    nodes: str = "non_input",
-    level: str = "sites",
+    nodes: str = "hidden",
+    level: str = "summary",
     site_aggregation: str = "max_abs",
 ) -> Union[pd.DataFrame, dict[str, pd.DataFrame]]:
     """

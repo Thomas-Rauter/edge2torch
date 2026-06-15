@@ -16,8 +16,8 @@ def interpret_model(
     constructor_kwargs: dict[str, Any] | None = None,
     attribute_kwargs: dict[str, Any] | None = None,
     quiet: bool = False,
-    level: str = "sites",
-    nodes: str = "non_input",
+    level: str = "summary",
+    nodes: str = "hidden",
     site_aggregation: str = "max_abs",
 ) -> Union[pd.DataFrame, dict[str, pd.DataFrame]]:
     """
@@ -36,7 +36,7 @@ def interpret_model(
     target : str, default="features"
         Interpretation target. Use ``"features"`` to attribute predictions
         to input features. Use ``"nodes"`` to attribute predictions to named
-        internal nodes of a feedforward compiled model.
+        graph nodes.
     method : str, default="IntegratedGradients"
         Captum attribution method name. Method names follow Captum class
         names exactly and are case-sensitive, for example
@@ -61,6 +61,18 @@ def interpret_model(
     quiet : bool, default=False
         If False, emit informational notes. If True, suppress informational
         notes.
+    level : str, default="summary"
+        Detail level for ``target="nodes"``. Use ``"summary"`` to return one
+        node-importance table per sample. Use ``"sites"`` to return one table
+        per interpretation site such as ``layer_1`` or ``step_2``.
+    nodes : str, default="hidden"
+        Node filter for ``target="nodes"``. Use ``"hidden"`` for internal
+        graph nodes, ``"non_input"`` to include output nodes, or ``"all"``
+        for all visible graph nodes.
+    site_aggregation : str, default="max_abs"
+        Aggregation rule used when ``target="nodes"`` and ``level="summary"``
+        for recurrent and graphnn backends. Ignored for feedforward summary
+        results and for ``level="sites"``.
 
     Returns
     -------
@@ -68,23 +80,27 @@ def interpret_model(
         If ``target="features"``, returns one DataFrame with rows as
         examples and columns as input feature names.
 
-        If ``target="nodes"``, returns a dictionary mapping layer names to
-        DataFrames. Each DataFrame has rows as examples and columns as named
-        nodes for that layer.
+        If ``target="nodes"`` and ``level="summary"``, returns one DataFrame
+        with rows as examples and columns as named nodes selected by
+        ``nodes``.
+
+        If ``target="nodes"`` and ``level="sites"``, returns a dictionary
+        mapping site identifiers to DataFrames. Each DataFrame has rows as
+        examples and columns as named nodes for that site.
 
     Notes
     -----
-    Feature interpretation is currently supported for all implemented
-    backends.
+    Feature interpretation is supported for all implemented backends.
 
-    Node interpretation is currently supported only for the ``"feedforward"``
-    backend. Node interpretation methods use Captum layer attribution classes.
+    Node interpretation is supported for the ``feedforward``, ``recurrent``,
+    and ``graphnn`` backends. Node interpretation methods use Captum layer
+    attribution classes.
 
-    For feedforward node-level interpretation, edge2torch must access the
-    compiled model's internal feedforward layer blocks. This works for raw
-    models returned by ``compile_graph()``, models returned by
-    ``customize_model()``, and manually wrapped PyTorch models if the compiled
-    model remains registered as a submodule. Highly custom wrappers that hide,
+    For node-level interpretation, edge2torch must access the compiled
+    model's internal interpretation sites. This works for raw models
+    returned by ``compile_graph()``, models returned by ``customize_model()``,
+    and manually wrapped PyTorch models if the compiled model remains
+    registered as a PyTorch submodule. Highly custom wrappers that hide,
     replace, or bypass the compiled model may not support ``target="nodes"``.
 
     ``interpret_model()`` temporarily switches the model to evaluation mode
@@ -117,9 +133,9 @@ def interpret_model(
     ... )
     >>> feature_attributions.head()
 
-    Compute node-level attributions for a feedforward model.
+    Compute summary node-level attributions.
 
-    >>> node_attributions = interpret_model(
+    >>> node_importance = interpret_model(
     ...     model=trained_model,
     ...     artifact=artifact,
     ...     data=data,
@@ -127,7 +143,21 @@ def interpret_model(
     ...     method="LayerConductance",
     ...     quiet=True,
     ... )
-    >>> node_attributions.keys()
+    >>> node_importance.head()
+
+    Compute per-site node-level attributions.
+
+    >>> node_attributions_by_site = interpret_model(
+    ...     model=trained_model,
+    ...     artifact=artifact,
+    ...     data=data,
+    ...     target="nodes",
+    ...     level="sites",
+    ...     nodes="non_input",
+    ...     method="LayerConductance",
+    ...     quiet=True,
+    ... )
+    >>> node_attributions_by_site.keys()
     """
     validate_interpret_model_inputs(
         model=model,
