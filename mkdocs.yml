@@ -25,6 +25,8 @@ nav:
   - Home: index.md
   - Installation: installation.md
   - Getting started: getting-started.ipynb
+  - Recurrent example: recurrent-example.ipynb
+  - GraphNN example: graphnn-example.ipynb
   - Feedforward skip edges: feedforward-skip-edges.ipynb
   - Edge-weight metadata: edge-weight-metadata.ipynb
   - Backends: backends.md

@@ -113,6 +113,8 @@ If you are new to the package, start with:
 
 - [**Installation**](installation.md) for package setup and optional extras
 - [**Getting started**](getting-started.ipynb) for a full end-to-end example
+- [**Recurrent example**](recurrent-example.ipynb) for cyclic graphs with the recurrent backend
+- [**GraphNN example**](graphnn-example.ipynb) for cyclic graphs with the graphnn backend
 - [**Feedforward skip edges**](feedforward-skip-edges.ipynb) for how non-adjacent feedforward edges are handled
 - [**Backends**](backends.md) for backend semantics and current support
 - [**API reference**](api.md) for function-level documentation
