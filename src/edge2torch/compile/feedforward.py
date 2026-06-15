@@ -21,6 +21,11 @@ from ..graph.schema import EdgeGraph
 from ..nn.model import EdgeModel
 from .artifact import CompileArtifact
 from .execution_plan import build_feedforward_execution_plan
+from .interpretation_metadata import (
+    build_feedforward_interpretation_sites,
+    collect_feedforward_node_names,
+    compute_hidden_nodes,
+)
 
 
 def compile_feedforward(
@@ -57,12 +62,26 @@ def compile_feedforward(
 
     # Stores the metadata needed later for alignment, interpretation, and
     # inspection.
+    node_names_by_layer = execution_plan.node_names_by_layer
+    input_nodes = list(execution_plan.input_node_names)
+    output_nodes = list(execution_plan.output_node_names)
+
     artifact = CompileArtifact(
         backend="feedforward",
         graph=graph,
         execution_plan=execution_plan,
-        node_names_by_layer=execution_plan.node_names_by_layer,
-        feature_names=execution_plan.input_node_names,
+        node_names_by_layer=node_names_by_layer,
+        input_nodes=input_nodes,
+        output_nodes=output_nodes,
+        hidden_nodes=compute_hidden_nodes(
+            node_names=collect_feedforward_node_names(node_names_by_layer),
+            input_nodes=input_nodes,
+            output_nodes=output_nodes,
+        ),
+        interpretation_sites=build_feedforward_interpretation_sites(
+            node_names_by_layer
+        ),
+        feature_names=input_nodes,
     )
 
     return model, artifact

@@ -169,6 +169,10 @@ def test_align_features_to_input_nodes_rejects_artifact_without_feature_names():
         graph=object(),  # type: ignore[arg-type]
         execution_plan=object(),
         node_names_by_layer={},
+        input_nodes=[],
+        output_nodes=[],
+        hidden_nodes=[],
+        interpretation_sites={},
         feature_names=[],
     )
 
@@ -184,6 +188,10 @@ def test_align_features_to_input_nodes_rejects_duplicate_artifact_features():
         graph=object(),  # type: ignore[arg-type]
         execution_plan=object(),
         node_names_by_layer={},
+        input_nodes=["gene_a"],
+        output_nodes=[],
+        hidden_nodes=[],
+        interpretation_sites={},
         feature_names=["gene_a", "gene_a"],
     )
 

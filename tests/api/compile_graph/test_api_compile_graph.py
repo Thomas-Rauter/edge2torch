@@ -74,6 +74,25 @@ def test_compile_graph_builds_expected_layer_structure():
     }
 
 
+def test_compile_graph_builds_feedforward_interpretation_metadata():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2", "pathway_1"],
+            "target": ["pathway_1", "pathway_1", "output_1"],
+        }
+    )
+
+    _, artifact = compile_graph(edgelist)
+
+    assert artifact.input_nodes == ["gene_1", "gene_2"]
+    assert artifact.output_nodes == ["output_1"]
+    assert artifact.hidden_nodes == ["pathway_1"]
+    assert artifact.interpretation_sites == {
+        "layer_1": ["pathway_1"],
+        "layer_2": ["output_1"],
+    }
+
+
 def test_compile_graph_expands_feedforward_skip_edges():
     edgelist = pd.DataFrame(
         {

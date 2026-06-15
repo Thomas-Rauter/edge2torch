@@ -21,6 +21,10 @@ from ..graph.schema import EdgeGraph
 from ..nn.model import RecurrentEdgeModel
 from .artifact import CompileArtifact
 from .execution_plan import build_recurrent_execution_plan
+from .interpretation_metadata import (
+    build_state_update_interpretation_sites,
+    compute_hidden_nodes,
+)
 
 
 def compile_recurrent(
@@ -62,12 +66,26 @@ def compile_recurrent(
 
     # Stores the metadata needed later for alignment, interpretation, and
     # inspection.
+    input_nodes = list(execution_plan.input_node_names)
+    output_nodes = list(execution_plan.output_node_names)
+
     artifact = CompileArtifact(
         backend="recurrent",
         graph=graph,
         execution_plan=execution_plan,
         node_names_by_layer={},
-        feature_names=execution_plan.input_node_names,
+        input_nodes=input_nodes,
+        output_nodes=output_nodes,
+        hidden_nodes=compute_hidden_nodes(
+            node_names=list(execution_plan.node_names),
+            input_nodes=input_nodes,
+            output_nodes=output_nodes,
+        ),
+        interpretation_sites=build_state_update_interpretation_sites(
+            node_names=execution_plan.node_names,
+            steps=steps,
+        ),
+        feature_names=input_nodes,
     )
 
     return model, artifact

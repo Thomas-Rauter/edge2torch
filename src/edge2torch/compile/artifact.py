@@ -51,7 +51,19 @@ class CompileArtifact:
         backend-specific internals and may change across releases.
     node_names_by_layer : dict[str, list[str]]
         Mapping from layer name to node names in that layer. This field is
-        primarily intended for inspection and feedforward-backend internals.
+        populated for the feedforward backend and is primarily intended for
+        inspection and feedforward-backend internals.
+    input_nodes : list[str]
+        Names of graph input nodes inferred as nodes with no incoming edges.
+    output_nodes : list[str]
+        Names of graph output nodes inferred as nodes with no outgoing edges.
+    hidden_nodes : list[str]
+        Names of hidden graph nodes excluding inputs, outputs, and compiler
+        pseudo nodes.
+    interpretation_sites : dict[str, list[str]]
+        Mapping from interpretation site identifier to ordered node names for
+        that site. Feedforward backends use ``layer_1``, ``layer_2``, and so on.
+        Recurrent and graphnn backends use ``step_1``, ``step_2``, and so on.
     feature_names : list[str]
         Names of the input features. This field defines the expected input
         column order for tensors passed to the compiled model.
@@ -61,4 +73,8 @@ class CompileArtifact:
     graph: EdgeGraph
     execution_plan: object
     node_names_by_layer: dict[str, list[str]]
+    input_nodes: list[str]
+    output_nodes: list[str]
+    hidden_nodes: list[str]
+    interpretation_sites: dict[str, list[str]]
     feature_names: list[str]
