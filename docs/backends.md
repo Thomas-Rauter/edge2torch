@@ -263,18 +263,62 @@ Use `graphnn` when:
 
 ## Interpretation support
 
-Current interpretation support is backend-dependent.
+Node and feature interpretation are available for all implemented backends.
 
 | Backend | Feature attribution | Node attribution |
 |---|---:|---:|
 | `feedforward` | yes | yes |
-| `recurrent` | yes | planned |
-| `graphnn` | yes | planned |
+| `recurrent` | yes | yes |
+| `graphnn` | yes | yes |
 
-Feature attribution is available for all implemented backends through
-feature-level Captum methods such as `IntegratedGradients`, `Saliency`, and
-`DeepLift`.
+Feature attribution is available through feature-level Captum methods such as
+`IntegratedGradients`, `Saliency`, and `DeepLift`.
 
-Node attribution is currently available for the `feedforward` backend through
-layer-level Captum methods such as `LayerConductance` and
-`LayerIntegratedGradients`.
+Node attribution is available through layer-level Captum methods such as
+`LayerConductance` and `LayerIntegratedGradients`.
+
+### Interpretation sites
+
+Node attribution is computed at **interpretation sites** inside the compiled
+model:
+
+- `feedforward`: one site per non-input layer (`layer_1`, `layer_2`, ...)
+- `recurrent` and `graphnn`: one site per unrolled state-update step
+  (`step_1`, `step_2`, ...)
+
+Pseudo nodes used internally by the feedforward backend are never exposed in
+user-facing node interpretation output.
+
+### Summary vs per-site node results
+
+`interpret_model(..., target="nodes")` supports two detail levels:
+
+| `level` | Return type | Meaning |
+|---|---|---|
+| `"summary"` (default) | `pandas.DataFrame` | One node-importance table per sample |
+| `"sites"` | `dict[str, pandas.DataFrame]` | One table per interpretation site |
+
+Use the `nodes` parameter to filter which graph nodes appear in the result:
+
+| `nodes` | Included nodes |
+|---|---|
+| `"hidden"` (default) | Internal graph nodes only |
+| `"non_input"` | All nodes except inputs (includes outputs) |
+| `"all"` | All visible graph nodes |
+
+For recurrent and graphnn backends, summary results aggregate repeated node
+columns across steps. Control this with `site_aggregation`:
+
+| `site_aggregation` | Behavior |
+|---|---|
+| `"max_abs"` (default) | Keep the step value with largest absolute magnitude |
+| `"mean_abs"` | Average absolute values across steps |
+| `"last"` | Use the final step only |
+
+Feedforward summary results merge disjoint site columns. `site_aggregation` is
+ignored for feedforward summary output and for `level="sites"`.
+
+Models returned by `customize_model()` support node interpretation when the
+wrapped compiled model remains accessible for interpretation-site lookup.
+Adding a custom output `head` can change output dimensionality and may require
+Captum `attribute_kwargs` such as `target` for multi-output graphs.

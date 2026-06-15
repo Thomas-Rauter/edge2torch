@@ -9,9 +9,15 @@ The main public workflow consists of four functions:
 
 `CompileArtifact` is also exported because it is returned by `compile_graph()`
 and accepted by helper functions. Its stable user-facing fields are `backend`
-and `feature_names`. Additional fields such as `graph`, `execution_plan`, and
-`node_names_by_layer` expose compilation internals for inspection and debugging
+and `feature_names`. Additional fields such as `graph`, `execution_plan`,
+`node_names_by_layer`, `input_nodes`, `output_nodes`, `hidden_nodes`, and
+`interpretation_sites` expose compilation internals for inspection and debugging
 and may change across releases.
+
+For `target="nodes"`, `interpret_model()` returns one summary `pandas.DataFrame`
+by default. Use `level="sites"` to obtain per-site tables keyed by
+`layer_1`, `layer_2`, ... for feedforward models or `step_1`, `step_2`, ...
+for recurrent and graphnn models.
 
 ::: edge2torch.compile_graph
 

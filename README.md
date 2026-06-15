@@ -179,10 +179,9 @@ internals for inspection and debugging and may change across releases.
 - `recurrent`
 - `graphnn`
 
-Feature attribution is available through Captum-based methods. Feedforward
-models also support broad node-level attribution. Recurrent and graph neural
-network backends can be compiled and trained, while node-level interpretation
-for these backends is planned for a future release.
+Feature attribution is available through Captum-based methods on all backends.
+Node-level interpretation is also available on all backends through layer-level
+Captum methods such as `LayerConductance` and `LayerIntegratedGradients`.
 
 ## Documentation
 

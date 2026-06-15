@@ -101,10 +101,9 @@ This keeps the package small in scope:
 These backends share the same edge-list input format but differ in how the graph
 structure is translated into neural-network computation.
 
-Feature attribution is available through Captum-based methods. Feedforward
-models also support broad node-level attribution. Recurrent and graph neural
-network backends can be compiled and trained, while node-level interpretation
-for these backends is planned for a future release.
+Feature attribution is available through Captum-based methods on all backends.
+Node-level interpretation is also available on all backends through layer-level
+Captum methods such as `LayerConductance` and `LayerIntegratedGradients`.
 
 See the [**Backends**](backends.md) page for details.
 
