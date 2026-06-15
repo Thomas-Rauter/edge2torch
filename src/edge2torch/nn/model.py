@@ -32,12 +32,7 @@ from ..compile.execution_plan import (
 )
 from ..utils.errors import Edge2TorchError
 from .blocks import FeedforwardLayerBlock
-from .masked_linear import (
-    CONSTRAINT_UNCONSTRAINED,
-    ConstrainedMaskedLinear,
-    MaskedLinear,
-    constraint_name_to_code,
-)
+from .step_block import build_node_state_linear, build_state_update_steps
 
 
 class EdgeModel(nn.Module):
@@ -236,75 +231,16 @@ class RecurrentEdgeModel(nn.Module):
             self.node_index[node_name] for node_name in self.output_node_names
         ]
 
-        n_nodes = len(self.node_names)
-
-        mask = torch.zeros(n_nodes, n_nodes, dtype=torch.float32)
-
-        has_initial_weight = (
-            "initial_weight" in execution_plan.original_edges.columns
+        self.recurrent = build_node_state_linear(
+            original_edges=execution_plan.original_edges,
+            node_names=self.node_names,
+            node_index=self.node_index,
+            bias=bias,
         )
-        has_constraint = "constraint" in execution_plan.original_edges.columns
-        has_edge_metadata = has_initial_weight or has_constraint
-
-        initial_weight = None
-        constraint = None
-
-        if has_initial_weight:
-            initial_weight = torch.full(
-                (n_nodes, n_nodes),
-                fill_value=float("nan"),
-                dtype=torch.float32,
-            )
-
-        if has_constraint:
-            constraint = torch.full(
-                (n_nodes, n_nodes),
-                fill_value=CONSTRAINT_UNCONSTRAINED,
-                dtype=torch.long,
-            )
-
-        for row in execution_plan.original_edges.itertuples(index=False):
-            source = str(row.source)
-            target = str(row.target)
-
-            source_idx = self.node_index[source]
-            target_idx = self.node_index[target]
-
-            mask[target_idx, source_idx] = 1.0
-
-            if has_initial_weight:
-                assert initial_weight is not None
-                row_initial_weight = getattr(row, "initial_weight")
-
-                if pd.notna(row_initial_weight):
-                    initial_weight[target_idx, source_idx] = float(
-                        row_initial_weight
-                    )
-
-            if has_constraint:
-                assert constraint is not None
-                constraint[target_idx, source_idx] = constraint_name_to_code(
-                    str(row.constraint)
-                )
-
-        self.recurrent: ConstrainedMaskedLinear | MaskedLinear
-
-        if has_edge_metadata:
-            self.recurrent = ConstrainedMaskedLinear(
-                in_features=n_nodes,
-                out_features=n_nodes,
-                mask=mask,
-                initial_weight=initial_weight,
-                constraint=constraint,
-                bias=bias,
-            )
-        else:
-            self.recurrent = MaskedLinear(
-                in_features=n_nodes,
-                out_features=n_nodes,
-                mask=mask,
-                bias=bias,
-            )
+        self.update_steps = build_state_update_steps(
+            linear=self.recurrent,
+            steps=steps,
+        )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -343,9 +279,8 @@ class RecurrentEdgeModel(nn.Module):
 
         state[:, self.input_indices] = x
 
-        for _ in range(self.steps):
-            state = self.recurrent(state)
-            state[:, self.input_indices] = x
+        for step in self.update_steps:
+            state = step(state, x, self.input_indices)
 
         return state[:, self.output_indices]
 
@@ -406,75 +341,16 @@ class EdgeGraphNNModel(nn.Module):
             self.node_index[node_name] for node_name in self.output_node_names
         ]
 
-        n_nodes = len(self.node_names)
-
-        mask = torch.zeros(n_nodes, n_nodes, dtype=torch.float32)
-
-        has_initial_weight = (
-            "initial_weight" in execution_plan.original_edges.columns
+        self.message_passing = build_node_state_linear(
+            original_edges=execution_plan.original_edges,
+            node_names=self.node_names,
+            node_index=self.node_index,
+            bias=bias,
         )
-        has_constraint = "constraint" in execution_plan.original_edges.columns
-        has_edge_metadata = has_initial_weight or has_constraint
-
-        initial_weight = None
-        constraint = None
-
-        if has_initial_weight:
-            initial_weight = torch.full(
-                (n_nodes, n_nodes),
-                fill_value=float("nan"),
-                dtype=torch.float32,
-            )
-
-        if has_constraint:
-            constraint = torch.full(
-                (n_nodes, n_nodes),
-                fill_value=CONSTRAINT_UNCONSTRAINED,
-                dtype=torch.long,
-            )
-
-        for row in execution_plan.original_edges.itertuples(index=False):
-            source = str(row.source)
-            target = str(row.target)
-
-            source_idx = self.node_index[source]
-            target_idx = self.node_index[target]
-
-            mask[target_idx, source_idx] = 1.0
-
-            if has_initial_weight:
-                assert initial_weight is not None
-                row_initial_weight = getattr(row, "initial_weight")
-
-                if pd.notna(row_initial_weight):
-                    initial_weight[target_idx, source_idx] = float(
-                        row_initial_weight
-                    )
-
-            if has_constraint:
-                assert constraint is not None
-                constraint[target_idx, source_idx] = constraint_name_to_code(
-                    str(row.constraint)
-                )
-
-        self.message_passing: ConstrainedMaskedLinear | MaskedLinear
-
-        if has_edge_metadata:
-            self.message_passing = ConstrainedMaskedLinear(
-                in_features=n_nodes,
-                out_features=n_nodes,
-                mask=mask,
-                initial_weight=initial_weight,
-                constraint=constraint,
-                bias=bias,
-            )
-        else:
-            self.message_passing = MaskedLinear(
-                in_features=n_nodes,
-                out_features=n_nodes,
-                mask=mask,
-                bias=bias,
-            )
+        self.update_steps = build_state_update_steps(
+            linear=self.message_passing,
+            steps=steps,
+        )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -513,8 +389,7 @@ class EdgeGraphNNModel(nn.Module):
 
         state[:, self.input_indices] = x
 
-        for _ in range(self.steps):
-            state = self.message_passing(state)
-            state[:, self.input_indices] = x
+        for step in self.update_steps:
+            state = step(state, x, self.input_indices)
 
         return state[:, self.output_indices]

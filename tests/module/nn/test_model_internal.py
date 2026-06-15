@@ -230,6 +230,15 @@ def test_recurrent_edge_model_forward_returns_output_nodes():
     assert result.shape == (2, 1)
 
 
+def test_recurrent_edge_model_exposes_one_update_step_module_per_step():
+    model = RecurrentEdgeModel(
+        execution_plan=_RecurrentPlan(),
+        steps=4,
+    )
+
+    assert len(model.update_steps) == 4
+
+
 # EdgeGraphNNModel -------------------------------------------------------------
 
 
@@ -289,6 +298,15 @@ def test_edge_graphnn_model_forward_returns_output_nodes():
     result = model(x)
 
     assert result.shape == (2, 1)
+
+
+def test_edge_graphnn_model_exposes_one_update_step_module_per_step():
+    model = EdgeGraphNNModel(
+        execution_plan=_GraphNNPlan(),
+        steps=4,
+    )
+
+    assert len(model.update_steps) == 4
 
 
 @pytest.mark.parametrize("steps", [True, False])
