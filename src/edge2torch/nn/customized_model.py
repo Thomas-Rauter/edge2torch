@@ -24,6 +24,8 @@ from typing import cast
 import torch
 from torch import nn
 
+from .interpretation_sites import GET_INTERPRETATION_SITE_METHOD
+
 
 class CustomizedEdgeModel(nn.Module):
     """
@@ -72,14 +74,11 @@ class CustomizedEdgeModel(nn.Module):
 
         return x
 
-    def _edge2torch_get_feedforward_layer_block(
-        self,
-        layer_name: str,
-    ) -> nn.Module:
+    def _edge2torch_list_interpretation_site_ids(self) -> list[str]:
         """
-        Delegate feedforward layer-block access to the wrapped compiled model.
+        Delegate interpretation-site listing to the wrapped compiled model.
         """
-        method_name = "_edge2torch_get_feedforward_layer_block"
+        method_name = "_edge2torch_list_interpretation_site_ids"
 
         if not hasattr(self.base_model, method_name):
             raise AttributeError(
@@ -87,9 +86,26 @@ class CustomizedEdgeModel(nn.Module):
                 f"'{method_name}'"
             )
 
-        get_layer_block = cast(
-            Callable[[str], nn.Module],
+        list_site_ids = cast(
+            Callable[[], list[str]],
             getattr(self.base_model, method_name),
         )
 
-        return get_layer_block(layer_name)
+        return list_site_ids()
+
+    def _edge2torch_get_interpretation_site(self, site_id: str) -> nn.Module:
+        """
+        Delegate interpretation-site access to the wrapped compiled model.
+        """
+        if not hasattr(self.base_model, GET_INTERPRETATION_SITE_METHOD):
+            raise AttributeError(
+                f"'{type(self.base_model).__name__}' object has no attribute "
+                f"'{GET_INTERPRETATION_SITE_METHOD}'"
+            )
+
+        get_site = cast(
+            Callable[[str], nn.Module],
+            getattr(self.base_model, GET_INTERPRETATION_SITE_METHOD),
+        )
+
+        return get_site(site_id)

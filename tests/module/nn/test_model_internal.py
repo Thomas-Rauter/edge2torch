@@ -104,40 +104,46 @@ class _GraphNNPlan:
 # EdgeModel --------------------------------------------------------------------
 
 
-def test_edge_model_get_layer_block_rejects_invalid_layer_prefix():
+def test_edge_model_get_interpretation_site_rejects_invalid_site_prefix():
     model = EdgeModel(_FeedforwardPlan())
 
-    with pytest.raises(Edge2TorchError, match="Invalid layer name"):
-        model._edge2torch_get_feedforward_layer_block("hidden_1")
+    with pytest.raises(Edge2TorchError, match="Invalid interpretation site"):
+        model._edge2torch_get_interpretation_site("hidden_1")
 
 
-def test_edge_model_get_layer_block_rejects_malformed_layer_name():
+def test_edge_model_get_interpretation_site_rejects_malformed_site_id():
     model = EdgeModel(_FeedforwardPlan())
 
-    with pytest.raises(Edge2TorchError, match="Invalid layer name"):
-        model._edge2torch_get_feedforward_layer_block("layer_x")
+    with pytest.raises(Edge2TorchError, match="Invalid interpretation site"):
+        model._edge2torch_get_interpretation_site("layer_x")
 
 
-def test_edge_model_get_layer_block_rejects_input_layer():
+def test_edge_model_get_interpretation_site_rejects_input_layer():
     model = EdgeModel(_FeedforwardPlan())
 
-    with pytest.raises(Edge2TorchError, match="input layer"):
-        model._edge2torch_get_feedforward_layer_block("layer_0")
+    with pytest.raises(Edge2TorchError, match="not an interpretation site"):
+        model._edge2torch_get_interpretation_site("layer_0")
 
 
-def test_edge_model_get_layer_block_rejects_unknown_layer_name():
+def test_edge_model_get_interpretation_site_rejects_unknown_site_id():
     model = EdgeModel(_FeedforwardPlan())
 
-    with pytest.raises(Edge2TorchError, match="Unknown layer name"):
-        model._edge2torch_get_feedforward_layer_block("layer_2")
+    with pytest.raises(Edge2TorchError, match="Unknown interpretation site"):
+        model._edge2torch_get_interpretation_site("layer_2")
 
 
-def test_edge_model_get_layer_block_rejects_missing_block_for_known_layer():
+def test_edge_model_get_interpretation_site_rejects_missing_block_for_site():
     model = EdgeModel(_FeedforwardPlan())
     model.layer_names.append("layer_2")
 
     with pytest.raises(Edge2TorchError, match="No block exists"):
-        model._edge2torch_get_feedforward_layer_block("layer_2")
+        model._edge2torch_get_interpretation_site("layer_2")
+
+
+def test_edge_model_lists_interpretation_sites_without_input_layer():
+    model = EdgeModel(_FeedforwardPlan())
+
+    assert model._edge2torch_list_interpretation_site_ids() == ["layer_1"]
 
 
 def test_edge_model_sort_layer_names_rejects_invalid_layer_name():
@@ -239,6 +245,23 @@ def test_recurrent_edge_model_exposes_one_update_step_module_per_step():
     assert len(model.update_steps) == 4
 
 
+def test_recurrent_edge_model_lists_and_resolves_interpretation_sites():
+    model = RecurrentEdgeModel(
+        execution_plan=_RecurrentPlan(),
+        steps=3,
+    )
+
+    assert model._edge2torch_list_interpretation_site_ids() == [
+        "step_1",
+        "step_2",
+        "step_3",
+    ]
+
+    site = model._edge2torch_get_interpretation_site("step_2")
+
+    assert site is model.update_steps[1]
+
+
 # EdgeGraphNNModel -------------------------------------------------------------
 
 
@@ -307,6 +330,32 @@ def test_edge_graphnn_model_exposes_one_update_step_module_per_step():
     )
 
     assert len(model.update_steps) == 4
+
+
+def test_edge_graphnn_model_lists_and_resolves_interpretation_sites():
+    model = EdgeGraphNNModel(
+        execution_plan=_GraphNNPlan(),
+        steps=2,
+    )
+
+    assert model._edge2torch_list_interpretation_site_ids() == [
+        "step_1",
+        "step_2",
+    ]
+
+    site = model._edge2torch_get_interpretation_site("step_1")
+
+    assert site is model.update_steps[0]
+
+
+def test_recurrent_edge_model_rejects_invalid_interpretation_site():
+    model = RecurrentEdgeModel(
+        execution_plan=_RecurrentPlan(),
+        steps=2,
+    )
+
+    with pytest.raises(Edge2TorchError, match="Invalid interpretation site"):
+        model._edge2torch_get_interpretation_site("layer_1")
 
 
 @pytest.mark.parametrize("steps", [True, False])

@@ -137,7 +137,7 @@ def _assert_feedforward_block_mask_matches_expanded_edges(
     input_node_names = plan.node_names_by_layer[input_layer_name]
     output_node_names = plan.node_names_by_layer[output_layer_name]
 
-    block = model._edge2torch_get_feedforward_layer_block(layer_name)
+    block = model._edge2torch_get_interpretation_site(layer_name)
     masked_linear = _masked_linear_from_feedforward_block(block)
 
     expected_mask = _expected_mask(

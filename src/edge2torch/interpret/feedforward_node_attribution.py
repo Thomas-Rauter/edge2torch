@@ -23,6 +23,7 @@ import torch
 from torch import nn
 
 from ..compile.artifact import CompileArtifact
+from ..nn.interpretation_sites import find_interpretation_site_provider
 from ..utils.constants import INTERNAL_NODE_PREFIX
 from ..utils.errors import Edge2TorchError
 from .captum_classes import get_captum_class
@@ -59,21 +60,21 @@ def run_feedforward_node_attribution(
 
         node_names = artifact.node_names_by_layer[layer_name]
 
-        layer_block_provider = _find_feedforward_layer_block_provider(model)
+        site_provider = find_interpretation_site_provider(model)
 
-        get_layer_block = cast(
+        get_site = cast(
             Callable[[str], nn.Module],
             getattr(
-                layer_block_provider,
-                "_edge2torch_get_feedforward_layer_block",
+                site_provider,
+                "_edge2torch_get_interpretation_site",
             ),
         )
-        layer_block = get_layer_block(layer_name)
+        site_module = get_site(layer_name)
 
         interpreter = _build_feedforward_layer_interpreter(
             method=method,
             model=model,
-            layer_block=layer_block,
+            layer_block=site_module,
             constructor_kwargs=constructor_kwargs,
         )
 
@@ -109,35 +110,6 @@ def run_feedforward_node_attribution(
 
 
 # Level 4 functions (called by level 3 functions) ------------------------------
-
-
-def _find_feedforward_layer_block_provider(model: nn.Module) -> nn.Module:
-    """
-    Find a module that exposes edge2torch feedforward layer-block access.
-
-    Raw feedforward models expose this method directly. Models returned by
-    ``customize_model()`` and many manually wrapped PyTorch models expose it
-    through a registered submodule.
-    """
-    method_name = "_edge2torch_get_feedforward_layer_block"
-
-    if hasattr(model, method_name):
-        return model
-
-    for module in model.modules():
-        if module is model:
-            continue
-
-        if hasattr(module, method_name):
-            return module
-
-    raise Edge2TorchError(
-        "Node-level interpretation requires access to the compiled "
-        "feedforward model's internal layer blocks. This is supported for raw "
-        "feedforward models returned by compile_graph(), models returned by "
-        "customize_model(), and wrappers that keep the compiled model as a "
-        "registered PyTorch submodule."
-    )
 
 
 def _build_feedforward_layer_interpreter(

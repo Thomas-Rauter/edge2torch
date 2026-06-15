@@ -32,7 +32,15 @@ from ..compile.execution_plan import (
 )
 from ..utils.errors import Edge2TorchError
 from .blocks import FeedforwardLayerBlock
-from .step_block import build_node_state_linear, build_state_update_steps
+from .interpretation_sites import (
+    parse_feedforward_site_id,
+    parse_state_update_site_id,
+)
+from .step_block import (
+    StateUpdateStep,
+    build_node_state_linear,
+    build_state_update_steps,
+)
 
 
 class EdgeModel(nn.Module):
@@ -96,50 +104,50 @@ class EdgeModel(nn.Module):
 
         return x
 
-    def _edge2torch_get_feedforward_layer_block(
+    def _edge2torch_list_interpretation_site_ids(self) -> list[str]:
+        """
+        Return feedforward interpretation site identifiers.
+        """
+        return [
+            layer_name
+            for layer_name in self.layer_names
+            if layer_name != "layer_0"
+        ]
+
+    def _edge2torch_get_interpretation_site(
         self,
-        layer_name: str,
+        site_id: str,
     ) -> FeedforwardLayerBlock:
         """
-        Return the feedforward block that produces the given layer.
+        Return the feedforward block for an interpretation site.
 
         Parameters
         ----------
-        layer_name : str
-            Layer name like ``"layer_1"`` or ``"layer_2"``.
+        site_id : str
+            Site identifier like ``"layer_1"`` or ``"layer_2"``.
 
         Returns
         -------
-        nn.Module
-            Feedforward block whose output corresponds to ``layer_name``.
+        FeedforwardLayerBlock
+            Feedforward block whose output corresponds to ``site_id``.
 
         Raises
         ------
         Edge2TorchError
-            If the layer name is invalid or refers to the input layer.
+            If the site identifier is invalid or has no corresponding block.
         """
-        if not layer_name.startswith("layer_"):
-            raise Edge2TorchError(f"Invalid layer name '{layer_name}'.")
-
-        try:
-            layer_idx = int(layer_name.split("_")[1])
-        except (IndexError, ValueError) as exc:
-            raise Edge2TorchError(
-                f"Invalid layer name '{layer_name}'."
-            ) from exc
-
-        if layer_idx == 0:
-            raise Edge2TorchError(
-                "The input layer 'layer_0' does not have a feedforward block."
-            )
+        layer_idx = parse_feedforward_site_id(site_id)
+        layer_name = f"layer_{layer_idx}"
 
         if layer_name not in self.layer_names:
-            raise Edge2TorchError(f"Unknown layer name '{layer_name}'.")
+            raise Edge2TorchError(f"Unknown interpretation site '{site_id}'.")
 
         block_idx = layer_idx - 1
 
         if block_idx >= len(self.blocks):
-            raise Edge2TorchError(f"No block exists for layer '{layer_name}'.")
+            raise Edge2TorchError(
+                f"No block exists for interpretation site '{site_id}'."
+            )
 
         return cast(FeedforwardLayerBlock, self.blocks[block_idx])
 
@@ -284,6 +292,26 @@ class RecurrentEdgeModel(nn.Module):
 
         return state[:, self.output_indices]
 
+    def _edge2torch_list_interpretation_site_ids(self) -> list[str]:
+        """
+        Return recurrent interpretation site identifiers.
+        """
+        return [f"step_{step_idx}" for step_idx in range(1, self.steps + 1)]
+
+    def _edge2torch_get_interpretation_site(
+        self,
+        site_id: str,
+    ) -> StateUpdateStep:
+        """
+        Return the state-update step module for an interpretation site.
+        """
+        step_idx = parse_state_update_site_id(site_id)
+
+        if step_idx >= len(self.update_steps):
+            raise Edge2TorchError(f"Unknown interpretation site '{site_id}'.")
+
+        return cast(StateUpdateStep, self.update_steps[step_idx])
+
 
 class EdgeGraphNNModel(nn.Module):
     """
@@ -393,3 +421,23 @@ class EdgeGraphNNModel(nn.Module):
             state = step(state, x, self.input_indices)
 
         return state[:, self.output_indices]
+
+    def _edge2torch_list_interpretation_site_ids(self) -> list[str]:
+        """
+        Return graphnn interpretation site identifiers.
+        """
+        return [f"step_{step_idx}" for step_idx in range(1, self.steps + 1)]
+
+    def _edge2torch_get_interpretation_site(
+        self,
+        site_id: str,
+    ) -> StateUpdateStep:
+        """
+        Return the state-update step module for an interpretation site.
+        """
+        step_idx = parse_state_update_site_id(site_id)
+
+        if step_idx >= len(self.update_steps):
+            raise Edge2TorchError(f"Unknown interpretation site '{site_id}'.")
+
+        return cast(StateUpdateStep, self.update_steps[step_idx])

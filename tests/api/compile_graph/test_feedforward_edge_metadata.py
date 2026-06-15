@@ -23,7 +23,7 @@ def _reset_if_available(module: torch.nn.Module) -> None:
 
 
 def _block_for_layer(model: torch.nn.Module, layer_name: str):
-    return model._edge2torch_get_feedforward_layer_block(layer_name)
+    return model._edge2torch_get_interpretation_site(layer_name)
 
 
 def _edge_weight(
