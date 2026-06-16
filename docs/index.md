@@ -3,7 +3,7 @@
 [![CI](https://github.com/Thomas-Rauter/edge2torch/actions/workflows/ci.yml/badge.svg)](https://github.com/Thomas-Rauter/edge2torch/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/Thomas-Rauter/edge2torch/branch/main/graph/badge.svg)](https://app.codecov.io/gh/Thomas-Rauter/edge2torch)
 
-Build sparse PyTorch neural networks from edge lists of named nodes,
+Build sparsely connected PyTorch neural networks from prior-knowledge graphs,
 with optional feature- and node-level attribution.
 
 <img src="figures/graphical_abstract.svg"
