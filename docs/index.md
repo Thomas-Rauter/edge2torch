@@ -117,6 +117,7 @@ If you are new to the package, start with:
 - [**GraphNN example**](graphnn-example.ipynb) for cyclic graphs with the graphnn backend
 - [**Feedforward skip edges**](feedforward-skip-edges.ipynb) for how non-adjacent feedforward edges are handled
 - [**Backends**](backends.md) for backend semantics and current support
+- [**Scope and limitations**](scope.md) for what each backend does and does not cover
 - [**API reference**](api.md) for function-level documentation
 
 ## License

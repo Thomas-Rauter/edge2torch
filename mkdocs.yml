@@ -30,6 +30,7 @@ nav:
   - Feedforward skip edges: feedforward-skip-edges.ipynb
   - Edge-weight metadata: edge-weight-metadata.ipynb
   - Backends: backends.md
+  - Scope and limitations: scope.md
   - API reference: api.md
   - Changelog: changelog.md
   - Citing: citing.md

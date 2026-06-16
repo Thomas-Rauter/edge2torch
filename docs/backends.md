@@ -322,3 +322,6 @@ Models returned by `customize_model()` support node interpretation when the
 wrapped compiled model remains accessible for interpretation-site lookup.
 Adding a custom output `head` can change output dimensionality and may require
 Captum `attribute_kwargs` such as `target` for multi-output graphs.
+
+See [Scope and limitations](scope.md) for what each backend is designed to
+cover.
