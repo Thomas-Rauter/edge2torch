@@ -223,6 +223,20 @@ jobs:
             --ExecutePreprocessor.kernel_name=python3 \
             docs/edge-weight-metadata.ipynb
 
+          python -m jupyter nbconvert \
+            --to notebook \
+            --execute \
+            --inplace \
+            --ExecutePreprocessor.kernel_name=python3 \
+            docs/recurrent-example.ipynb
+
+          python -m jupyter nbconvert \
+            --to notebook \
+            --execute \
+            --inplace \
+            --ExecutePreprocessor.kernel_name=python3 \
+            docs/graphnn-example.ipynb
+
       - name: Build documentation
         run: |
           mkdocs build --strict

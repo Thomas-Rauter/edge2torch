@@ -23,6 +23,8 @@ This project follows semantic versioning.
 - Added interpretation-site metadata to `CompileArtifact` (`input_nodes`,
   `output_nodes`, `hidden_nodes`, `interpretation_sites`).
 - Added architecture-fixture tests for node interpretation across backends.
+- Added recurrent and graphnn example notebooks for cyclic-graph end-to-end
+  workflows.
 
 ### Changed
 
@@ -33,6 +35,10 @@ This project follows semantic versioning.
   interpretation-site access.
 
 ### Fixed
+
+- Fixed notebook JSON metadata required by `mkdocs build --strict`.
+- Fixed graphnn example topology so the informative path reaches
+  `readout_1` via `module_a`.
 
 ## [0.1.0] - 2026-05-26
 
