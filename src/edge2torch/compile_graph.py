@@ -9,9 +9,9 @@ from .graph.validate import handle_validation_report, validate_graph
 def compile_graph(
     edgelist: pd.DataFrame,
     backend: str = "feedforward",
-    quiet: bool = False,
     bias: bool = True,
     steps: int = 3,
+    quiet: bool = False,
 ):
     """
     Compile an edgelist into a sparse PyTorch model and compilation artifact.
@@ -82,9 +82,6 @@ def compile_graph(
     backend : str, default="feedforward"
         Backend to compile to. One of ``"feedforward"``, ``"recurrent"``,
         or ``"graphnn"``.
-    quiet : bool, default=False
-        If False, emit informational notes during validation. If True,
-        suppress informational notes.
     bias : bool, default=True
         Whether compiled masked linear layers include bias terms. If True,
         each target node has a learned node-level offset in addition to its
@@ -97,6 +94,9 @@ def compile_graph(
         through longer graph paths and revisit cycles more times. This parameter
         is not used by the ``feedforward`` backend; non-default values with
         ``backend="feedforward"`` are rejected.
+    quiet : bool, default=False
+        If False, emit informational notes during validation. If True,
+        suppress informational notes.
 
     Returns
     -------

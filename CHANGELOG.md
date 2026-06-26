@@ -6,39 +6,37 @@ This project follows semantic versioning.
 
 ## [Unreleased]
 
-### Added
-
-### Changed
-
-### Fixed
-
-## [0.2.0] - 2026-06-15
+## [0.2.0] - 2026-06-26
 
 ### Added
 
-- Added unified node-level interpretation for the `recurrent` and `graphnn`
-  backends.
-- Added `level`, `nodes`, and `site_aggregation` parameters to
-  `interpret_model()` for node interpretation.
-- Added interpretation-site metadata to `CompileArtifact` (`input_nodes`,
-  `output_nodes`, `hidden_nodes`, `interpretation_sites`).
-- Added architecture-fixture tests for node interpretation across backends.
-- Added recurrent and graphnn example notebooks for cyclic-graph end-to-end
-  workflows.
+- **Node interpretation on all backends.** You can now attribute predictions to
+  named hidden nodes on `recurrent` and `graphnn` models, not only on
+  `feedforward`.
+- **Finer control over node attribution output** via new `interpret_model()`
+  options:
+  - `level="summary"` — one table per sample (default)
+  - `level="sites"` — separate tables per interpretation site (`layer_*` on
+    feedforward, `step_*` on recurrent and graphnn)
+  - `nodes` — include hidden nodes only, or also outputs (`"non_input"`), or
+    all visible nodes (`"all"`)
+  - `site_aggregation` — on recurrent and graphnn, choose how step-wise scores
+    are combined in the summary (`"max_abs"`, `"mean_abs"`, or `"last"`)
+- **New example notebooks:** recurrent and graphnn end-to-end workflows
+  (compile, train, interpret on cyclic graphs).
+- **New docs page:** [Scope and limitations](https://Thomas-Rauter.github.io/edge2torch/scope/)
+  — what each backend supports cleanly, with extra PyTorch work, or not at all.
 
 ### Changed
 
 - **Breaking:** `interpret_model(..., target="nodes")` now returns a summary
-  `pandas.DataFrame` by default (`level="summary"`, `nodes="hidden"`).
-- **Breaking:** Per-site node tables now require `level="sites"`.
-- Recurrent and graphnn models now unroll state updates into step modules for
-  interpretation-site access.
+  `pandas.DataFrame` by default. For the previous per-site dictionary of
+  tables, pass `level="sites"`.
 
 ### Fixed
 
-- Fixed notebook JSON metadata required by `mkdocs build --strict`.
-- Fixed graphnn example topology so the informative path reaches
-  `readout_1` via `module_a`.
+- GraphNN example notebook: corrected graph topology so the signal path
+  reaches the readout node as intended.
 
 ## [0.1.0] - 2026-05-26
 
