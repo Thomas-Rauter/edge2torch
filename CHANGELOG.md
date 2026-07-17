@@ -6,6 +6,31 @@ This project follows semantic versioning.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-17
+
+### Removed
+
+- **`backend="recurrent"` and `backend="graphnn"`.** The public API now has
+  two backends only: `feedforward` and `state_update`.
+- **`RecurrentEdgeModel` and `EdgeGraphNNModel`.** Cyclic graphs compile to
+  `StateUpdateEdgeModel`.
+- **`model.recurrent` and `model.message_passing`.** Use `model.state_linear`
+  for the shared masked linear layer.
+
+### Added
+
+- **`backend="state_update"`** as the only topology-preserving compile path for
+  cyclic graphs.
+- **`StateUpdateEdgeModel`** as the compiled model class for `state_update`.
+- **`model.state_linear`** as the canonical accessor for state-update weights.
+
+### Changed
+
+- **Docs and examples** now describe `feedforward` and `state_update` only. The
+  cyclic-graph walkthrough is `docs/state-update-example.ipynb`.
+- **Node interpretation on `state_update`** still uses `step_*` sites and the
+  same `site_aggregation` options as before.
+
 ## [0.2.0] - 2026-06-26
 
 ### Added
