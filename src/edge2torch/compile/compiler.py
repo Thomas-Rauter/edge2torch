@@ -19,7 +19,7 @@ implementations themselves or the public API entry point.
 from torch import nn
 
 from ..graph.schema import EdgeGraph
-from ..utils.constants import COMPILE_BACKENDS
+from ..utils.constants import COMPILE_BACKENDS, CompileBackend
 from ..utils.errors import Edge2TorchError
 from .artifact import CompileArtifact
 from .feedforward import compile_feedforward
@@ -28,7 +28,7 @@ from .state_update import compile_state_update
 
 def compile_backend(
     graph: EdgeGraph,
-    backend: str,
+    backend: CompileBackend,
     bias: bool = True,
     steps: int = 3,
 ) -> tuple[nn.Module, CompileArtifact]:

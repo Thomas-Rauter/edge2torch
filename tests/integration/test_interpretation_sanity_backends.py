@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass
-from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -28,6 +27,7 @@ from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
 from edge2torch import (
+    CompileBackend,
     align_features_to_input_nodes,
     compile_graph,
     customize_model,
@@ -36,7 +36,7 @@ from edge2torch import (
 
 pytestmark = pytest.mark.integration
 
-BackendName = Literal["feedforward", "state_update"]
+BackendName = CompileBackend
 
 SEED = 7
 N_TRAIN = 512

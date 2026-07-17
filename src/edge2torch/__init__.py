@@ -10,6 +10,7 @@ from .align_features_to_input_nodes import align_features_to_input_nodes
 from .compile_graph import compile_graph
 from .customize_model import customize_model
 from .interpret_model import interpret_model
+from .utils.constants import COMPILE_BACKENDS, CompileBackend
 
 try:
     __version__ = version("edge2torch")
@@ -22,5 +23,7 @@ __all__ = [
     "customize_model",
     "interpret_model",
     "CompileArtifact",
+    "CompileBackend",
+    "COMPILE_BACKENDS",
     "__version__",
 ]

@@ -269,7 +269,7 @@ def _assert_feedforward_model_masks_preserve_expanded_graph(
         )
 
 
-def _assert_state_update_or_state_update_model_mask_matches_edgelist(
+def _assert_state_update_model_mask_matches_edgelist(
     *,
     node_names: list[str],
     edgelist: pd.DataFrame,
@@ -419,7 +419,7 @@ def test_compile_graph_fixture_state_update_cycle_preserves_graph():
     assert artifact.execution_plan.input_node_names == model.input_node_names
     assert artifact.execution_plan.output_node_names == model.output_node_names
 
-    _assert_state_update_or_state_update_model_mask_matches_edgelist(
+    _assert_state_update_model_mask_matches_edgelist(
         node_names=model.node_names,
         edgelist=edgelist,
         masked_linear=model.state_linear,

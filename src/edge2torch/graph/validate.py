@@ -20,6 +20,7 @@ public API orchestration, or model construction.
 
 from dataclasses import dataclass, field
 
+from ..utils.constants import CompileBackend
 from ..utils.errors import Edge2TorchError
 from .schema import EdgeGraph
 
@@ -63,7 +64,7 @@ class ValidationReport:
 
 def validate_graph(
     graph: EdgeGraph,
-    backend: str,
+    backend: CompileBackend,
 ) -> ValidationReport:
     """
     Validate a normalized internal graph for backend-specific compilation.
@@ -72,7 +73,7 @@ def validate_graph(
     ----------
     graph : EdgeGraph
         Internal graph object.
-    backend : str
+    backend : CompileBackend
         Backend to compile to.
 
     Returns

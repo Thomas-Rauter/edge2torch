@@ -20,6 +20,7 @@ code.
 from dataclasses import dataclass
 
 from ..graph.schema import EdgeGraph
+from ..utils.constants import CompileBackend
 
 
 @dataclass
@@ -39,8 +40,8 @@ class CompileArtifact:
 
     Parameters
     ----------
-    backend : str
-        Backend used for compilation.
+    backend : CompileBackend
+        Backend used for compilation (``"feedforward"`` or ``"state_update"``).
     graph : EdgeGraph
         Internal edge2torch graph object used for compilation. The graph
         contains the normalized edge table and may include optional edge-level
@@ -69,7 +70,7 @@ class CompileArtifact:
         column order for tensors passed to the compiled model.
     """
 
-    backend: str
+    backend: CompileBackend
     graph: EdgeGraph
     execution_plan: object
     node_names_by_layer: dict[str, list[str]]

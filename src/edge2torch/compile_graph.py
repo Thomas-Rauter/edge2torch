@@ -4,11 +4,12 @@ from .compile.compiler import compile_backend
 from .compile.input_validation import validate_compile_graph_inputs
 from .graph.io import edgelist_to_graph
 from .graph.validate import handle_validation_report, validate_graph
+from .utils.constants import CompileBackend
 
 
 def compile_graph(
     edgelist: pd.DataFrame,
-    backend: str = "feedforward",
+    backend: CompileBackend = "feedforward",
     bias: bool = True,
     steps: int = 3,
     quiet: bool = False,
@@ -81,6 +82,7 @@ def compile_graph(
         edges require an explicit constant value.
     backend : str, default="feedforward"
         Backend to compile to. One of ``"feedforward"`` or ``"state_update"``.
+        Typed as ``CompileBackend``.
     bias : bool, default=True
         Whether compiled masked linear layers include bias terms. If True,
         each target node has a learned node-level offset in addition to its

@@ -16,7 +16,7 @@ def _state_update_edgelist() -> pd.DataFrame:
 
 
 @pytest.mark.parametrize("backend", ["state_update"])
-def test_compile_graph_sets_steps_for_state_update_backends(
+def test_compile_graph_sets_steps_for_state_update_backend(
     backend: str,
 ):
     model, _ = compile_graph(
