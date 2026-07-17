@@ -122,3 +122,55 @@ def test_graph_topology_rejects_invalid_interpretation_site_id():
 
     with pytest.raises(Edge2TorchError, match="Invalid interpretation site"):
         graph_topology(artifact)
+
+
+@pytest.mark.parametrize(
+    ("mutate", "match"),
+    [
+        (
+            lambda a: setattr(a, "interpretation_sites", ["layer_1"]),
+            "interpretation_sites' must be a dictionary",
+        ),
+        (
+            lambda a: a.interpretation_sites.__setitem__(1, ["node_a"]),
+            "keys must be strings",
+        ),
+        (
+            lambda a: a.interpretation_sites.__setitem__(
+                "layer_1",
+                "node_a",
+            ),
+            "must be a list",
+        ),
+        (
+            lambda a: a.interpretation_sites.__setitem__(
+                "layer_1",
+                [1],
+            ),
+            "must contain only strings",
+        ),
+        (
+            lambda a: a.interpretation_sites.__setitem__(
+                "layer_x",
+                ["node_a"],
+            ),
+            "Invalid interpretation site",
+        ),
+        (
+            lambda a: a.interpretation_sites.__setitem__(
+                "step_x",
+                ["node_a"],
+            ),
+            "Invalid interpretation site",
+        ),
+    ],
+)
+def test_graph_topology_rejects_malformed_interpretation_sites(
+    mutate,
+    match,
+):
+    artifact = _compile_feedforward_artifact()
+    mutate(artifact)
+
+    with pytest.raises(Edge2TorchError, match=match):
+        graph_topology(artifact)

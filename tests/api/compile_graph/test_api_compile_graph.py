@@ -188,6 +188,23 @@ def test_compile_graph_raises_edge2torcherror_for_unknown_backend():
         compile_graph(edgelist=edgelist, backend="cnn")
 
 
+def test_compile_backend_rejects_unsupported_backend_directly():
+    from edge2torch.compile.compiler import compile_backend
+    from edge2torch.graph.io import edgelist_to_graph
+
+    graph = edgelist_to_graph(
+        pd.DataFrame(
+            {
+                "source": ["gene_1"],
+                "target": ["pathway_1"],
+            }
+        )
+    )
+
+    with pytest.raises(Edge2TorchError, match="Unsupported backend"):
+        compile_backend(graph=graph, backend="cnn")  # type: ignore[arg-type]
+
+
 def test_compile_graph_raises_edge2torcherror_for_non_bool_quiet():
     edgelist = pd.DataFrame(
         {

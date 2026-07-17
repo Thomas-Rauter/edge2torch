@@ -8,6 +8,7 @@ from edge2torch.graph.schema import EdgeGraph
 from edge2torch.interpret.site_node_attribution import (
     _aggregate_state_update_site_attributions,
     _build_site_interpreter,
+    _build_summary_attribution,
     _filter_site_attributions,
     _is_visible_domain_node,
     _merge_feedforward_site_attributions,
@@ -158,6 +159,82 @@ def test_aggregate_state_update_site_attributions_uses_max_abs():
     )
 
     assert summary.loc["s1", "hidden_1"] == -5.0
+
+
+def test_aggregate_state_update_site_attributions_uses_mean_abs():
+    site_results = {
+        "step_1": pd.DataFrame([[-4.0]], index=["s1"], columns=["hidden_1"]),
+        "step_2": pd.DataFrame([[2.0]], index=["s1"], columns=["hidden_1"]),
+    }
+
+    summary = _aggregate_state_update_site_attributions(
+        site_results=site_results,
+        site_aggregation="mean_abs",
+    )
+
+    assert summary.loc["s1", "hidden_1"] == pytest.approx(3.0)
+
+
+def test_build_summary_attribution_rejects_empty_site_results():
+    with pytest.raises(Edge2TorchError, match="empty site results"):
+        _build_summary_attribution(
+            artifact=_Artifact(backend="state_update"),
+            site_results={},
+            site_aggregation="max_abs",
+        )
+
+
+def test_build_summary_attribution_rejects_unsupported_backend():
+    site_results = {
+        "step_1": pd.DataFrame([[1.0]], index=["s1"], columns=["hidden_1"]),
+    }
+
+    with pytest.raises(Edge2TorchError, match="Unsupported backend"):
+        _build_summary_attribution(
+            artifact=_Artifact(backend="legacy"),
+            site_results=site_results,
+            site_aggregation="max_abs",
+        )
+
+
+def test_site_sort_key_rejects_malformed_ids():
+    with pytest.raises(Edge2TorchError, match="Invalid interpretation site"):
+        _site_sort_key("layer_x")
+
+    with pytest.raises(Edge2TorchError, match="Invalid interpretation site"):
+        _site_sort_key("step_x")
+
+    with pytest.raises(Edge2TorchError, match="Invalid interpretation site"):
+        _site_sort_key("not_a_site")
+
+
+def test_should_include_node_rejects_unknown_filter():
+    artifact = _Artifact()
+
+    with pytest.raises(Edge2TorchError, match="Unsupported node filter"):
+        _should_include_node(
+            "hidden_1",
+            artifact,
+            "outputs",  # type: ignore[arg-type]
+        )
+
+
+def test_validate_node_attributions_rejects_sample_or_width_mismatch():
+    with pytest.raises(Edge2TorchError, match="row count"):
+        _validate_node_attributions(
+            attributions=torch.randn(1, 2),
+            site_id="layer_1",
+            sample_names=["s1", "s2"],
+            node_names=["n1", "n2"],
+        )
+
+    with pytest.raises(Edge2TorchError, match="width mismatch"):
+        _validate_node_attributions(
+            attributions=torch.randn(2, 1),
+            site_id="layer_1",
+            sample_names=["s1", "s2"],
+            node_names=["n1", "n2"],
+        )
 
 
 def test_run_site_node_attribution_returns_summary_dataframe():
