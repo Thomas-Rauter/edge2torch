@@ -26,13 +26,12 @@ nav:
   - Getting started:
       - Installation: installation.md
       - Tutorial: getting-started.ipynb
-  - Examples:
+  - Additional examples:
       - State-update: state-update-example.ipynb
-      - Feedforward skip edges: feedforward-skip-edges.ipynb
-      - Edge-weight metadata: edge-weight-metadata.ipynb
   - Reference:
       - Backends: backends.md
-      - Scope and limitations: scope.md
+      - Feedforward skip edges: feedforward-skip-edges.ipynb
+      - Edge weights and constraints: edge-weight-metadata.ipynb
       - API reference: api.md
   - Project:
       - Changelog: changelog.md

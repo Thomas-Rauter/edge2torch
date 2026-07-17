@@ -15,6 +15,15 @@ with optional feature- and node-level attribution.
 `edge2torch` is an edge-list-to-PyTorch compiler for sparse neural network
 architectures with named nodes.
 
+An **edge list** is a table of directed connections: each row links a
+`source` node to a `target` node. For example:
+
+| source | target |
+|--------|--------|
+| feature_a | hidden_1 |
+| feature_b | hidden_1 |
+| hidden_1 | output |
+
 Define a model architecture as an edge list, compile it into a minimally
 opinionated PyTorch model, train it with standard PyTorch tools, and optionally
 map model behavior back to the named nodes and features that defined the
@@ -30,11 +39,8 @@ neural network. Feedforward models and topology-preserving state-update models
 can both be represented by edge lists when their architecture is defined through
 directed connections between named nodes.
 
-A major application area is knowledge-primed neural networks (KPNNs), where
-prior knowledge defines the model structure. In biology, for example, edge lists
-may connect genes, transcription factors, pathways, kinases, or other biological
-entities. The same approach can also apply in domains such as chemistry or other
-fields with graph-structured prior knowledge.
+A major application area is interpretable neural networks shaped by prior
+knowledge of domain networks, for example in biology and chemistry.
 
 `edge2torch` deliberately leaves training loops, losses, optimizers,
 task-specific heads, and advanced customization to standard PyTorch.
@@ -114,10 +120,12 @@ If you are new to the package, start with:
 
 - [**Installation**](installation.md) for package setup and optional extras
 - [**Getting started**](getting-started.ipynb) for a full end-to-end example
-- [**State-update example**](state-update-example.ipynb) for cyclic graphs
-- [**Feedforward skip edges**](feedforward-skip-edges.ipynb) for how non-adjacent feedforward edges are handled
+- [**State-update example**](state-update-example.ipynb) for an additional
+  cyclic-graph walkthrough
 - [**Backends**](backends.md) for backend semantics and current support
-- [**Scope and limitations**](scope.md) for what each backend does and does not cover
+- [**Feedforward skip edges**](feedforward-skip-edges.ipynb) and
+  [**Edge weights and constraints**](edge-weight-metadata.ipynb) for
+  feature-focused reference notebooks
 - [**API reference**](api.md) for function-level documentation
 
 ## License

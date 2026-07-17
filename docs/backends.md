@@ -191,6 +191,48 @@ Use `state_update` when:
 | `feedforward` | yes | no | yes | sparse layer-wise computation |
 | `state_update` | no | yes | no | fixed-step masked state updates |
 
+## Supported and not supported
+
+`edge2torch` is deliberately thin: training, losses, and most modeling choices
+stay in ordinary PyTorch. The lists below describe **technical fit**, not how
+easy a model is to train.
+
+### Well supported
+
+- Edgelists with `source` / `target` (optional `initial_weight`, `constraint`)
+- Automatic input and output node inference
+- Masked linear connectivity and optional node biases
+- One static feature vector per sample
+- Alignment, post-core `customize_model()`, and standard PyTorch training
+- Feature and node attribution via Captum when the `[interpret]` extra is
+  installed
+
+### Supported with extra work
+
+- Nonlinearities **inside** the compiled forward path (wrap or subclass the
+  compiled module)
+- Custom readouts beyond terminal output nodes
+- Multi-output node interpretation (extra Captum `attribute_kwargs`)
+- Steady-state / fixed-point style behavior in user code around
+  `state_update`
+
+### Not supported
+
+- Graphs that change structure per sample at compile time
+- Edge features, attention, or heterogeneous node types as compile inputs
+- A native sequence / time axis in the input API
+- Learnable GNN primitives (GCN, GAT, GraphSAGE, and similar) inside the
+  compiler
+- Sparse-tensor acceleration (implementation uses masked dense layers)
+- Built-in trainers, dataloaders, or experiment managers
+
+Backend-specific hard limits:
+
+| Backend | Not for |
+|---|---|
+| `feedforward` | Cyclic graphs; directed graphs that cannot be layerized |
+| `state_update` | Temporal sequence models (LSTM/GRU-style inputs); different weights per unrolled step; gated recurrence or adaptive converge-until loops inside `compile_graph()` |
+
 ## Interpretation support
 
 Node and feature interpretation are available for all implemented backends.
@@ -251,6 +293,3 @@ Models returned by `customize_model()` support node interpretation when the
 wrapped compiled model remains accessible for interpretation-site lookup.
 Adding a custom output `head` can change output dimensionality and may require
 Captum `attribute_kwargs` such as `target` for multi-output graphs.
-
-See [Scope and limitations](scope.md) for what each backend is designed to
-cover.
