@@ -26,8 +26,7 @@ body:
       description: Which backend were you using?
       options:
         - feedforward
-        - recurrent
-        - graphnn
+        - state_update
         - not sure / not backend-specific
     validations:
       required: true

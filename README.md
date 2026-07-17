@@ -176,8 +176,7 @@ internals for inspection and debugging and may change across releases.
 `compile_graph()` currently supports:
 
 - `feedforward`
-- `recurrent`
-- `graphnn`
+- `state_update`
 
 Feature attribution is available through Captum-based methods on all backends.
 Node-level interpretation is also available on all backends through layer-level

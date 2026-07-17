@@ -14,7 +14,7 @@ When possible, include:
 - your Python and PyTorch versions;
 - a minimal edge list that reproduces the issue;
 - the full error message or traceback;
-- the backend you used: `feedforward`, `recurrent`, or `graphnn`.
+- the backend you used: `feedforward` or `state_update`.
 
 ## Request a feature
 

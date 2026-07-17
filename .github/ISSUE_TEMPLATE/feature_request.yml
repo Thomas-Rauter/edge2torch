@@ -36,8 +36,7 @@ body:
       options:
         - compile_graph
         - feedforward backend
-        - recurrent backend
-        - graphnn backend
+        - state_update backend
         - feature alignment
         - model customization
         - interpretation / attribution

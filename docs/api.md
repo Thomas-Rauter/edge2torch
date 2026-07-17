@@ -17,7 +17,7 @@ and may change across releases.
 For `target="nodes"`, `interpret_model()` returns one summary `pandas.DataFrame`
 by default. Use `level="sites"` to obtain per-site tables keyed by
 `layer_1`, `layer_2`, ... for feedforward models or `step_1`, `step_2`, ...
-for recurrent and graphnn models.
+for `state_update` models.
 
 ::: edge2torch.compile_graph
 

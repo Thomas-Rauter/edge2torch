@@ -4,7 +4,7 @@ This file is **AI-first documentation** for assistants working in this repositor
 or explaining the package to users. It is more detailed and operational than
 `README.md`. Human docs live at https://Thomas-Rauter.github.io/edge2torch/.
 
-**Current release:** `0.2.0` (see `pyproject.toml`, `CHANGELOG.md`).
+**Current release:** `0.3.0` (see `pyproject.toml`, `CHANGELOG.md`).
 
 ---
 
@@ -23,7 +23,7 @@ Captum.
    (one row = one edge). Optional columns `initial_weight` and `constraint` per
    edge.
 2. **Compile:** `compile_graph()` validates the graph, picks a **backend**
-   (`feedforward`, `recurrent`, or `graphnn`), and returns `(model, artifact)`.
+   (`feedforward` or `state_update`), and returns `(model, artifact)`.
 3. **Align data:** `align_features_to_input_nodes()` maps user DataFrames (or
    AnnData / tensors) to the tensor layout expected by `model`.
 4. **Customize (optional):** `customize_model()` wraps the compiled model with
@@ -47,8 +47,8 @@ Captum.
 
 - Not a full GNN library (no generic message-passing variants, edge features, or
   graph batching abstractions beyond fixed-step masked updates).
-- Not an LSTM/GRU/sequence-time-series toolkit. `steps` on recurrent/graphnn
-  backends are **internal state-update iterations per forward pass**, not
+- Not an LSTM/GRU/sequence-time-series toolkit. `steps` on `state_update`
+  is an **internal state-update iteration count per forward pass**, not
   timesteps in the input data.
 - Not a training framework (no built-in losses for steady state, spectral
   radius, knockouts, etc.).
@@ -97,12 +97,12 @@ are not public API unless documented otherwise.
 
 - `edgelist`: `pd.DataFrame` with required `source`, `target`. Optional
   `initial_weight`, `constraint` per row.
-- `backend`: `"feedforward"` | `"recurrent"` | `"graphnn"`.
+- `backend`: `"feedforward"` | `"state_update"`.
 - `bias`: If `True` (default), node-level biases in masked linear layers. Not
   graph edges.
-- `steps`: Only for `recurrent` and `graphnn`. Positive int; number of unrolled
-  state-update steps **per forward pass**. Passing `steps` to `feedforward` raises
-  `Edge2TorchError`.
+- `steps`: Only for `state_update`. Positive int; number of unrolled
+  state-update steps **per forward pass**. Passing `steps` to `feedforward`
+  raises `Edge2TorchError`.
 
 **Node inference (all backends):**
 
@@ -157,7 +157,7 @@ feature names). Methods: `IntegratedGradients`, `Saliency`, `DeepLift`, etc.
 | `nodes` | `"hidden"` | Columns = hidden nodes only |
 | `nodes` | `"non_input"` | Includes output nodes at final sites |
 | `nodes` | `"all"` | All visible graph nodes |
-| `site_aggregation` | `"max_abs"` | For recurrent/graphnn **summary** only: aggregate repeated node columns across steps (`max_abs`, `mean_abs`, `last`). Ignored for feedforward summary and for `level="sites"`. |
+| `site_aggregation` | `"max_abs"` | For `state_update` **summary** only: aggregate repeated node columns across steps (`max_abs`, `mean_abs`, `last`). Ignored for feedforward summary and for `level="sites"`. |
 
 **Returns:**
 
@@ -204,8 +204,7 @@ the graph is executed, not the input format.
 | Backend | Cycles | Layered | Pseudo nodes | Interpretation sites | `steps` |
 |---------|--------|---------|--------------|----------------------|---------|
 | `feedforward` | no | yes | yes (skip edges) | `layer_1`, `layer_2`, ... | N/A |
-| `recurrent` | yes | no | no | `step_1`, `step_2`, ... | required |
-| `graphnn` | yes | no | no | `step_1`, `step_2`, ... | required |
+| `state_update` | yes | no | no | `step_1`, `step_2`, ... | required |
 
 ### `feedforward`
 
@@ -215,23 +214,21 @@ the graph is executed, not the input format.
 - One `FeedforwardLayerBlock` per layer transition; masked linear between
   adjacent layers.
 
-### `recurrent` and `graphnn`
+### `state_update`
 
-Both currently share the same core implementation pattern (`StateUpdateStep` in
-`nn/step_block.py`):
+Uses `StateUpdateEdgeModel` with masked linear updates in `nn/step_block.py`:
 
 1. Initialize full node-state vector; copy inputs into input node indices.
 2. For each of `steps` iterations: apply **shared** masked linear on full
    state, then **re-inject** input feature values at input indices.
 3. Return values at output node indices.
 
+Access weights through `model.state_linear`.
+
 **Important:** This is graph-structured **iterative state refinement** from a
 **static input vector per sample**, not RNN-over-time. Conceptually similar to
 steady-state signaling models (e.g. LEMBAS) at the structural level, but without
 built-in mechanistic activations, convergence loops, or stability regularizers.
-
-`graphnn` is an extension-point name for future richer message passing; today it
-is intentionally close to `recurrent`.
 
 **Reachability rule:** Every node that can influence an output must be reachable
 from at least one input node.
@@ -259,7 +256,7 @@ from torch import nn
 import edge2torch as e2t
 
 edgelist = pd.DataFrame({...})
-model, artifact = e2t.compile_graph(edgelist, backend="recurrent", steps=2)
+model, artifact = e2t.compile_graph(edgelist, backend="state_update", steps=2)
 
 x_df = pd.DataFrame({...})  # columns = artifact.feature_names
 x = e2t.align_features_to_input_nodes(x_df, artifact)
@@ -283,20 +280,20 @@ sites = e2t.interpret_model(customized, artifact, x_df, target="nodes",
 1. **`align_features_to_input_nodes` returns a `Tensor`, not a DataFrame.**
    Do not call `.values` on the result.
 
-2. **`steps` is not for `feedforward`.** Use only with `recurrent` / `graphnn`.
+2. **`steps` is not for `feedforward`.** Use only with `state_update`.
 
 3. **`steps` is not dataset time dimension.** One row = one static feature
    vector; `steps` = internal unrolling count per forward.
 
-4. **Output must be reachable from informative inputs.** Example bug: graphnn
-   notebook initially connected `readout` only via a noise input — training and
-   node attribution failed silently (high loss, zero hidden attributions). Always
+4. **Output must be reachable from informative inputs.** Example bug: a cyclic
+   graph where the readout connects only via a noise input — training and node
+   attribution failed silently (high loss, zero hidden attributions). Always
    verify paths from signal inputs to outputs.
 
-5. **Recurrent example attribution:** `regulator_a` may get all importance and
-   `regulator_b` zero when only the `regulator_a` branch carries label signal
-   and only `regulator_a` connects to the output. Expected for the toy graph, not
-   a package bug.
+5. **State-update example attribution:** `regulator_a` may get all importance
+   and `regulator_b` zero when only the `regulator_a` branch carries label
+   signal and only `regulator_a` connects to the output. Expected for the toy
+   graph, not a package bug.
 
 6. **Multi-output graphs:** node/feature attribution may need
    `attribute_kwargs={"target": 0}` (or appropriate index).
@@ -338,8 +335,7 @@ tests/
 
 docs/
   getting-started.ipynb     # Main tutorial (feedforward)
-  recurrent-example.ipynb   # Cyclic recurrent backend
-  graphnn-example.ipynb     # Cyclic graphnn backend
+  state-update-example.ipynb  # Cyclic state_update backend
   feedforward-skip-edges.ipynb
   edge-weight-metadata.ipynb
   backends.md, api.md, ...
@@ -374,7 +370,7 @@ Install for development: `pip install -e ".[dev,docs]"` or `".[all,dev,docs]"`.
 
 - **423+ tests** (`pytest`), ruff lint/format, mypy on `src/`.
 - CI (`.github/workflows/ci.yml`): matrix Python 3.10–3.12; docs job executes
-  all five notebooks then `mkdocs build --strict`.
+  all four notebooks then `mkdocs build --strict`.
 - Release tag `v*`: PyPI publish (`release.yml`), versioned docs via Mike
   (`docs.yml`).
 
@@ -395,8 +391,7 @@ mkdocs build --strict
 | `README.md` | Overview, install, minimal example |
 | `CONTEXT.md` | This file — dense AI context |
 | `docs/getting-started.ipynb` | Full feedforward workflow |
-| `docs/recurrent-example.ipynb` | Cyclic recurrent + node interpret |
-| `docs/graphnn-example.ipynb` | Cyclic graphnn + node interpret |
+| `docs/state-update-example.ipynb` | Cyclic state_update + node interpret |
 | `docs/backends.md` | Backend semantics and interpretation |
 | `docs/api.md` | API entry + mkdocstrings |
 | `CHANGELOG.md` | Version history; **0.2.0 breaking node API** |
@@ -408,7 +403,7 @@ mkdocs build --strict
 - `interpret_model(..., target="nodes")` now returns a **summary DataFrame** by
   default instead of a dict of per-layer tables.
 - Per-site node tables: pass `level="sites"`.
-- Recurrent/graphnn: state updates unrolled into `step_*` modules for
+- `state_update`: state updates unrolled into `step_*` modules for
   interpretation; use `site_aggregation` on summary.
 
 ---
@@ -422,7 +417,7 @@ mkdocs build --strict
 - Do not add training loops, losses, or domain-specific biology inside the
   compiler unless explicitly requested.
 
-**When user asks about recurrent / signaling / LEMBAS-style models:**
+**When user asks about cyclic graphs / signaling / LEMBAS-style models:**
 
 - Affirm structural alignment (sparse prior graph, cycles, static ligand-like
   inputs, iterative internal updates).
@@ -434,7 +429,7 @@ mkdocs build --strict
 - Check graph topology (path from informative inputs to outputs).
 - Check training actually reduced loss.
 - Check `nodes` filter and `level`.
-- For recurrent/graphnn, inspect `level="sites"`.
+- For `state_update`, inspect `level="sites"`.
 
 **When editing notebooks for mkdocs:**
 

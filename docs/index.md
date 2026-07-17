@@ -26,8 +26,8 @@ It is domain-agnostic: any setting where a neural architecture can be
 represented as named edges can use the same graph-to-model abstraction.
 
 Here, "graph" means the architecture specification, not necessarily a graph
-neural network. Feedforward models, recurrent models, and graph neural networks
-can all be represented by edge lists when their architecture is defined through
+neural network. Feedforward models and topology-preserving state-update models
+can both be represented by edge lists when their architecture is defined through
 directed connections between named nodes.
 
 A major application area is knowledge-primed neural networks (KPNNs), where
@@ -95,8 +95,7 @@ This keeps the package small in scope:
 `compile_graph()` currently supports:
 
 - `feedforward`
-- `recurrent`
-- `graphnn`
+- `state_update`
 
 These backends share the same edge-list input format but differ in how the graph
 structure is translated into neural-network computation.
@@ -113,8 +112,7 @@ If you are new to the package, start with:
 
 - [**Installation**](installation.md) for package setup and optional extras
 - [**Getting started**](getting-started.ipynb) for a full end-to-end example
-- [**Recurrent example**](recurrent-example.ipynb) for cyclic graphs with the recurrent backend
-- [**GraphNN example**](graphnn-example.ipynb) for cyclic graphs with the graphnn backend
+- [**State-update example**](state-update-example.ipynb) for cyclic graphs
 - [**Feedforward skip edges**](feedforward-skip-edges.ipynb) for how non-adjacent feedforward edges are handled
 - [**Backends**](backends.md) for backend semantics and current support
 - [**Scope and limitations**](scope.md) for what each backend does and does not cover

@@ -70,14 +70,7 @@ jobs:
             --execute \
             --inplace \
             --ExecutePreprocessor.kernel_name=python3 \
-            docs/recurrent-example.ipynb
-
-          python -m jupyter nbconvert \
-            --to notebook \
-            --execute \
-            --inplace \
-            --ExecutePreprocessor.kernel_name=python3 \
-            docs/graphnn-example.ipynb
+            docs/state-update-example.ipynb
 
       - name: Validate docs build
         run: |
