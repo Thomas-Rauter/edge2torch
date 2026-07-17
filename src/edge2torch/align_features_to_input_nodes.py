@@ -1,3 +1,5 @@
+from typing import cast
+
 import pandas as pd
 import torch
 
@@ -120,7 +122,7 @@ def align_features_to_input_nodes(
 
     # Dataframe logic
     if isinstance(data, pd.DataFrame):
-        ordered = data.loc[:, feature_names]
+        ordered = cast(pd.DataFrame, data[feature_names])
 
         return torch.tensor(
             ordered.to_numpy(copy=True),

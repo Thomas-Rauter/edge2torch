@@ -17,6 +17,8 @@ representation. It should contain graph-format conversion logic, not
 public API validation, backend compilation, or model execution code.
 """
 
+from typing import cast
+
 import pandas as pd
 
 from .schema import EdgeGraph
@@ -47,7 +49,7 @@ def edgelist_to_graph(edgelist: pd.DataFrame) -> EdgeGraph:
     if "constraint" in edgelist.columns:
         edge_columns.append("constraint")
 
-    edges = edgelist.loc[:, edge_columns].copy()
+    edges = cast(pd.DataFrame, edgelist[edge_columns].copy())
 
     edges["source"] = edges["source"].astype(str).str.strip()
     edges["target"] = edges["target"].astype(str).str.strip()

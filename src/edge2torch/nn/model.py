@@ -174,10 +174,13 @@ class EdgeModel(nn.Module):
         """
         Select the edges connecting one layer to the next.
         """
-        block_edges = expanded_edges[
-            expanded_edges["source"].isin(input_node_names)
-            & expanded_edges["target"].isin(output_node_names)
-        ].copy()
+        block_edges = cast(
+            pd.DataFrame,
+            expanded_edges[
+                expanded_edges["source"].isin(input_node_names)
+                & expanded_edges["target"].isin(output_node_names)
+            ].copy(),
+        )
 
         return block_edges.reset_index(drop=True)
 

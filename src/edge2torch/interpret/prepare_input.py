@@ -19,6 +19,7 @@ execution, or downstream result analysis.
 """
 
 from dataclasses import dataclass
+from typing import cast
 
 import pandas as pd
 import torch
@@ -70,7 +71,7 @@ def prepare_interpretation_input(
     feature_names = list(artifact.feature_names)
 
     if isinstance(data, pd.DataFrame):
-        ordered = data.loc[:, feature_names]
+        ordered = cast(pd.DataFrame, data[feature_names])
         inputs = torch.tensor(
             ordered.to_numpy(copy=True),
             dtype=torch.float32,

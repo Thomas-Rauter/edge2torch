@@ -50,6 +50,7 @@ dev = [
     "pytest-cov",
     "ruff",
     "mypy",
+    "pandas-stubs>=2.3.3,<2.4",
     "build",
     "captum>=0.7,<1",
     "anndata>=0.10,<1",

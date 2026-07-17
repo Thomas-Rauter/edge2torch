@@ -116,7 +116,7 @@ def _validate_source_target_values(edgelist: pd.DataFrame) -> None:
     """
     Validate source and target node values.
     """
-    edge_columns = edgelist.loc[:, ["source", "target"]]
+    edge_columns = edgelist[["source", "target"]]
 
     if edge_columns.isnull().any().any():
         raise Edge2TorchError(

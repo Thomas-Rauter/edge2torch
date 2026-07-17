@@ -29,6 +29,10 @@ jobs:
           pip install -e .[dev]
           pip install pytest-cov
 
+      - name: Verify pandas type stubs for mypy
+        run: |
+          python -m pip show pandas-stubs
+
       - name: Run Ruff lint
         run: |
           ruff check .
