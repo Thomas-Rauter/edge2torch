@@ -101,8 +101,7 @@ are not public API unless documented otherwise.
 - `bias`: If `True` (default), node-level biases in masked linear layers. Not
   graph edges.
 - `steps`: Only for `state_update`. Positive int; number of unrolled
-  state-update steps **per forward pass**. Passing `steps` to `feedforward`
-  raises `Edge2TorchError`.
+  state-update steps **per forward pass**. Ignored for `feedforward`.
 
 **Node inference (all backends):**
 
@@ -280,7 +279,7 @@ sites = e2t.interpret_model(customized, artifact, x_df, target="nodes",
 1. **`align_features_to_input_nodes` returns a `Tensor`, not a DataFrame.**
    Do not call `.values` on the result.
 
-2. **`steps` is not for `feedforward`.** Use only with `state_update`.
+2. **`steps` is ignored for `feedforward`.** It only affects `state_update`.
 
 3. **`steps` is not dataset time dimension.** One row = one static feature
    vector; `steps` = internal unrolling count per forward.

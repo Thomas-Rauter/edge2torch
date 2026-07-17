@@ -51,6 +51,7 @@ def validate_compile_graph_inputs(
         Whether compiled masked linear layers should include bias terms.
     steps
         Number of state-update steps for the ``state_update`` backend.
+        Ignored when ``backend`` is ``feedforward``.
 
     Raises
     ------
@@ -224,17 +225,17 @@ def _validate_bias(bias: Any) -> None:
 def _validate_steps(steps: Any, backend: Any) -> None:
     """
     Validate state-update step count.
+
+    ``steps`` is ignored for the feedforward backend.
     """
+    if backend == "feedforward":
+        return
+
     if isinstance(steps, bool) or not isinstance(steps, int):
         raise Edge2TorchError("'steps' must be an integer.")
 
     if steps <= 0:
         raise Edge2TorchError("'steps' must be a positive integer.")
-
-    if backend == "feedforward" and steps != 3:
-        raise Edge2TorchError(
-            "'steps' is only used by the 'state_update' backend."
-        )
 
 
 # Level 3 functions (functions called by level 2 functions) --------------------

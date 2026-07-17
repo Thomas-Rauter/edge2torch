@@ -15,10 +15,10 @@ def interpret_model(
     method: str = "IntegratedGradients",
     constructor_kwargs: dict[str, Any] | None = None,
     attribute_kwargs: dict[str, Any] | None = None,
-    quiet: bool = False,
     level: str = "summary",
     nodes: str = "hidden",
     site_aggregation: str = "max_abs",
+    quiet: bool = False,
 ) -> Union[pd.DataFrame, dict[str, pd.DataFrame]]:
     """
     Interpret a model compiled by edge2torch using a Captum attribution
@@ -58,9 +58,6 @@ def interpret_model(
         unchanged and are not interpreted, validated, or modified by
         edge2torch. Refer to the Captum documentation for the selected method
         to determine which attribution arguments are supported.
-    quiet : bool, default=False
-        If False, emit informational notes. If True, suppress informational
-        notes.
     level : str, default="summary"
         Detail level for ``target="nodes"``. Use ``"summary"`` to return one
         node-importance table per sample. Use ``"sites"`` to return one table
@@ -73,6 +70,9 @@ def interpret_model(
         Aggregation rule used when ``target="nodes"`` and ``level="summary"``
         for state_update backends. Ignored for feedforward summary
         results and for ``level="sites"``.
+    quiet : bool, default=False
+        If False, emit informational notes. If True, suppress informational
+        notes.
 
     Returns
     -------

@@ -308,7 +308,7 @@ def test_validate_compile_graph_inputs_rejects_non_integer_steps():
         )
 
 
-def test_validate_compile_graph_inputs_rejects_feedforward_steps():
+def test_validate_compile_graph_inputs_ignores_feedforward_steps():
     edgelist = pd.DataFrame(
         {
             "source": ["gene_1"],
@@ -316,14 +316,10 @@ def test_validate_compile_graph_inputs_rejects_feedforward_steps():
         }
     )
 
-    with pytest.raises(
-        Edge2TorchError,
-        match="'steps' is only used by the 'state_update'",
-    ):
-        validate_compile_graph_inputs(
-            edgelist=edgelist,
-            backend="feedforward",
-            quiet=False,
-            bias=True,
-            steps=5,
-        )
+    validate_compile_graph_inputs(
+        edgelist=edgelist,
+        backend="feedforward",
+        quiet=False,
+        bias=True,
+        steps=5,
+    )

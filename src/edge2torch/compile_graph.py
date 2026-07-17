@@ -45,8 +45,8 @@ def compile_graph(
 
     The ``state_update`` backend applies a fixed number of graph state-update
     steps during each forward pass. The ``steps`` argument controls this update
-    count. It is not a training epoch count and does not represent a sequence
-    length in the input data.
+    count. It is ignored by the ``feedforward`` backend. It is not a training
+    epoch count and does not represent a sequence length in the input data.
 
     Parameters
     ----------
@@ -92,9 +92,7 @@ def compile_graph(
     steps : int, default=3
         Number of state-update steps for the ``state_update`` backend. Larger
         values allow information to propagate through longer graph paths and
-        revisit cycles more times. This parameter is not used by the
-        ``feedforward`` backend; non-default values with
-        ``backend="feedforward"`` are rejected.
+        revisit cycles more times. Ignored by the ``feedforward`` backend.
     quiet : bool, default=False
         If False, emit informational notes during validation. If True,
         suppress informational notes.

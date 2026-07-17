@@ -66,7 +66,7 @@ def test_steps_changes_state_update_forward_behavior():
     assert not torch.allclose(output_one_step, output_three_steps)
 
 
-def test_compile_graph_allows_default_steps_for_feedforward():
+def test_compile_graph_ignores_steps_for_feedforward():
     edgelist = pd.DataFrame(
         {
             "source": ["feature_a", "hidden"],
@@ -78,30 +78,10 @@ def test_compile_graph_allows_default_steps_for_feedforward():
         edgelist=edgelist,
         backend="feedforward",
         quiet=True,
-        steps=3,
+        steps=5,
     )
 
     assert model.backend == "feedforward"
-
-
-def test_compile_graph_rejects_non_default_steps_for_feedforward():
-    edgelist = pd.DataFrame(
-        {
-            "source": ["feature_a", "hidden"],
-            "target": ["hidden", "prediction"],
-        }
-    )
-
-    with pytest.raises(
-        Edge2TorchError,
-        match="'steps' is only used by the 'state_update'",
-    ):
-        compile_graph(
-            edgelist=edgelist,
-            backend="feedforward",
-            quiet=True,
-            steps=5,
-        )
 
 
 @pytest.mark.parametrize("steps", [0, -1])
