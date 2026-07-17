@@ -42,8 +42,6 @@ def test_compile_graph_bias_true_keeps_bias_parameters(backend: str):
     if backend == "feedforward":
         for block in model.blocks:
             assert block.linear.bias is not None
-    elif backend == "state_update":
-        assert model.state_linear.bias is not None
     else:
         assert model.state_linear.bias is not None
 
@@ -63,8 +61,6 @@ def test_compile_graph_bias_false_removes_bias_parameters(backend: str):
     if backend == "feedforward":
         for block in model.blocks:
             assert block.linear.bias is None
-    elif backend == "state_update":
-        assert model.state_linear.bias is None
     else:
         assert model.state_linear.bias is None
 
@@ -121,9 +117,6 @@ def test_bias_false_works_with_edge_metadata(backend: str):
         for block in model.blocks:
             assert isinstance(block.linear, ConstrainedMaskedLinear)
             assert block.linear.bias is None
-    elif backend == "state_update":
-        assert isinstance(model.state_linear, ConstrainedMaskedLinear)
-        assert model.state_linear.bias is None
     else:
         assert isinstance(model.state_linear, ConstrainedMaskedLinear)
         assert model.state_linear.bias is None
