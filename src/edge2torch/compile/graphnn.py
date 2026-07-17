@@ -4,23 +4,23 @@ GraphNN backend compilation.
 Why this file exists
 --------------------
 This file isolates the logic for compiling a validated graph into the
-graphnn backend. Keeping this path separate makes the graphnn-specific
-compilation semantics explicit and allows the backend to evolve without
+graphnn backend. Keeping this path separate makes the graphnn-labeled
+compilation wiring explicit and allows the backend name to evolve without
 adding complexity to the general compiler dispatch.
 
 Role in the package
 -------------------
 This is an internal backend-compilation module. It takes a graph,
-derives the graphnn execution plan, builds the corresponding PyTorch
-model, and packages the result together with its artifact. It should
-contain graphnn-specific compilation logic, not public API handling or
-generic backend dispatch.
+derives the shared state-update execution plan, builds the corresponding
+PyTorch model, and packages the result together with its artifact. It
+should contain graphnn-labeled compilation wiring, not public API
+handling or generic backend dispatch.
 """
 
 from ..graph.schema import EdgeGraph
 from ..nn.model import EdgeGraphNNModel
 from .artifact import CompileArtifact
-from .execution_plan import build_graphnn_execution_plan
+from .execution_plan import build_state_update_execution_plan
 from .interpretation_metadata import (
     build_state_update_interpretation_sites,
     compute_hidden_nodes,
@@ -33,7 +33,7 @@ def compile_graphnn(
     steps: int = 3,
 ) -> tuple[EdgeGraphNNModel, CompileArtifact]:
     """
-    Compile a KPNN graph into a graph neural network PyTorch model.
+    Compile a KPNN graph into a graphnn PyTorch model.
 
     Parameters
     ----------
@@ -42,30 +42,29 @@ def compile_graphnn(
     bias
         Whether compiled masked linear layers include bias terms. If True,
         each target node has a learned node-level offset in addition to its
-        graph-defined weighted inputs. If False, node updates are computed only
-        from graph-defined weighted inputs. Disabling bias gives the graph
-        structure stricter control over node activations.
+        graph-defined weighted inputs. If False, node updates are computed
+        only from graph-defined weighted inputs. Disabling bias gives the
+        graph structure stricter control over node activations.
     steps
-        Number of recurrent/message-passing update steps for the ``recurrent``
-        and ``graphnn`` backends.
+        Number of recurrent/message-passing update steps for the
+        ``recurrent`` and ``graphnn`` backends.
 
     Returns
     -------
     tuple
         A tuple of (model, artifact).
     """
-    # Decides the structure
-    execution_plan = build_graphnn_execution_plan(graph)
+    execution_plan = build_state_update_execution_plan(
+        graph,
+        backend_label="GraphNN",
+    )
 
-    # Builds the actual PyTorch modules from that structure.
     model = EdgeGraphNNModel(
         execution_plan=execution_plan,
         steps=steps,
         bias=bias,
     )
 
-    # Stores the metadata needed later for alignment, interpretation, and
-    # inspection.
     input_nodes = list(execution_plan.input_node_names)
     output_nodes = list(execution_plan.output_node_names)
 

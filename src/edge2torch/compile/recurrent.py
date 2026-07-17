@@ -11,16 +11,16 @@ path easier to evolve independently.
 Role in the package
 -------------------
 This is an internal backend-compilation module. It takes a graph,
-derives the recurrent execution plan, builds the corresponding PyTorch
-model, and packages the result together with its artifact. It should
-contain recurrent-specific compilation logic, not public API handling or
-generic backend dispatch.
+derives the shared state-update execution plan, builds the corresponding
+PyTorch model, and packages the result together with its artifact. It
+should contain recurrent-labeled compilation wiring, not public API
+handling or generic backend dispatch.
 """
 
 from ..graph.schema import EdgeGraph
 from ..nn.model import RecurrentEdgeModel
 from .artifact import CompileArtifact
-from .execution_plan import build_recurrent_execution_plan
+from .execution_plan import build_state_update_execution_plan
 from .interpretation_metadata import (
     build_state_update_interpretation_sites,
     compute_hidden_nodes,
@@ -42,30 +42,29 @@ def compile_recurrent(
     bias
         Whether compiled masked linear layers include bias terms. If True,
         each target node has a learned node-level offset in addition to its
-        graph-defined weighted inputs. If False, node updates are computed only
-        from graph-defined weighted inputs. Disabling bias gives the graph
-        structure stricter control over node activations.
+        graph-defined weighted inputs. If False, node updates are computed
+        only from graph-defined weighted inputs. Disabling bias gives the
+        graph structure stricter control over node activations.
     steps
-        Number of recurrent/message-passing update steps for the ``recurrent``
-        and ``graphnn`` backends.
+        Number of recurrent/message-passing update steps for the
+        ``recurrent`` and ``graphnn`` backends.
 
     Returns
     -------
     tuple
         A tuple of (model, artifact).
     """
-    # Decides the structure
-    execution_plan = build_recurrent_execution_plan(graph)
+    execution_plan = build_state_update_execution_plan(
+        graph,
+        backend_label="Recurrent",
+    )
 
-    # Builds the actual PyTorch modules from that structure.
     model = RecurrentEdgeModel(
         execution_plan=execution_plan,
         steps=steps,
         bias=bias,
     )
 
-    # Stores the metadata needed later for alignment, interpretation, and
-    # inspection.
     input_nodes = list(execution_plan.input_node_names)
     output_nodes = list(execution_plan.output_node_names)
 

@@ -263,16 +263,20 @@ def build_feedforward_execution_plan(
 
 
 @dataclass
-class RecurrentExecutionPlan:
+class StateUpdateExecutionPlan:
     """
-    Execution plan for a recurrent edge2torch model.
+    Execution plan for topology-preserving state-update models.
+
+    Used by the recurrent and graphnn backends, which currently share the
+    same non-layerized execution structure.
 
     Attributes
     ----------
     original_edges : pd.DataFrame
-        Normalized edge table used for recurrent compilation. Always contains
-        ``source`` and ``target`` columns. May also contain optional edge-level
-        metadata columns such as ``initial_weight`` and ``constraint``.
+        Normalized edge table used for state-update compilation. Always
+        contains ``source`` and ``target`` columns. May also contain optional
+        edge-level metadata columns such as ``initial_weight`` and
+        ``constraint``.
     node_names : list[str]
         Names of all graph nodes in model state order.
     input_node_names : list[str]
@@ -287,48 +291,58 @@ class RecurrentExecutionPlan:
     output_node_names: list[str]
 
 
-def build_recurrent_execution_plan(
+# Compatibility aliases for the shared state-update plan type.
+RecurrentExecutionPlan = StateUpdateExecutionPlan
+GraphNNExecutionPlan = StateUpdateExecutionPlan
+
+
+def build_state_update_execution_plan(
     graph: EdgeGraph,
-) -> RecurrentExecutionPlan:
+    *,
+    backend_label: str = "State-update",
+) -> StateUpdateExecutionPlan:
     """
-    Build a recurrent execution plan from an edge2torch graph.
+    Build a state-update execution plan from an edge2torch graph.
 
-    In the recurrent backend, the graph is kept in its original form rather
-    than expanded into adjacent feedforward layers. Cycles are allowed, but the
-    graph must expose at least one input node and one output node.
+    The graph is kept in its original form rather than expanded into
+    adjacent feedforward layers. Cycles are allowed, but the graph must
+    expose at least one input node and one output node.
 
-    Edge-level metadata stored in ``graph.edges``, such as ``initial_weight``
-    and ``constraint``, is preserved in ``original_edges`` and consumed later
-    by the recurrent model constructor.
+    Edge-level metadata stored in ``graph.edges``, such as
+    ``initial_weight`` and ``constraint``, is preserved in
+    ``original_edges`` and consumed later by the model constructor.
 
     Parameters
     ----------
     graph
         Internal edge2torch graph object.
+    backend_label
+        Label used in validation error messages (for example
+        ``"Recurrent"`` or ``"GraphNN"``).
 
     Returns
     -------
-    RecurrentExecutionPlan
-        Execution plan for recurrent compilation.
+    StateUpdateExecutionPlan
+        Execution plan for topology-preserving state-update compilation.
 
     Raises
     ------
     Edge2TorchError
-        If the graph is empty or structurally invalid for recurrent
+        If the graph is empty or structurally invalid for state-update
         compilation.
     """
     original_edges = graph.edges.copy()
 
     if original_edges.empty:
         raise Edge2TorchError(
-            "Recurrent compilation requires at least one edge."
+            f"{backend_label} compilation requires at least one edge."
         )
 
     node_names = list(graph.nodes)
 
     if not node_names:
         raise Edge2TorchError(
-            "Recurrent compilation requires at least one node."
+            f"{backend_label} compilation requires at least one node."
         )
 
     children: dict[str, list[str]] = {node: [] for node in node_names}
@@ -340,12 +354,14 @@ def build_recurrent_execution_plan(
 
         if source not in children:
             raise Edge2TorchError(
-                f"Unknown source node '{source}' in recurrent graph."
+                f"Unknown source node '{source}' in "
+                f"{backend_label.lower()} graph."
             )
 
         if target not in parents:
             raise Edge2TorchError(
-                f"Unknown target node '{target}' in recurrent graph."
+                f"Unknown target node '{target}' in "
+                f"{backend_label.lower()} graph."
             )
 
         children[source].append(target)
@@ -361,16 +377,16 @@ def build_recurrent_execution_plan(
 
     if not input_node_names:
         raise Edge2TorchError(
-            "Recurrent compilation requires at least one input node. "
-            "Cycles are allowed, but the graph must include at least one "
-            "node with no incoming edges."
+            f"{backend_label} compilation requires at least one "
+            "input node. Cycles are allowed, but the graph must "
+            "include at least one node with no incoming edges."
         )
 
     if not output_node_names:
         raise Edge2TorchError(
-            "Recurrent compilation requires at least one output node. "
-            "Cycles are allowed, but the graph must include at least one "
-            "node with no outgoing edges."
+            f"{backend_label} compilation requires at least one "
+            "output node. Cycles are allowed, but the graph must "
+            "include at least one node with no outgoing edges."
         )
 
     _validate_outputs_reachable_from_inputs(
@@ -378,10 +394,10 @@ def build_recurrent_execution_plan(
         parents=parents,
         input_node_names=input_node_names,
         output_node_names=output_node_names,
-        backend_name="Recurrent",
+        backend_name=backend_label,
     )
 
-    return RecurrentExecutionPlan(
+    return StateUpdateExecutionPlan(
         original_edges=original_edges,
         node_names=sorted(node_names),
         input_node_names=input_node_names,
@@ -389,108 +405,33 @@ def build_recurrent_execution_plan(
     )
 
 
-@dataclass
-class GraphNNExecutionPlan:
+def build_recurrent_execution_plan(
+    graph: EdgeGraph,
+) -> StateUpdateExecutionPlan:
     """
-    Execution plan for a graph neural network KPNN model.
-    """
+    Build a recurrent execution plan from an edge2torch graph.
 
-    original_edges: pd.DataFrame
-    node_names: list[str]
-    input_node_names: list[str]
-    output_node_names: list[str]
+    Thin wrapper around ``build_state_update_execution_plan`` that keeps
+    recurrent-specific validation wording.
+    """
+    return build_state_update_execution_plan(
+        graph,
+        backend_label="Recurrent",
+    )
 
 
 def build_graphnn_execution_plan(
     graph: EdgeGraph,
-) -> GraphNNExecutionPlan:
+) -> StateUpdateExecutionPlan:
     """
-    Build a graph neural network execution plan from a KPNN graph.
+    Build a graphnn execution plan from an edge2torch graph.
 
-    In the graphnn backend, the graph is kept in its original form rather
-    than expanded into feedforward layers. Cycles are allowed.
-
-    Parameters
-    ----------
-    graph
-        Internal KPNN graph object.
-
-    Returns
-    -------
-    GraphNNExecutionPlan
-        Execution plan for graph neural network compilation.
-
-    Raises
-    ------
-    Edge2TorchError
-        If the graph is empty or structurally invalid for graphnn
-        compilation.
+    Thin wrapper around ``build_state_update_execution_plan`` that keeps
+    graphnn-specific validation wording.
     """
-    original_edges = graph.edges.copy()
-
-    if original_edges.empty:
-        raise Edge2TorchError("GraphNN compilation requires at least one edge.")
-
-    node_names = list(graph.nodes)
-
-    if not node_names:
-        raise Edge2TorchError("GraphNN compilation requires at least one node.")
-
-    children: dict[str, list[str]] = {node: [] for node in node_names}
-    parents: dict[str, list[str]] = {node: [] for node in node_names}
-
-    for row in original_edges.itertuples(index=False):
-        source = str(row.source)
-        target = str(row.target)
-
-        if source not in children:
-            raise Edge2TorchError(
-                f"Unknown source node '{source}' in graphnn graph."
-            )
-
-        if target not in parents:
-            raise Edge2TorchError(
-                f"Unknown target node '{target}' in graphnn graph."
-            )
-
-        children[source].append(target)
-        parents[target].append(source)
-
-    input_node_names = sorted(
-        node for node in node_names if len(parents[node]) == 0
-    )
-
-    output_node_names = sorted(
-        node for node in node_names if len(children[node]) == 0
-    )
-
-    if not input_node_names:
-        raise Edge2TorchError(
-            "GraphNN compilation requires at least one input node. "
-            "Cycles are allowed, but the graph must include at least one "
-            "node with no incoming edges."
-        )
-
-    if not output_node_names:
-        raise Edge2TorchError(
-            "GraphNN compilation requires at least one output node. "
-            "Cycles are allowed, but the graph must include at least one "
-            "node with no outgoing edges."
-        )
-
-    _validate_outputs_reachable_from_inputs(
-        children=children,
-        parents=parents,
-        input_node_names=input_node_names,
-        output_node_names=output_node_names,
-        backend_name="GraphNN",
-    )
-
-    return GraphNNExecutionPlan(
-        original_edges=original_edges,
-        node_names=sorted(node_names),
-        input_node_names=input_node_names,
-        output_node_names=output_node_names,
+    return build_state_update_execution_plan(
+        graph,
+        backend_label="GraphNN",
     )
 
 

@@ -12,11 +12,10 @@ public API orchestration.
 Role in the package
 -------------------
 This is an internal neural-network implementation module. It defines the
-compiled model classes for the feedforward, recurrent, and graphnn
-backends, along with the backend-specific runtime behavior they need. It
-should contain model execution logic and backend-specific model
-structure, not public API validation, graph conversion, or compiler
-dispatch.
+compiled model classes for the feedforward backend and the shared
+state-update core used by the recurrent and graphnn backends. It should
+contain model execution logic and backend-specific model structure, not
+public API validation, graph conversion, or compiler dispatch.
 """
 
 from typing import cast
@@ -27,8 +26,7 @@ from torch import nn
 
 from ..compile.execution_plan import (
     FeedforwardExecutionPlan,
-    GraphNNExecutionPlan,
-    RecurrentExecutionPlan,
+    StateUpdateExecutionPlan,
 )
 from ..utils.errors import Edge2TorchError
 from .blocks import FeedforwardLayerBlock
@@ -36,6 +34,7 @@ from .interpretation_sites import (
     parse_feedforward_site_id,
     parse_state_update_site_id,
 )
+from .masked_linear import ConstrainedMaskedLinear, MaskedLinear
 from .step_block import (
     StateUpdateStep,
     build_node_state_linear,
@@ -183,153 +182,28 @@ class EdgeModel(nn.Module):
         return block_edges.reset_index(drop=True)
 
 
-class RecurrentEdgeModel(nn.Module):
+class StateUpdateEdgeModel(nn.Module):
     """
-    Recurrent KPNN model compiled from a recurrent execution plan.
+    Topology-preserving KPNN model with fixed-step state updates.
 
-    The model applies a masked recurrent update over all graph nodes for a
-    fixed number of steps. No activation functions or other architectural
-    choices are imposed here.
-
-    Input features are injected into nodes with zero in-degree. The model
-    returns the activations of nodes with zero out-degree.
-    """
-
-    def __init__(
-        self,
-        execution_plan: RecurrentExecutionPlan,
-        steps: int = 3,
-        bias: bool = True,
-    ) -> None:
-        super().__init__()
-
-        if isinstance(steps, bool) or not isinstance(steps, int):
-            raise Edge2TorchError("'steps' must be an integer.")
-
-        if steps <= 0:
-            raise Edge2TorchError("'steps' must be a positive integer.")
-
-        self.execution_plan = execution_plan
-        self.backend = "recurrent"
-        self.steps = steps
-        self.bias = bias
-
-        self.node_names = list(execution_plan.node_names)
-        self.input_node_names = list(execution_plan.input_node_names)
-        self.output_node_names = list(execution_plan.output_node_names)
-
-        if not self.input_node_names:
-            raise Edge2TorchError(
-                "RecurrentEdgeModel requires at least one input node."
-            )
-
-        if not self.output_node_names:
-            raise Edge2TorchError(
-                "RecurrentEdgeModel requires at least one output node."
-            )
-
-        self.node_index = {
-            node_name: idx for idx, node_name in enumerate(self.node_names)
-        }
-
-        self.input_indices = [
-            self.node_index[node_name] for node_name in self.input_node_names
-        ]
-        self.output_indices = [
-            self.node_index[node_name] for node_name in self.output_node_names
-        ]
-
-        self.recurrent = build_node_state_linear(
-            original_edges=execution_plan.original_edges,
-            node_names=self.node_names,
-            node_index=self.node_index,
-            bias=bias,
-        )
-        self.update_steps = build_state_update_steps(
-            linear=self.recurrent,
-            steps=steps,
-        )
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """
-        Run the recurrent KPNN for a fixed number of update steps.
-
-        Parameters
-        ----------
-        x : torch.Tensor
-            Input tensor with shape (n_examples, n_input_nodes).
-
-        Returns
-        -------
-        torch.Tensor
-            Output tensor with shape (n_examples, n_output_nodes).
-        """
-        if x.ndim != 2:
-            raise Edge2TorchError("Input tensor must be 2-dimensional.")
-
-        expected_n_features = len(self.input_indices)
-
-        if x.shape[1] != expected_n_features:
-            raise Edge2TorchError(
-                "Input tensor has the wrong number of features. "
-                f"Expected {expected_n_features}, got {x.shape[1]}."
-            )
-
-        batch_size = x.shape[0]
-        n_nodes = len(self.node_names)
-
-        state = torch.zeros(
-            batch_size,
-            n_nodes,
-            dtype=x.dtype,
-            device=x.device,
-        )
-
-        state[:, self.input_indices] = x
-
-        for step in self.update_steps:
-            state = step(state, x, self.input_indices)
-
-        return state[:, self.output_indices]
-
-    def _edge2torch_list_interpretation_site_ids(self) -> list[str]:
-        """
-        Return recurrent interpretation site identifiers.
-        """
-        return [f"step_{step_idx}" for step_idx in range(1, self.steps + 1)]
-
-    def _edge2torch_get_interpretation_site(
-        self,
-        site_id: str,
-    ) -> StateUpdateStep:
-        """
-        Return the state-update step module for an interpretation site.
-        """
-        step_idx = parse_state_update_site_id(site_id)
-
-        if step_idx >= len(self.update_steps):
-            raise Edge2TorchError(f"Unknown interpretation site '{site_id}'.")
-
-        return cast(StateUpdateStep, self.update_steps[step_idx])
-
-
-class EdgeGraphNNModel(nn.Module):
-    """
-    Graph neural network KPNN model compiled from a graphnn execution plan.
-
-    The model applies a masked message-passing style update over all graph
-    nodes for a fixed number of steps. No activation functions or other
+    The model applies a shared masked linear update over all graph nodes
+    for a fixed number of steps. No activation functions or other
     architectural choices are imposed here.
 
     Input features are injected into nodes with zero in-degree. The model
     returns the activations of nodes with zero out-degree.
+
+    The recurrent and graphnn backends currently share this
+    implementation and differ only by their ``backend`` label.
     """
 
     def __init__(
         self,
-        execution_plan: GraphNNExecutionPlan,
+        execution_plan: StateUpdateExecutionPlan,
         steps: int = 3,
         bias: bool = True,
+        backend: str = "state_update",
+        linear_module_name: str = "state_linear",
     ) -> None:
         super().__init__()
 
@@ -340,9 +214,10 @@ class EdgeGraphNNModel(nn.Module):
             raise Edge2TorchError("'steps' must be a positive integer.")
 
         self.execution_plan = execution_plan
-        self.backend = "graphnn"
+        self.backend = backend
         self.steps = steps
         self.bias = bias
+        self._linear_module_name = linear_module_name
 
         self.node_names = list(execution_plan.node_names)
         self.input_node_names = list(execution_plan.input_node_names)
@@ -350,12 +225,12 @@ class EdgeGraphNNModel(nn.Module):
 
         if not self.input_node_names:
             raise Edge2TorchError(
-                "EdgeGraphNNModel requires at least one input node."
+                "StateUpdateEdgeModel requires at least one input node."
             )
 
         if not self.output_node_names:
             raise Edge2TorchError(
-                "EdgeGraphNNModel requires at least one output node."
+                "StateUpdateEdgeModel requires at least one output node."
             )
 
         self.node_index = {
@@ -369,20 +244,30 @@ class EdgeGraphNNModel(nn.Module):
             self.node_index[node_name] for node_name in self.output_node_names
         ]
 
-        self.message_passing = build_node_state_linear(
+        linear = build_node_state_linear(
             original_edges=execution_plan.original_edges,
             node_names=self.node_names,
             node_index=self.node_index,
             bias=bias,
         )
+        self.add_module(linear_module_name, linear)
         self.update_steps = build_state_update_steps(
-            linear=self.message_passing,
+            linear=self.state_linear,
             steps=steps,
+        )
+
+    @property
+    def state_linear(self) -> MaskedLinear | ConstrainedMaskedLinear:
+        """Canonical access to the masked state-update linear."""
+        module = self._modules[self._linear_module_name]
+        return cast(
+            MaskedLinear | ConstrainedMaskedLinear,
+            module,
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Run the graphnn KPNN for a fixed number of update steps.
+        Run fixed-step state updates over the compiled graph.
 
         Parameters
         ----------
@@ -424,7 +309,7 @@ class EdgeGraphNNModel(nn.Module):
 
     def _edge2torch_list_interpretation_site_ids(self) -> list[str]:
         """
-        Return graphnn interpretation site identifiers.
+        Return state-update interpretation site identifiers.
         """
         return [f"step_{step_idx}" for step_idx in range(1, self.steps + 1)]
 
@@ -441,3 +326,47 @@ class EdgeGraphNNModel(nn.Module):
             raise Edge2TorchError(f"Unknown interpretation site '{site_id}'.")
 
         return cast(StateUpdateStep, self.update_steps[step_idx])
+
+
+class RecurrentEdgeModel(StateUpdateEdgeModel):
+    """
+    Recurrent KPNN model compiled from a state-update execution plan.
+
+    Thin backend-labeled wrapper around ``StateUpdateEdgeModel``.
+    """
+
+    def __init__(
+        self,
+        execution_plan: StateUpdateExecutionPlan,
+        steps: int = 3,
+        bias: bool = True,
+    ) -> None:
+        super().__init__(
+            execution_plan=execution_plan,
+            steps=steps,
+            bias=bias,
+            backend="recurrent",
+            linear_module_name="recurrent",
+        )
+
+
+class EdgeGraphNNModel(StateUpdateEdgeModel):
+    """
+    Graphnn KPNN model compiled from a state-update execution plan.
+
+    Thin backend-labeled wrapper around ``StateUpdateEdgeModel``.
+    """
+
+    def __init__(
+        self,
+        execution_plan: StateUpdateExecutionPlan,
+        steps: int = 3,
+        bias: bool = True,
+    ) -> None:
+        super().__init__(
+            execution_plan=execution_plan,
+            steps=steps,
+            bias=bias,
+            backend="graphnn",
+            linear_module_name="message_passing",
+        )

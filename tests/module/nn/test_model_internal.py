@@ -6,6 +6,7 @@ from edge2torch.nn.model import (
     EdgeGraphNNModel,
     EdgeModel,
     RecurrentEdgeModel,
+    StateUpdateEdgeModel,
 )
 from edge2torch.utils.errors import Edge2TorchError
 
@@ -173,6 +174,29 @@ def test_edge_model_select_block_edges_filters_edges_between_layers():
     )
 
     pd.testing.assert_frame_equal(result, expected)
+
+
+# StateUpdateEdgeModel ---------------------------------------------------------
+
+
+def test_state_update_edge_model_rejects_non_positive_steps():
+    with pytest.raises(Edge2TorchError, match="positive integer"):
+        StateUpdateEdgeModel(
+            execution_plan=_RecurrentPlan(),
+            steps=0,
+        )
+
+
+def test_backend_wrappers_delegate_to_state_update_core():
+    recurrent = RecurrentEdgeModel(execution_plan=_RecurrentPlan())
+    graphnn = EdgeGraphNNModel(execution_plan=_GraphNNPlan())
+
+    assert isinstance(recurrent, StateUpdateEdgeModel)
+    assert isinstance(graphnn, StateUpdateEdgeModel)
+    assert recurrent.backend == "recurrent"
+    assert graphnn.backend == "graphnn"
+    assert recurrent.recurrent is recurrent.state_linear
+    assert graphnn.message_passing is graphnn.state_linear
 
 
 # RecurrentEdgeModel -----------------------------------------------------------
