@@ -21,7 +21,7 @@ The currently implemented backends are:
 - `feedforward`
 - `state_update`
 
-All three backends share the same high-level interface:
+Both backends share the same high-level interface:
 
 - they are created with `compile_graph(...)`
 - they return a normal PyTorch `nn.Module`
@@ -235,8 +235,8 @@ Use the `nodes` parameter to filter which graph nodes appear in the result:
 | `"non_input"` | All nodes except inputs (includes outputs) |
 | `"all"` | All visible graph nodes |
 
-For `state_update` backends, summary results aggregate repeated node columns
-across steps. Control this with `site_aggregation`:
+For the `state_update` backend, summary results aggregate repeated node
+columns across steps. Control this with `site_aggregation`:
 
 | `site_aggregation` | Behavior |
 |---|---|

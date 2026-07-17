@@ -85,7 +85,11 @@ Exported from `edge2torch` (`src/edge2torch/__init__.py`):
 | `align_features_to_input_nodes` | Named data → `torch.Tensor` in input-node order |
 | `customize_model` | Optional activation / dropout / head wrapper |
 | `interpret_model` | Captum feature or node attribution |
+| `graph_topology` | Optional read-only topology view from an artifact |
+| `GraphTopology` | Immutable topology metadata dataclass |
 | `CompileArtifact` | Compilation metadata dataclass |
+| `CompileBackend` | `"feedforward"` \| `"state_update"` literal alias |
+| `COMPILE_BACKENDS` | Frozenset of supported backend names |
 | `__version__` | Package version string |
 
 `__all__` contains exactly these names. Internal modules under `src/edge2torch/`

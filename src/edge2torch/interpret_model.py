@@ -90,11 +90,9 @@ def interpret_model(
 
     Notes
     -----
-    Feature interpretation is supported for all implemented backends.
-
-    Node interpretation is supported for the ``feedforward`` and
-    ``state_update`` backends. Node interpretation methods use Captum layer
-    attribution classes.
+    Feature and node interpretation are supported for both backends
+    (``feedforward`` and ``state_update``). Node interpretation uses Captum
+    layer attribution classes at ``layer_*`` or ``step_*`` sites.
 
     For node-level interpretation, edge2torch must access the compiled
     model's internal interpretation sites. This works for raw models

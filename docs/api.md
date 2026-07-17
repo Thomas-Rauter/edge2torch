@@ -1,30 +1,52 @@
+---
+toc_depth: 2
+---
+
 # API reference
 
-The main public workflow consists of four functions:
+::: edge2torch.compile_graph.compile_graph
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+      show_root_toc_entry: true
+      heading_level: 2
 
-- `compile_graph()`
-- `align_features_to_input_nodes()`
-- `customize_model()`
-- `interpret_model()`
+::: edge2torch.compile.artifact.CompileArtifact
+    options:
+      show_root_heading: false
+      show_root_toc_entry: false
+      members: false
 
-`CompileArtifact` is also exported because it is returned by `compile_graph()`
-and accepted by helper functions. Its stable user-facing fields are `backend`
-and `feature_names`. Additional fields such as `graph`, `execution_plan`,
-`node_names_by_layer`, `input_nodes`, `output_nodes`, `hidden_nodes`, and
-`interpretation_sites` expose compilation internals for inspection and debugging
-and may change across releases.
+::: edge2torch.align_features_to_input_nodes.align_features_to_input_nodes
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+      show_root_toc_entry: true
+      heading_level: 2
 
-For `target="nodes"`, `interpret_model()` returns one summary `pandas.DataFrame`
-by default. Use `level="sites"` to obtain per-site tables keyed by
-`layer_1`, `layer_2`, ... for feedforward models or `step_1`, `step_2`, ...
-for `state_update` models.
+::: edge2torch.customize_model.customize_model
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+      show_root_toc_entry: true
+      heading_level: 2
 
-::: edge2torch.compile_graph
+::: edge2torch.interpret_model.interpret_model
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+      show_root_toc_entry: true
+      heading_level: 2
 
-::: edge2torch.CompileArtifact
+::: edge2torch.graph_topology.graph_topology
+    options:
+      show_root_heading: true
+      show_root_full_path: false
+      show_root_toc_entry: true
+      heading_level: 2
 
-::: edge2torch.align_features_to_input_nodes
-
-::: edge2torch.customize_model
-
-::: edge2torch.interpret_model
+::: edge2torch.graph_topology.GraphTopology
+    options:
+      show_root_heading: false
+      show_root_toc_entry: false
+      members: false

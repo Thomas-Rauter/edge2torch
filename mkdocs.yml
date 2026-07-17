@@ -23,17 +23,21 @@ extra:
 
 nav:
   - Home: index.md
-  - Installation: installation.md
-  - Getting started: getting-started.ipynb
-  - State-update example: state-update-example.ipynb
-  - Feedforward skip edges: feedforward-skip-edges.ipynb
-  - Edge-weight metadata: edge-weight-metadata.ipynb
-  - Backends: backends.md
-  - Scope and limitations: scope.md
-  - API reference: api.md
-  - Changelog: changelog.md
-  - Citing: citing.md
-  - Feedback: feedback.md
+  - Getting started:
+      - Installation: installation.md
+      - Tutorial: getting-started.ipynb
+  - Examples:
+      - State-update: state-update-example.ipynb
+      - Feedforward skip edges: feedforward-skip-edges.ipynb
+      - Edge-weight metadata: edge-weight-metadata.ipynb
+  - Reference:
+      - Backends: backends.md
+      - Scope and limitations: scope.md
+      - API reference: api.md
+  - Project:
+      - Changelog: changelog.md
+      - Citing: citing.md
+      - Feedback: feedback.md
 
 plugins:
   - search

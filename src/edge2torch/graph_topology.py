@@ -17,9 +17,26 @@ def graph_topology(artifact: CompileArtifact) -> GraphTopology:
     """
     Build a stable, read-only topology view from a compilation artifact.
 
-    The returned object exposes graph structure and interpretation-site
-    metadata without surfacing internal graph objects, execution plans, or
-    model internals.
+    This helper is optional in the main compile → align → customize →
+    interpret workflow. Use it when you want node roles and interpretation
+    sites without depending on internal artifact fields such as ``graph`` or
+    ``execution_plan``.
+
+    Parameters
+    ----------
+    artifact : CompileArtifact
+        Artifact returned by ``compile_graph()``.
+
+    Returns
+    -------
+    GraphTopology
+        Immutable topology metadata for the compiled graph.
+
+    Raises
+    ------
+    Edge2TorchError
+        If ``artifact`` is not a valid ``CompileArtifact`` or its topology
+        fields are malformed.
     """
     _validate_topology_artifact(artifact)
 
@@ -42,6 +59,31 @@ def graph_topology(artifact: CompileArtifact) -> GraphTopology:
 class GraphTopology:
     """
     Immutable topology metadata for a compiled graph.
+
+    Obtained via ``graph_topology(artifact)``. Values are copied into tuples
+    / a read-only mapping so later mutation of the artifact does not change
+    this view.
+
+    Attributes
+    ----------
+    backend : CompileBackend
+        Compilation backend (``"feedforward"`` or ``"state_update"``).
+    feature_names : tuple[str, ...]
+        Input feature names in the column order expected by the model.
+    input_nodes : tuple[str, ...]
+        Nodes with no incoming edges.
+    output_nodes : tuple[str, ...]
+        Nodes with no outgoing edges.
+    hidden_nodes : tuple[str, ...]
+        Visible non-input, non-output nodes.
+    interpretation_sites : Mapping[str, tuple[str, ...]]
+        Mapping from site id (``layer_*`` or ``step_*``) to node names.
+    site_ids : tuple[str, ...]
+        Interpretation site identifiers in numeric order.
+    is_feedforward : bool
+        Whether this topology came from the feedforward backend.
+    is_state_update : bool
+        Whether this topology came from the state_update backend.
     """
 
     backend: CompileBackend
@@ -53,6 +95,9 @@ class GraphTopology:
 
     @property
     def site_ids(self) -> tuple[str, ...]:
+        """
+        Interpretation site identifiers in numeric order.
+        """
         return tuple(
             sorted(
                 self.interpretation_sites.keys(),
@@ -62,10 +107,16 @@ class GraphTopology:
 
     @property
     def is_feedforward(self) -> bool:
+        """
+        Whether this topology came from the feedforward backend.
+        """
         return self.backend == "feedforward"
 
     @property
     def is_state_update(self) -> bool:
+        """
+        Whether this topology came from the state_update backend.
+        """
         return self.backend == "state_update"
 
 

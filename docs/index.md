@@ -66,7 +66,9 @@ The current public API is centered on:
 fields are `backend` and `feature_names`; other fields expose compilation
 internals for inspection and debugging and may change across releases.
 
-`__version__` is exported for version reporting.
+Optional helpers and types: `graph_topology()` / `GraphTopology` for a
+read-only topology view, plus `CompileBackend`, `COMPILE_BACKENDS`, and
+`__version__`.
 
 ## Package philosophy
 
