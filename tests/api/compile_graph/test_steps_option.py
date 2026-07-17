@@ -15,13 +15,10 @@ def _state_update_edgelist() -> pd.DataFrame:
     )
 
 
-@pytest.mark.parametrize("backend", ["state_update"])
-def test_compile_graph_sets_steps_for_state_update_backend(
-    backend: str,
-):
+def test_compile_graph_sets_steps_for_state_update_backend():
     model, _ = compile_graph(
         edgelist=_state_update_edgelist(),
-        backend=backend,
+        backend="state_update",
         quiet=True,
         steps=5,
     )
@@ -29,35 +26,29 @@ def test_compile_graph_sets_steps_for_state_update_backend(
     assert model.steps == 5
 
 
-@pytest.mark.parametrize("backend", ["state_update"])
-def test_compile_graph_default_steps_is_three(
-    backend: str,
-):
+def test_compile_graph_default_steps_is_three():
     model, _ = compile_graph(
         edgelist=_state_update_edgelist(),
-        backend=backend,
+        backend="state_update",
         quiet=True,
     )
 
     assert model.steps == 3
 
 
-@pytest.mark.parametrize("backend", ["state_update"])
-def test_steps_changes_state_update_forward_behavior(
-    backend: str,
-):
+def test_steps_changes_state_update_forward_behavior():
     torch.manual_seed(0)
 
     model_one_step, artifact = compile_graph(
         edgelist=_state_update_edgelist(),
-        backend=backend,
+        backend="state_update",
         quiet=True,
         bias=False,
         steps=1,
     )
     model_three_steps, _ = compile_graph(
         edgelist=_state_update_edgelist(),
-        backend=backend,
+        backend="state_update",
         quiet=True,
         bias=False,
         steps=3,

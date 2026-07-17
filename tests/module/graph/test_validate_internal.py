@@ -315,16 +315,7 @@ def test_validate_state_update_graph_rejects_graph_without_output_nodes():
     assert any("at least one output node" in error for error in report.errors)
 
 
-@pytest.mark.parametrize(
-    ("backend", "backend_name"),
-    [
-        ("state_update", "State-update"),
-    ],
-)
-def test_state_update_graph_errors_for_unreachable_output(
-    backend: str,
-    backend_name: str,
-):
+def test_state_update_graph_errors_for_unreachable_output():
     graph = _Graph(
         [
             ("feature", "prediction_good"),
@@ -334,19 +325,16 @@ def test_state_update_graph_errors_for_unreachable_output(
         ]
     )
 
-    report = validate_graph(graph=graph, backend=backend)
+    report = validate_graph(graph=graph, backend="state_update")
 
     assert (
-        f"{backend_name} compilation requires every output node to be "
+        "State-update compilation requires every output node to be "
         "reachable from at least one input node. Unreachable output "
         "node(s): prediction_bad."
     ) in report.errors
 
 
-@pytest.mark.parametrize("backend", ["state_update"])
-def test_state_update_graph_accepts_reachable_output_through_cycle(
-    backend: str,
-):
+def test_state_update_graph_accepts_reachable_output_through_cycle():
     graph = _Graph(
         [
             ("feature", "a"),
@@ -356,21 +344,12 @@ def test_state_update_graph_accepts_reachable_output_through_cycle(
         ]
     )
 
-    report = validate_graph(graph=graph, backend=backend)
+    report = validate_graph(graph=graph, backend="state_update")
 
     assert report.errors == []
 
 
-@pytest.mark.parametrize(
-    ("backend", "backend_name"),
-    [
-        ("state_update", "State-update"),
-    ],
-)
-def test_state_update_graph_reports_multiple_unreachable_outputs(
-    backend: str,
-    backend_name: str,
-):
+def test_state_update_graph_reports_multiple_unreachable_outputs():
     graph = _Graph(
         [
             ("feature", "prediction_good"),
@@ -381,25 +360,16 @@ def test_state_update_graph_reports_multiple_unreachable_outputs(
         ]
     )
 
-    report = validate_graph(graph=graph, backend=backend)
+    report = validate_graph(graph=graph, backend="state_update")
 
     assert (
-        f"{backend_name} compilation requires every output node to be "
+        "State-update compilation requires every output node to be "
         "reachable from at least one input node. Unreachable output "
         "node(s): prediction_bad_a, prediction_bad_b."
     ) in report.errors
 
 
-@pytest.mark.parametrize(
-    ("backend", "backend_name"),
-    [
-        ("state_update", "State-update"),
-    ],
-)
-def test_state_update_graph_rejects_unreachable_output_relevant_nodes(
-    backend: str,
-    backend_name: str,
-):
+def test_state_update_graph_rejects_unreachable_output_relevant_nodes():
     graph = _Graph(
         [
             ("feature", "prediction"),
@@ -409,10 +379,10 @@ def test_state_update_graph_rejects_unreachable_output_relevant_nodes(
         ]
     )
 
-    report = validate_graph(graph=graph, backend=backend)
+    report = validate_graph(graph=graph, backend="state_update")
 
     assert (
-        f"{backend_name} compilation requires every node that can "
+        "State-update compilation requires every node that can "
         "influence an output node to be reachable from at least one "
         "input node. Unreachable output-relevant node(s): a, b."
     ) in report.errors

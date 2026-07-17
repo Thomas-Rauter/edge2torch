@@ -72,10 +72,7 @@ def test_build_state_update_interpretation_sites_rejects_non_positive_steps():
         )
 
 
-@pytest.mark.parametrize("backend", ["state_update"])
-def test_compile_graph_builds_state_update_interpretation_metadata(
-    backend: str,
-):
+def test_compile_graph_builds_state_update_interpretation_metadata():
     edgelist = pd.DataFrame(
         {
             "source": ["gene_1", "hidden_1", "hidden_1"],
@@ -85,7 +82,7 @@ def test_compile_graph_builds_state_update_interpretation_metadata(
 
     _, artifact = compile_graph(
         edgelist=edgelist,
-        backend=backend,
+        backend="state_update",
         quiet=True,
         steps=4,
     )

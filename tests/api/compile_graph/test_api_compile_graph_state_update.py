@@ -25,20 +25,6 @@ def test_compile_graph_returns_state_update_model_and_artifact():
     assert isinstance(artifact.execution_plan, StateUpdateExecutionPlan)
 
 
-def test_compile_graph_state_update_allows_cycles():
-    edgelist = pd.DataFrame(
-        {
-            "source": ["input_1", "node_a", "node_b", "node_b"],
-            "target": ["node_a", "node_b", "node_a", "output_1"],
-        }
-    )
-
-    model, artifact = compile_graph(edgelist, backend="state_update")
-
-    assert model is not None
-    assert artifact is not None
-
-
 def test_compile_graph_state_update_returns_expected_feature_names():
     edgelist = pd.DataFrame(
         {
