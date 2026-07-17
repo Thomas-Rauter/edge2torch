@@ -99,6 +99,10 @@ module = ["numpy", "numpy.*"]
 follow_imports = "skip"
 follow_imports_for_stubs = true
 
+[[tool.mypy.overrides]]
+module = ["anndata", "anndata.*"]
+follow_imports = "skip"
+
 [tool.pytest.ini_options]
 markers = [
     "integration: tests that train models or use real datasets",

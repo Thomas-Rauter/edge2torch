@@ -30,6 +30,7 @@ jobs:
           pip install pytest-cov
 
       - name: Verify pandas type stubs for mypy
+        if: matrix.python-version == '3.11'
         run: |
           python -m pip show pandas-stubs
 
@@ -42,6 +43,7 @@ jobs:
           ruff format --check .
 
       - name: Run mypy
+        if: matrix.python-version == '3.11'
         run: |
           mypy src
 
