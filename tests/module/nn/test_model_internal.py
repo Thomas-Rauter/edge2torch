@@ -2,12 +2,7 @@ import pandas as pd
 import pytest
 import torch
 
-from edge2torch.nn.model import (
-    EdgeGraphNNModel,
-    EdgeModel,
-    RecurrentEdgeModel,
-    StateUpdateEdgeModel,
-)
+from edge2torch.nn.model import EdgeModel, StateUpdateEdgeModel
 from edge2torch.utils.errors import Edge2TorchError
 
 
@@ -38,39 +33,7 @@ class _FeedforwardPlan:
         )
 
 
-class _RecurrentPlan:
-    def __init__(
-        self,
-        *,
-        node_names=None,
-        input_node_names=None,
-        output_node_names=None,
-        original_edges=None,
-    ):
-        self.node_names = (
-            ["input_1", "hidden_1", "output_1"]
-            if node_names is None
-            else node_names
-        )
-        self.input_node_names = (
-            ["input_1"] if input_node_names is None else input_node_names
-        )
-        self.output_node_names = (
-            ["output_1"] if output_node_names is None else output_node_names
-        )
-        self.original_edges = (
-            pd.DataFrame(
-                {
-                    "source": ["input_1", "hidden_1"],
-                    "target": ["hidden_1", "output_1"],
-                }
-            )
-            if original_edges is None
-            else original_edges
-        )
-
-
-class _GraphNNPlan:
+class _StateUpdatePlan:
     def __init__(
         self,
         *,
@@ -182,73 +145,50 @@ def test_edge_model_select_block_edges_filters_edges_between_layers():
 def test_state_update_edge_model_rejects_non_positive_steps():
     with pytest.raises(Edge2TorchError, match="positive integer"):
         StateUpdateEdgeModel(
-            execution_plan=_RecurrentPlan(),
+            execution_plan=_StateUpdatePlan(),
             steps=0,
         )
 
 
-def test_backend_wrappers_delegate_to_state_update_core():
-    recurrent = RecurrentEdgeModel(execution_plan=_RecurrentPlan())
-    graphnn = EdgeGraphNNModel(execution_plan=_GraphNNPlan())
-
-    assert isinstance(recurrent, StateUpdateEdgeModel)
-    assert isinstance(graphnn, StateUpdateEdgeModel)
-    assert recurrent.backend == "recurrent"
-    assert graphnn.backend == "graphnn"
-    assert recurrent.recurrent is recurrent.state_linear
-    assert graphnn.message_passing is graphnn.state_linear
-
-
-# RecurrentEdgeModel -----------------------------------------------------------
-
-
-def test_recurrent_edge_model_rejects_non_positive_steps():
-    with pytest.raises(Edge2TorchError, match="positive integer"):
-        RecurrentEdgeModel(
-            execution_plan=_RecurrentPlan(),
-            steps=0,
-        )
-
-
-def test_recurrent_edge_model_rejects_non_integer_steps():
+def test_state_update_edge_model_rejects_non_integer_steps():
     with pytest.raises(Edge2TorchError, match="must be an integer"):
-        RecurrentEdgeModel(
-            execution_plan=_RecurrentPlan(),
+        StateUpdateEdgeModel(
+            execution_plan=_StateUpdatePlan(),
             steps=1.5,
         )
 
 
-def test_recurrent_edge_model_rejects_missing_input_nodes():
-    plan = _RecurrentPlan(input_node_names=[])
+def test_state_update_edge_model_rejects_missing_input_nodes():
+    plan = _StateUpdatePlan(input_node_names=[])
 
     with pytest.raises(Edge2TorchError, match="at least one input node"):
-        RecurrentEdgeModel(execution_plan=plan)
+        StateUpdateEdgeModel(execution_plan=plan)
 
 
-def test_recurrent_edge_model_rejects_missing_output_nodes():
-    plan = _RecurrentPlan(output_node_names=[])
+def test_state_update_edge_model_rejects_missing_output_nodes():
+    plan = _StateUpdatePlan(output_node_names=[])
 
     with pytest.raises(Edge2TorchError, match="at least one output node"):
-        RecurrentEdgeModel(execution_plan=plan)
+        StateUpdateEdgeModel(execution_plan=plan)
 
 
-def test_recurrent_edge_model_forward_rejects_1d_input():
-    model = RecurrentEdgeModel(execution_plan=_RecurrentPlan())
+def test_state_update_edge_model_forward_rejects_1d_input():
+    model = StateUpdateEdgeModel(execution_plan=_StateUpdatePlan())
 
     with pytest.raises(Edge2TorchError, match="2-dimensional"):
         model(torch.tensor([1.0]))
 
 
-def test_recurrent_edge_model_forward_rejects_wrong_input_width():
-    model = RecurrentEdgeModel(execution_plan=_RecurrentPlan())
+def test_state_update_edge_model_forward_rejects_wrong_input_width():
+    model = StateUpdateEdgeModel(execution_plan=_StateUpdatePlan())
 
     with pytest.raises(Edge2TorchError, match="wrong number of features"):
         model(torch.randn(2, 2))
 
 
-def test_recurrent_edge_model_forward_returns_output_nodes():
-    model = RecurrentEdgeModel(
-        execution_plan=_RecurrentPlan(),
+def test_state_update_edge_model_forward_returns_output_nodes():
+    model = StateUpdateEdgeModel(
+        execution_plan=_StateUpdatePlan(),
         steps=2,
         bias=False,
     )
@@ -260,18 +200,25 @@ def test_recurrent_edge_model_forward_returns_output_nodes():
     assert result.shape == (2, 1)
 
 
-def test_recurrent_edge_model_exposes_one_update_step_module_per_step():
-    model = RecurrentEdgeModel(
-        execution_plan=_RecurrentPlan(),
+def test_state_update_edge_model_exposes_state_linear_module():
+    model = StateUpdateEdgeModel(execution_plan=_StateUpdatePlan())
+
+    assert model.backend == "state_update"
+    assert "state_linear" in dict(model.named_children())
+
+
+def test_state_update_edge_model_exposes_one_update_step_module_per_step():
+    model = StateUpdateEdgeModel(
+        execution_plan=_StateUpdatePlan(),
         steps=4,
     )
 
     assert len(model.update_steps) == 4
 
 
-def test_recurrent_edge_model_lists_and_resolves_interpretation_sites():
-    model = RecurrentEdgeModel(
-        execution_plan=_RecurrentPlan(),
+def test_state_update_edge_model_lists_and_resolves_interpretation_sites():
+    model = StateUpdateEdgeModel(
+        execution_plan=_StateUpdatePlan(),
         steps=3,
     )
 
@@ -286,95 +233,9 @@ def test_recurrent_edge_model_lists_and_resolves_interpretation_sites():
     assert site is model.update_steps[1]
 
 
-# EdgeGraphNNModel -------------------------------------------------------------
-
-
-def test_edge_graphnn_model_rejects_non_positive_steps():
-    with pytest.raises(Edge2TorchError, match="positive integer"):
-        EdgeGraphNNModel(
-            execution_plan=_GraphNNPlan(),
-            steps=0,
-        )
-
-
-def test_edge_graphnn_model_rejects_non_integer_steps():
-    with pytest.raises(Edge2TorchError, match="must be an integer"):
-        EdgeGraphNNModel(
-            execution_plan=_GraphNNPlan(),
-            steps=1.5,
-        )
-
-
-def test_edge_graphnn_model_rejects_missing_input_nodes():
-    plan = _GraphNNPlan(input_node_names=[])
-
-    with pytest.raises(Edge2TorchError, match="at least one input node"):
-        EdgeGraphNNModel(execution_plan=plan)
-
-
-def test_edge_graphnn_model_rejects_missing_output_nodes():
-    plan = _GraphNNPlan(output_node_names=[])
-
-    with pytest.raises(Edge2TorchError, match="at least one output node"):
-        EdgeGraphNNModel(execution_plan=plan)
-
-
-def test_edge_graphnn_model_forward_rejects_1d_input():
-    model = EdgeGraphNNModel(execution_plan=_GraphNNPlan())
-
-    with pytest.raises(Edge2TorchError, match="2-dimensional"):
-        model(torch.tensor([1.0]))
-
-
-def test_edge_graphnn_model_forward_rejects_wrong_input_width():
-    model = EdgeGraphNNModel(execution_plan=_GraphNNPlan())
-
-    with pytest.raises(Edge2TorchError, match="wrong number of features"):
-        model(torch.randn(2, 2))
-
-
-def test_edge_graphnn_model_forward_returns_output_nodes():
-    model = EdgeGraphNNModel(
-        execution_plan=_GraphNNPlan(),
-        steps=2,
-        bias=False,
-    )
-
-    x = torch.tensor([[1.0], [2.0]])
-
-    result = model(x)
-
-    assert result.shape == (2, 1)
-
-
-def test_edge_graphnn_model_exposes_one_update_step_module_per_step():
-    model = EdgeGraphNNModel(
-        execution_plan=_GraphNNPlan(),
-        steps=4,
-    )
-
-    assert len(model.update_steps) == 4
-
-
-def test_edge_graphnn_model_lists_and_resolves_interpretation_sites():
-    model = EdgeGraphNNModel(
-        execution_plan=_GraphNNPlan(),
-        steps=2,
-    )
-
-    assert model._edge2torch_list_interpretation_site_ids() == [
-        "step_1",
-        "step_2",
-    ]
-
-    site = model._edge2torch_get_interpretation_site("step_1")
-
-    assert site is model.update_steps[0]
-
-
-def test_recurrent_edge_model_rejects_invalid_interpretation_site():
-    model = RecurrentEdgeModel(
-        execution_plan=_RecurrentPlan(),
+def test_state_update_edge_model_rejects_invalid_interpretation_site():
+    model = StateUpdateEdgeModel(
+        execution_plan=_StateUpdatePlan(),
         steps=2,
     )
 
@@ -383,18 +244,9 @@ def test_recurrent_edge_model_rejects_invalid_interpretation_site():
 
 
 @pytest.mark.parametrize("steps", [True, False])
-def test_recurrent_edge_model_rejects_boolean_steps(steps: bool):
+def test_state_update_edge_model_rejects_boolean_steps(steps: bool):
     with pytest.raises(Edge2TorchError, match="must be an integer"):
-        RecurrentEdgeModel(
-            execution_plan=_RecurrentPlan(),
-            steps=steps,
-        )
-
-
-@pytest.mark.parametrize("steps", [True, False])
-def test_edge_graphnn_model_rejects_boolean_steps(steps: bool):
-    with pytest.raises(Edge2TorchError, match="must be an integer"):
-        EdgeGraphNNModel(
-            execution_plan=_GraphNNPlan(),
+        StateUpdateEdgeModel(
+            execution_plan=_StateUpdatePlan(),
             steps=steps,
         )

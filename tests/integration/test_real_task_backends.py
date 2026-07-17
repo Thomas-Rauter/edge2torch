@@ -51,24 +51,11 @@ def test_feedforward_backend_learns_real_tabular_task() -> None:
     assert metrics["test_roc_auc"] > 0.90
 
 
-def test_recurrent_backend_learns_real_tabular_task() -> None:
-    """Test that the recurrent backend learns a real tabular task."""
+def test_state_update_backend_learns_real_tabular_task() -> None:
+    """Test that the state_update backend learns a real tabular task."""
     metrics = _run_real_tabular_backend_task(
-        backend="recurrent",
-        make_edgelist=_make_recurrent_architecture_edgelist,
-        n_outputs=8,
-    )
-
-    assert metrics["final_loss"] < metrics["initial_loss"]
-    assert metrics["test_f1"] > 0.85
-    assert metrics["test_roc_auc"] > 0.90
-
-
-def test_graphnn_backend_learns_real_tabular_task() -> None:
-    """Test that the graphnn backend learns a real tabular task."""
-    metrics = _run_real_tabular_backend_task(
-        backend="graphnn",
-        make_edgelist=_make_graphnn_architecture_edgelist,
+        backend="state_update",
+        make_edgelist=_make_state_update_architecture_edgelist,
         n_outputs=8,
     )
 
@@ -254,10 +241,10 @@ def _make_feedforward_architecture_edgelist(
     return _make_edgelist(edges)
 
 
-def _make_recurrent_architecture_edgelist(
+def _make_state_update_architecture_edgelist(
     feature_names: list[str],
 ) -> pd.DataFrame:
-    """Build a cyclic sparse architecture for the recurrent backend."""
+    """Build a cyclic sparse architecture for the state_update backend."""
     rng = np.random.default_rng(SEED)
 
     n_state_nodes = 18
@@ -310,66 +297,6 @@ def _make_recurrent_architecture_edgelist(
     for idx, source in enumerate(state_nodes):
         edges.append((source, state_nodes[(idx + 1) % n_state_nodes]))
         edges.append((source, state_nodes[(idx - 3) % n_state_nodes]))
-
-    for source in state_nodes:
-        candidate_targets = [node for node in state_nodes if node != source]
-        targets = rng.choice(candidate_targets, size=3, replace=False)
-        edges.extend((source, str(target)) for target in targets)
-
-    for source in state_nodes:
-        targets = rng.choice(basis_nodes, size=3, replace=False)
-        edges.extend((source, str(target)) for target in targets)
-
-    return _make_edgelist(edges)
-
-
-def _make_graphnn_architecture_edgelist(
-    feature_names: list[str],
-) -> pd.DataFrame:
-    """Build a graph-oriented sparse architecture for the graphnn backend."""
-    rng = np.random.default_rng(SEED)
-
-    n_state_nodes = 20
-    n_basis_outputs = 8
-
-    state_nodes = [f"graph_state_{idx:02d}" for idx in range(n_state_nodes)]
-    basis_nodes = [
-        f"classification_basis_{idx:02d}" for idx in range(n_basis_outputs)
-    ]
-
-    statistic_nodes = {
-        "mean": state_nodes[0:6],
-        "error": state_nodes[6:12],
-        "worst": state_nodes[12:18],
-    }
-
-    measurements = sorted(
-        {_feature_measurement(name) for name in feature_names}
-    )
-    measurement_to_state = {
-        measurement: state_nodes[idx % n_state_nodes]
-        for idx, measurement in enumerate(measurements)
-    }
-
-    edges: list[tuple[str, str]] = []
-
-    for feature_name in feature_names:
-        statistic = _feature_statistic(feature_name)
-        measurement = _feature_measurement(feature_name)
-
-        statistic_target = rng.choice(statistic_nodes[statistic])
-        measurement_target = measurement_to_state[measurement]
-        random_target = rng.choice(state_nodes)
-
-        edges.append((feature_name, str(statistic_target)))
-        edges.append((feature_name, measurement_target))
-        edges.append((feature_name, str(random_target)))
-
-    for idx, source in enumerate(state_nodes):
-        edges.append((source, state_nodes[(idx + 1) % n_state_nodes]))
-        edges.append((source, state_nodes[(idx - 1) % n_state_nodes]))
-        edges.append((source, state_nodes[(idx + 5) % n_state_nodes]))
-        edges.append((source, state_nodes[(idx - 7) % n_state_nodes]))
 
     for source in state_nodes:
         candidate_targets = [node for node in state_nodes if node != source]

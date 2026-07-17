@@ -44,7 +44,7 @@ def _compile_model(backend: str):
         "bias": False,
     }
 
-    if backend in {"recurrent", "graphnn"}:
+    if backend == "state_update":
         kwargs["steps"] = 2
 
     return compile_graph(**kwargs)
@@ -58,7 +58,7 @@ def _output_index(model: torch.nn.Module, node_name: str) -> int:
     return model.output_node_names.index(node_name)
 
 
-@pytest.mark.parametrize("backend", ["feedforward", "recurrent", "graphnn"])
+@pytest.mark.parametrize("backend", ["feedforward", "state_update"])
 def test_absent_edge_has_zero_forward_influence(backend: str):
     model, artifact = _compile_model(backend)
 
@@ -91,7 +91,7 @@ def test_absent_edge_has_zero_forward_influence(backend: str):
     )
 
 
-@pytest.mark.parametrize("backend", ["feedforward", "recurrent", "graphnn"])
+@pytest.mark.parametrize("backend", ["feedforward", "state_update"])
 def test_absent_edge_has_zero_input_gradient(backend: str):
     model, artifact = _compile_model(backend)
 

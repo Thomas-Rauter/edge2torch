@@ -22,6 +22,7 @@ import torch
 from torch import nn
 
 from ..compile.artifact import CompileArtifact
+from ..utils.constants import COMPILE_BACKENDS
 from ..utils.errors import Edge2TorchError
 from .captum_classes import get_captum_class
 from .method_registry import (
@@ -48,11 +49,7 @@ def run_feature_attribution(
     This path is backend-agnostic as long as the compiled model supports
     standard differentiable PyTorch input-output behavior.
     """
-    if artifact.backend not in {
-        "feedforward",
-        "recurrent",
-        "graphnn",
-    }:
+    if artifact.backend not in COMPILE_BACKENDS:
         raise Edge2TorchError(
             f"Unsupported backend '{artifact.backend}' for "
             "feature interpretation."

@@ -267,7 +267,7 @@ class StateUpdateExecutionPlan:
     """
     Execution plan for topology-preserving state-update models.
 
-    Used by the recurrent and graphnn backends, which currently share the
+    Used by the state_update backends, which currently share the
     same non-layerized execution structure.
 
     Attributes
@@ -291,11 +291,6 @@ class StateUpdateExecutionPlan:
     output_node_names: list[str]
 
 
-# Compatibility aliases for the shared state-update plan type.
-RecurrentExecutionPlan = StateUpdateExecutionPlan
-GraphNNExecutionPlan = StateUpdateExecutionPlan
-
-
 def build_state_update_execution_plan(
     graph: EdgeGraph,
     *,
@@ -317,8 +312,7 @@ def build_state_update_execution_plan(
     graph
         Internal edge2torch graph object.
     backend_label
-        Label used in validation error messages (for example
-        ``"Recurrent"`` or ``"GraphNN"``).
+        Label used in validation error messages.
 
     Returns
     -------
@@ -402,36 +396,6 @@ def build_state_update_execution_plan(
         node_names=sorted(node_names),
         input_node_names=input_node_names,
         output_node_names=output_node_names,
-    )
-
-
-def build_recurrent_execution_plan(
-    graph: EdgeGraph,
-) -> StateUpdateExecutionPlan:
-    """
-    Build a recurrent execution plan from an edge2torch graph.
-
-    Thin wrapper around ``build_state_update_execution_plan`` that keeps
-    recurrent-specific validation wording.
-    """
-    return build_state_update_execution_plan(
-        graph,
-        backend_label="Recurrent",
-    )
-
-
-def build_graphnn_execution_plan(
-    graph: EdgeGraph,
-) -> StateUpdateExecutionPlan:
-    """
-    Build a graphnn execution plan from an edge2torch graph.
-
-    Thin wrapper around ``build_state_update_execution_plan`` that keeps
-    graphnn-specific validation wording.
-    """
-    return build_state_update_execution_plan(
-        graph,
-        backend_label="GraphNN",
     )
 
 

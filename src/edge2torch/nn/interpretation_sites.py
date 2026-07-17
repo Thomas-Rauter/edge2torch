@@ -73,7 +73,7 @@ def parse_feedforward_site_id(site_id: str) -> int:
 
 def parse_state_update_site_id(site_id: str) -> int:
     """
-    Parse a recurrent or graphnn interpretation site like ``step_1``.
+    Parse a state-update interpretation site like ``step_1``.
     """
     if not site_id.startswith("step_"):
         raise Edge2TorchError(f"Invalid interpretation site '{site_id}'.")

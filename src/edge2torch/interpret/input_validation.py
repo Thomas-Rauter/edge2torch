@@ -27,6 +27,7 @@ try:
 except ImportError:
     ad = None
 
+from ..utils.constants import COMPILE_BACKENDS
 from ..utils.errors import Edge2TorchError
 from .method_registry import (
     FEATURE_METHODS,
@@ -79,8 +80,8 @@ def validate_interpret_model_inputs(
     nodes
         Node filter for ``target="nodes"``.
     site_aggregation
-        Aggregation rule for summary node interpretation in recurrent and
-        graphnn backends.
+        Aggregation rule for summary node interpretation in the
+        ``state_update`` backend.
 
     Raises
     ------
@@ -232,11 +233,7 @@ def _validate_interpret_artifact(
     """
     Validate the compilation artifact and backend compatibility.
     """
-    supported_backends = {
-        "feedforward",
-        "recurrent",
-        "graphnn",
-    }
+    supported_backends = set(COMPILE_BACKENDS)
 
     required_artifact_attrs = {
         "backend",

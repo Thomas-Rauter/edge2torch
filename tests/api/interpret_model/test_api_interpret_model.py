@@ -494,7 +494,7 @@ def test_interpret_model_raises_for_missing_anndata_features():
         )
 
 
-def test_interpret_model_supports_feature_target_for_recurrent_backend():
+def test_interpret_model_supports_feature_target_for_state_update_backend():
     edgelist = pd.DataFrame(
         {
             "source": ["gene_1", "node_a", "node_b", "node_b"],
@@ -502,7 +502,7 @@ def test_interpret_model_supports_feature_target_for_recurrent_backend():
         }
     )
 
-    model, artifact = compile_graph(edgelist, backend="recurrent")
+    model, artifact = compile_graph(edgelist, backend="state_update")
 
     data = pd.DataFrame(
         {
@@ -525,39 +525,7 @@ def test_interpret_model_supports_feature_target_for_recurrent_backend():
     assert list(result.columns) == ["gene_1"]
 
 
-def test_interpret_model_supports_feature_target_for_graphnn_backend():
-    edgelist = pd.DataFrame(
-        {
-            "source": ["gene_1", "gene_2", "node_a", "node_b"],
-            "target": ["node_a", "node_a", "node_b", "output_1"],
-        }
-    )
-
-    model, artifact = compile_graph(edgelist, backend="graphnn")
-
-    data = pd.DataFrame(
-        {
-            "gene_1": [0.1, 0.2, 0.3],
-            "gene_2": [1.0, 1.1, 1.2],
-        },
-        index=["cell_1", "cell_2", "cell_3"],
-    )
-
-    result = interpret_model(
-        model=model,
-        artifact=artifact,
-        data=data,
-        target="features",
-        method="IntegratedGradients",
-    )
-
-    assert isinstance(result, pd.DataFrame)
-    assert result.shape == (3, 2)
-    assert list(result.index) == ["cell_1", "cell_2", "cell_3"]
-    assert list(result.columns) == ["gene_1", "gene_2"]
-
-
-def test_interpret_model_supports_node_target_for_recurrent_backend():
+def test_interpret_model_supports_node_target_for_state_update_backend():
     edgelist = pd.DataFrame(
         {
             "source": ["gene_1", "node_a", "node_b", "node_b"],
@@ -565,7 +533,7 @@ def test_interpret_model_supports_node_target_for_recurrent_backend():
         }
     )
 
-    model, artifact = compile_graph(edgelist, backend="recurrent", steps=2)
+    model, artifact = compile_graph(edgelist, backend="state_update", steps=2)
 
     data = pd.DataFrame(
         {
@@ -588,7 +556,7 @@ def test_interpret_model_supports_node_target_for_recurrent_backend():
     assert result.shape == (2, 2)
 
 
-def test_interpret_model_supports_node_sites_for_recurrent_backend():
+def test_interpret_model_supports_node_sites_for_state_update_backend():
     edgelist = pd.DataFrame(
         {
             "source": ["gene_1", "node_a", "node_b", "node_b"],
@@ -596,78 +564,11 @@ def test_interpret_model_supports_node_sites_for_recurrent_backend():
         }
     )
 
-    model, artifact = compile_graph(edgelist, backend="recurrent", steps=2)
+    model, artifact = compile_graph(edgelist, backend="state_update", steps=2)
 
     data = pd.DataFrame(
         {
             "gene_1": [0.1, 0.2],
-        },
-        index=["cell_1", "cell_2"],
-    )
-
-    result = interpret_model(
-        model=model,
-        artifact=artifact,
-        data=data,
-        target="nodes",
-        method="LayerConductance",
-        quiet=True,
-        level="sites",
-        nodes="non_input",
-    )
-
-    assert isinstance(result, dict)
-    assert list(result.keys()) == ["step_1", "step_2"]
-    assert list(result["step_1"].columns) == ["node_a", "node_b", "output_1"]
-    assert result["step_1"].shape == (2, 3)
-
-
-def test_interpret_model_supports_node_target_for_graphnn_backend():
-    edgelist = pd.DataFrame(
-        {
-            "source": ["gene_1", "gene_2", "node_a", "node_b"],
-            "target": ["node_a", "node_a", "node_b", "output_1"],
-        }
-    )
-
-    model, artifact = compile_graph(edgelist, backend="graphnn", steps=2)
-
-    data = pd.DataFrame(
-        {
-            "gene_1": [0.1, 0.2],
-            "gene_2": [1.0, 1.1],
-        },
-        index=["cell_1", "cell_2"],
-    )
-
-    result = interpret_model(
-        model=model,
-        artifact=artifact,
-        data=data,
-        target="nodes",
-        method="LayerConductance",
-        quiet=True,
-    )
-
-    assert isinstance(result, pd.DataFrame)
-    assert list(result.columns) == ["node_a", "node_b"]
-    assert result.shape == (2, 2)
-
-
-def test_interpret_model_supports_node_sites_for_graphnn_backend():
-    edgelist = pd.DataFrame(
-        {
-            "source": ["gene_1", "gene_2", "node_a", "node_b"],
-            "target": ["node_a", "node_a", "node_b", "output_1"],
-        }
-    )
-
-    model, artifact = compile_graph(edgelist, backend="graphnn", steps=2)
-
-    data = pd.DataFrame(
-        {
-            "gene_1": [0.1, 0.2],
-            "gene_2": [1.0, 1.1],
         },
         index=["cell_1", "cell_2"],
     )

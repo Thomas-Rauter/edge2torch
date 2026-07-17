@@ -36,7 +36,7 @@ from edge2torch import (
 
 pytestmark = pytest.mark.integration
 
-BackendName = Literal["feedforward", "recurrent", "graphnn"]
+BackendName = Literal["feedforward", "state_update"]
 
 SEED = 7
 N_TRAIN = 512
@@ -108,7 +108,7 @@ class _InterpretableTaskModel(nn.Module):
         )
 
 
-@pytest.mark.parametrize("backend", ["feedforward", "recurrent", "graphnn"])
+@pytest.mark.parametrize("backend", ["feedforward", "state_update"])
 def test_learned_attributions_separate_signal_from_decoy(
     backend: BackendName,
 ) -> None:
@@ -126,7 +126,7 @@ def test_learned_attributions_separate_signal_from_decoy(
         "backend": backend,
         "quiet": True,
     }
-    if backend in {"recurrent", "graphnn"}:
+    if backend == "state_update":
         compile_kwargs["steps"] = 5
 
     base_model, artifact = compile_graph(**compile_kwargs)
@@ -205,9 +205,7 @@ def _build_signal_decoy_graph(backend: BackendName) -> SignalDecoyGraph:
     """Return a backend-specific signal/decoy edgelist and node groupings."""
     if backend == "feedforward":
         return _build_feedforward_signal_decoy_graph()
-    if backend == "recurrent":
-        return _build_recurrent_signal_decoy_graph()
-    return _build_graphnn_signal_decoy_graph()
+    return _build_state_update_signal_decoy_graph()
 
 
 def _build_feedforward_signal_decoy_graph() -> SignalDecoyGraph:
@@ -250,7 +248,7 @@ def _build_feedforward_signal_decoy_graph() -> SignalDecoyGraph:
     )
 
 
-def _build_recurrent_signal_decoy_graph() -> SignalDecoyGraph:
+def _build_state_update_signal_decoy_graph() -> SignalDecoyGraph:
     edges: list[tuple[str, str]] = []
 
     for idx, feature_name in enumerate(SIGNAL_FEATURES):
@@ -279,48 +277,6 @@ def _build_recurrent_signal_decoy_graph() -> SignalDecoyGraph:
             ("dec_h_2", "dec_h_3"),
             ("dec_h_3", "dec_h_0"),
             ("dec_h_0", "dec_h_2"),
-            ("dec_h_1", "dec_h_3"),
-        ]
-    )
-
-    return SignalDecoyGraph(
-        edgelist=_make_edgelist(edges),
-        signal_features=tuple(SIGNAL_FEATURES),
-        decoy_features=tuple(DECOY_FEATURES),
-        signal_hidden=tuple(SIGNAL_HIDDEN),
-        decoy_hidden=tuple(DECOY_HIDDEN),
-    )
-
-
-def _build_graphnn_signal_decoy_graph() -> SignalDecoyGraph:
-    edges: list[tuple[str, str]] = []
-
-    for idx, feature_name in enumerate(SIGNAL_FEATURES):
-        edges.append((feature_name, SIGNAL_HIDDEN[idx % 2]))
-
-    edges.extend(
-        [
-            ("sig_h_0", "sig_h_1"),
-            ("sig_h_0", "sig_h_3"),
-            ("sig_h_1", "sig_h_2"),
-            ("sig_h_2", "sig_h_1"),
-            ("sig_h_1", "sig_h_4"),
-            ("sig_h_2", "sig_h_4"),
-            ("sig_h_3", "sig_h_4"),
-            ("sig_h_4", OUTPUT_NODE),
-        ]
-    )
-
-    for idx, feature_name in enumerate(DECOY_FEATURES):
-        edges.append((feature_name, DECOY_HIDDEN[idx % 2]))
-
-    edges.extend(
-        [
-            ("dec_h_0", "dec_h_1"),
-            ("dec_h_1", "dec_h_2"),
-            ("dec_h_2", "dec_h_3"),
-            ("dec_h_3", "dec_h_0"),
-            ("dec_h_0", "dec_h_3"),
             ("dec_h_1", "dec_h_3"),
         ]
     )

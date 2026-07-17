@@ -1,24 +1,23 @@
 """
-Recurrent backend compilation.
+State-update backend compilation.
 
 Why this file exists
 --------------------
 This file isolates the logic for compiling a validated graph into the
-recurrent backend. The separation keeps recurrent-specific compilation
-semantics out of the general compiler dispatch and makes the recurrent
-path easier to evolve independently.
+state-update backend. The separation keeps topology-preserving
+compilation semantics out of the general compiler dispatch.
 
 Role in the package
 -------------------
 This is an internal backend-compilation module. It takes a graph,
-derives the shared state-update execution plan, builds the corresponding
-PyTorch model, and packages the result together with its artifact. It
-should contain recurrent-labeled compilation wiring, not public API
-handling or generic backend dispatch.
+derives the state-update execution plan, builds the corresponding PyTorch
+model, and packages the result together with its artifact. It should
+contain state-update compilation wiring, not public API handling or
+generic backend dispatch.
 """
 
 from ..graph.schema import EdgeGraph
-from ..nn.model import RecurrentEdgeModel
+from ..nn.model import StateUpdateEdgeModel
 from .artifact import CompileArtifact
 from .execution_plan import build_state_update_execution_plan
 from .interpretation_metadata import (
@@ -27,13 +26,13 @@ from .interpretation_metadata import (
 )
 
 
-def compile_recurrent(
+def compile_state_update(
     graph: EdgeGraph,
     bias: bool = True,
     steps: int = 3,
-) -> tuple[RecurrentEdgeModel, CompileArtifact]:
+) -> tuple[StateUpdateEdgeModel, CompileArtifact]:
     """
-    Compile a KPNN graph into a recurrent PyTorch model.
+    Compile a KPNN graph into a state-update PyTorch model.
 
     Parameters
     ----------
@@ -46,20 +45,16 @@ def compile_recurrent(
         only from graph-defined weighted inputs. Disabling bias gives the
         graph structure stricter control over node activations.
     steps
-        Number of recurrent/message-passing update steps for the
-        ``recurrent`` and ``graphnn`` backends.
+        Number of fixed state-update steps applied at runtime.
 
     Returns
     -------
     tuple
         A tuple of (model, artifact).
     """
-    execution_plan = build_state_update_execution_plan(
-        graph,
-        backend_label="Recurrent",
-    )
+    execution_plan = build_state_update_execution_plan(graph)
 
-    model = RecurrentEdgeModel(
+    model = StateUpdateEdgeModel(
         execution_plan=execution_plan,
         steps=steps,
         bias=bias,
@@ -69,7 +64,7 @@ def compile_recurrent(
     output_nodes = list(execution_plan.output_node_names)
 
     artifact = CompileArtifact(
-        backend="recurrent",
+        backend="state_update",
         graph=graph,
         execution_plan=execution_plan,
         node_names_by_layer={},

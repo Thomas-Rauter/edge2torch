@@ -294,8 +294,8 @@ def test_validate_interpret_artifact_rejects_unknown_backend():
         )
 
 
-def test_validate_interpret_artifact_accepts_recurrent_node_target():
-    artifact = _Artifact(backend="recurrent")
+def test_validate_interpret_artifact_accepts_state_update_node_target():
+    artifact = _Artifact(backend="state_update")
 
     _validate_interpret_artifact(
         artifact=artifact,

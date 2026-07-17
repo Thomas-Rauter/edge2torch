@@ -72,7 +72,7 @@ def test_build_state_update_interpretation_sites_rejects_non_positive_steps():
         )
 
 
-@pytest.mark.parametrize("backend", ["recurrent", "graphnn"])
+@pytest.mark.parametrize("backend", ["state_update"])
 def test_compile_graph_builds_state_update_interpretation_metadata(
     backend: str,
 ):

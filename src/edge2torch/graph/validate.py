@@ -92,13 +92,8 @@ def validate_graph(
             graph=graph,
             report=report,
         )
-    elif backend == "recurrent":
-        _validate_recurrent_graph(
-            graph=graph,
-            report=report,
-        )
-    elif backend == "graphnn":
-        _validate_graphnn_graph(
+    elif backend == "state_update":
+        _validate_state_update_backend_graph(
             graph=graph,
             report=report,
         )
@@ -298,40 +293,20 @@ def _validate_feedforward_graph(
             )
 
 
-def _validate_recurrent_graph(
+def _validate_state_update_backend_graph(
     graph: EdgeGraph,
     report: ValidationReport,
 ) -> None:
     """
-    Validate graph constraints required by the recurrent backend.
+    Validate graph constraints required by the state-update backend.
     """
-    report.notes.append("Recurrent backend selected. Cycles may be allowed.")
+    report.notes.append("State-update backend selected. Cycles may be allowed.")
 
     _validate_state_update_graph(
         graph=graph,
         report=report,
-        backend_name="Recurrent",
-        backend_label="recurrent",
-    )
-
-
-def _validate_graphnn_graph(
-    graph: EdgeGraph,
-    report: ValidationReport,
-) -> None:
-    """
-    Validate graph constraints required by the graphnn backend.
-    """
-    report.notes.append(
-        "GraphNN backend selected. Graph structure will be compiled "
-        "for message passing."
-    )
-
-    _validate_state_update_graph(
-        graph=graph,
-        report=report,
-        backend_name="GraphNN",
-        backend_label="graphnn",
+        backend_name="State-update",
+        backend_label="state_update",
     )
 
 
@@ -347,7 +322,7 @@ def _validate_state_update_graph(
     """
     Validate graph constraints shared by state-update backends.
 
-    Recurrent and graphnn backends both allow cycles, but they still require
+    State-update compilation allows cycles, but it still requires
     at least one input node and at least one output node. Input nodes are
     inferred as nodes with no incoming edges. Output nodes are inferred as
     nodes with no outgoing edges.

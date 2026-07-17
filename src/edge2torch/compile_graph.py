@@ -42,10 +42,10 @@ def compile_graph(
     mask. Set ``bias=False`` to remove these offsets so node updates depend only
     on graph-defined weighted inputs.
 
-    The ``recurrent`` and ``graphnn`` backends apply a fixed number of graph
-    state-update steps during each forward pass. The ``steps`` argument controls
-    this update count. It is not a training epoch count and does not represent a
-    sequence length in the input data.
+    The ``state_update`` backend applies a fixed number of graph state-update
+    steps during each forward pass. The ``steps`` argument controls this update
+    count. It is not a training epoch count and does not represent a sequence
+    length in the input data.
 
     Parameters
     ----------
@@ -80,8 +80,7 @@ def compile_graph(
         provide an ``"initial_weight"`` value in the same row, because fixed
         edges require an explicit constant value.
     backend : str, default="feedforward"
-        Backend to compile to. One of ``"feedforward"``, ``"recurrent"``,
-        or ``"graphnn"``.
+        Backend to compile to. One of ``"feedforward"`` or ``"state_update"``.
     bias : bool, default=True
         Whether compiled masked linear layers include bias terms. If True,
         each target node has a learned node-level offset in addition to its
@@ -89,10 +88,10 @@ def compile_graph(
         from graph-defined weighted inputs. Disabling bias gives the graph
         structure stricter control over node activations.
     steps : int, default=3
-        Number of recurrent/message-passing update steps for the ``recurrent``
-        and ``graphnn`` backends. Larger values allow information to propagate
-        through longer graph paths and revisit cycles more times. This parameter
-        is not used by the ``feedforward`` backend; non-default values with
+        Number of state-update steps for the ``state_update`` backend. Larger
+        values allow information to propagate through longer graph paths and
+        revisit cycles more times. This parameter is not used by the
+        ``feedforward`` backend; non-default values with
         ``backend="feedforward"`` are rejected.
     quiet : bool, default=False
         If False, emit informational notes during validation. If True,
@@ -133,7 +132,7 @@ def compile_graph(
     >>> artifact.feature_names
     ['feature_a', 'feature_b']
 
-    Compile a recurrent architecture with edge-level initial weights and
+    Compile a state-update architecture with edge-level initial weights and
     constraints.
 
     >>> edgelist = pd.DataFrame(
@@ -147,7 +146,7 @@ def compile_graph(
     >>>
     >>> model, artifact = compile_graph(
     ...     edgelist=edgelist,
-    ...     backend="recurrent",
+    ...     backend="state_update",
     ...     quiet=True,
     ... )
     """

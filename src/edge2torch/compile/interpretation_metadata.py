@@ -66,7 +66,7 @@ def build_state_update_interpretation_sites(
     steps: int,
 ) -> dict[str, list[str]]:
     """
-    Build recurrent or graphnn interpretation sites for each update step.
+    Build state-update interpretation sites for each update step.
     """
     if steps <= 0:
         raise Edge2TorchError("'steps' must be a positive integer.")

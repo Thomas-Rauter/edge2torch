@@ -3,8 +3,7 @@ import pytest
 
 from edge2torch.compile.execution_plan import (
     build_feedforward_execution_plan,
-    build_graphnn_execution_plan,
-    build_recurrent_execution_plan,
+    build_state_update_execution_plan,
 )
 from edge2torch.utils.constants import PSEUDO_NODE_PREFIX
 from edge2torch.utils.errors import Edge2TorchError
@@ -134,44 +133,44 @@ def test_build_feedforward_execution_plan_keeps_adjacent_edges():
     }
 
 
-# build_recurrent_execution_plan ----------------------------------------------
+# build_state_update_execution_plan -------------------------------------------
 
 
-def test_build_recurrent_execution_plan_rejects_empty_edges():
+def test_build_state_update_execution_plan_rejects_empty_edges():
     graph = _Graph([], nodes=["input"])
 
     with pytest.raises(Edge2TorchError, match="at least one edge"):
-        build_recurrent_execution_plan(graph)
+        build_state_update_execution_plan(graph)
 
 
-def test_build_recurrent_execution_plan_rejects_empty_nodes():
+def test_build_state_update_execution_plan_rejects_empty_nodes():
     graph = _Graph([("input", "output")], nodes=[])
 
     with pytest.raises(Edge2TorchError, match="at least one node"):
-        build_recurrent_execution_plan(graph)
+        build_state_update_execution_plan(graph)
 
 
-def test_build_recurrent_execution_plan_rejects_unknown_source_node():
+def test_build_state_update_execution_plan_rejects_unknown_source_node():
     graph = _Graph(
         [("missing_source", "output")],
         nodes=["output"],
     )
 
     with pytest.raises(Edge2TorchError, match="Unknown source node"):
-        build_recurrent_execution_plan(graph)
+        build_state_update_execution_plan(graph)
 
 
-def test_build_recurrent_execution_plan_rejects_unknown_target_node():
+def test_build_state_update_execution_plan_rejects_unknown_target_node():
     graph = _Graph(
         [("input", "missing_target")],
         nodes=["input"],
     )
 
     with pytest.raises(Edge2TorchError, match="Unknown target node"):
-        build_recurrent_execution_plan(graph)
+        build_state_update_execution_plan(graph)
 
 
-def test_build_recurrent_execution_plan_rejects_no_input_nodes():
+def test_build_state_update_execution_plan_rejects_no_input_nodes():
     graph = _Graph(
         [
             ("a", "b"),
@@ -181,10 +180,10 @@ def test_build_recurrent_execution_plan_rejects_no_input_nodes():
     )
 
     with pytest.raises(Edge2TorchError, match="at least one input node"):
-        build_recurrent_execution_plan(graph)
+        build_state_update_execution_plan(graph)
 
 
-def test_build_recurrent_execution_plan_rejects_no_output_nodes():
+def test_build_state_update_execution_plan_rejects_no_output_nodes():
     graph = _Graph(
         [
             ("input", "a"),
@@ -194,10 +193,10 @@ def test_build_recurrent_execution_plan_rejects_no_output_nodes():
     )
 
     with pytest.raises(Edge2TorchError, match="at least one output node"):
-        build_recurrent_execution_plan(graph)
+        build_state_update_execution_plan(graph)
 
 
-def test_build_recurrent_execution_plan_returns_sorted_names():
+def test_build_state_update_execution_plan_returns_sorted_names():
     graph = _Graph(
         [
             ("input_b", "hidden"),
@@ -207,93 +206,7 @@ def test_build_recurrent_execution_plan_returns_sorted_names():
         ]
     )
 
-    plan = build_recurrent_execution_plan(graph)
-
-    assert plan.node_names == [
-        "hidden",
-        "input_a",
-        "input_b",
-        "output_a",
-        "output_b",
-    ]
-    assert plan.input_node_names == ["input_a", "input_b"]
-    assert plan.output_node_names == ["output_a", "output_b"]
-
-
-# build_graphnn_execution_plan -------------------------------------------------
-
-
-def test_build_graphnn_execution_plan_rejects_empty_edges():
-    graph = _Graph([], nodes=["input"])
-
-    with pytest.raises(Edge2TorchError, match="at least one edge"):
-        build_graphnn_execution_plan(graph)
-
-
-def test_build_graphnn_execution_plan_rejects_empty_nodes():
-    graph = _Graph([("input", "output")], nodes=[])
-
-    with pytest.raises(Edge2TorchError, match="at least one node"):
-        build_graphnn_execution_plan(graph)
-
-
-def test_build_graphnn_execution_plan_rejects_unknown_source_node():
-    graph = _Graph(
-        [("missing_source", "output")],
-        nodes=["output"],
-    )
-
-    with pytest.raises(Edge2TorchError, match="Unknown source node"):
-        build_graphnn_execution_plan(graph)
-
-
-def test_build_graphnn_execution_plan_rejects_unknown_target_node():
-    graph = _Graph(
-        [("input", "missing_target")],
-        nodes=["input"],
-    )
-
-    with pytest.raises(Edge2TorchError, match="Unknown target node"):
-        build_graphnn_execution_plan(graph)
-
-
-def test_build_graphnn_execution_plan_rejects_no_input_nodes():
-    graph = _Graph(
-        [
-            ("a", "b"),
-            ("b", "a"),
-            ("a", "output"),
-        ]
-    )
-
-    with pytest.raises(Edge2TorchError, match="at least one input node"):
-        build_graphnn_execution_plan(graph)
-
-
-def test_build_graphnn_execution_plan_rejects_no_output_nodes():
-    graph = _Graph(
-        [
-            ("input", "a"),
-            ("a", "b"),
-            ("b", "a"),
-        ]
-    )
-
-    with pytest.raises(Edge2TorchError, match="at least one output node"):
-        build_graphnn_execution_plan(graph)
-
-
-def test_build_graphnn_execution_plan_returns_sorted_names():
-    graph = _Graph(
-        [
-            ("input_b", "hidden"),
-            ("input_a", "hidden"),
-            ("hidden", "output_b"),
-            ("hidden", "output_a"),
-        ]
-    )
-
-    plan = build_graphnn_execution_plan(graph)
+    plan = build_state_update_execution_plan(graph)
 
     assert plan.node_names == [
         "hidden",

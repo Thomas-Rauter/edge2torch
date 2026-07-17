@@ -105,12 +105,12 @@ def _assert_no_pseudo_node_columns(
         )
 
 
-def test_interpret_model_recurrent_cycle_fixture_returns_hidden_node_summary():
-    edgelist = _load_edgelist("recurrent_cycle.csv")
+def test_interpret_model_state_update_cycle_hidden_node_summary():
+    edgelist = _load_edgelist("state_update_cycle.csv")
 
     model, artifact = compile_graph(
         edgelist=edgelist,
-        backend="recurrent",
+        backend="state_update",
         steps=2,
         quiet=True,
     )
@@ -131,38 +131,12 @@ def test_interpret_model_recurrent_cycle_fixture_returns_hidden_node_summary():
     assert list(summary.index) == list(data.index)
 
 
-def test_interpret_model_graphnn_cycle_fixture_returns_hidden_node_summary():
-    edgelist = _load_edgelist("graphnn_cycle.csv")
+def test_interpret_model_state_update_cycle_fixture_returns_step_site_tables():
+    edgelist = _load_edgelist("state_update_cycle.csv")
 
     model, artifact = compile_graph(
         edgelist=edgelist,
-        backend="graphnn",
-        steps=2,
-        quiet=True,
-    )
-    data = _make_sample_data(artifact)
-
-    summary = interpret_model(
-        model=model,
-        artifact=artifact,
-        data=data,
-        target="nodes",
-        method="LayerActivation",
-        quiet=True,
-    )
-
-    assert isinstance(summary, pd.DataFrame)
-    assert summary.shape == (len(data), len(artifact.hidden_nodes))
-    assert list(summary.columns) == artifact.hidden_nodes
-    assert list(summary.index) == list(data.index)
-
-
-def test_interpret_model_recurrent_cycle_fixture_returns_step_site_tables():
-    edgelist = _load_edgelist("recurrent_cycle.csv")
-
-    model, artifact = compile_graph(
-        edgelist=edgelist,
-        backend="recurrent",
+        backend="state_update",
         steps=2,
         quiet=True,
     )
@@ -185,40 +159,12 @@ def test_interpret_model_recurrent_cycle_fixture_returns_step_site_tables():
     assert sites["step_1"].shape == (len(data), len(artifact.hidden_nodes))
 
 
-def test_interpret_model_graphnn_cycle_fixture_returns_step_site_tables():
-    edgelist = _load_edgelist("graphnn_cycle.csv")
+def test_interpret_model_state_update_cycle_summary_matches_max_abs_sites():
+    edgelist = _load_edgelist("state_update_cycle.csv")
 
     model, artifact = compile_graph(
         edgelist=edgelist,
-        backend="graphnn",
-        steps=2,
-        quiet=True,
-    )
-    data = _make_sample_data(artifact)
-
-    sites = interpret_model(
-        model=model,
-        artifact=artifact,
-        data=data,
-        target="nodes",
-        method="LayerActivation",
-        quiet=True,
-        level="sites",
-        nodes="hidden",
-    )
-
-    assert isinstance(sites, dict)
-    assert list(sites.keys()) == ["step_1", "step_2"]
-    assert list(sites["step_1"].columns) == artifact.hidden_nodes
-    assert sites["step_1"].shape == (len(data), len(artifact.hidden_nodes))
-
-
-def test_interpret_model_recurrent_cycle_summary_matches_max_abs_sites():
-    edgelist = _load_edgelist("recurrent_cycle.csv")
-
-    model, artifact = compile_graph(
-        edgelist=edgelist,
-        backend="recurrent",
+        backend="state_update",
         steps=2,
         quiet=True,
     )
@@ -247,46 +193,7 @@ def test_interpret_model_recurrent_cycle_summary_matches_max_abs_sites():
     _assert_summary_matches_sites(
         summary=summary,
         sites=sites,
-        backend="recurrent",
-        site_aggregation="max_abs",
-    )
-
-
-def test_interpret_model_graphnn_cycle_summary_matches_max_abs_sites():
-    edgelist = _load_edgelist("graphnn_cycle.csv")
-
-    model, artifact = compile_graph(
-        edgelist=edgelist,
-        backend="graphnn",
-        steps=2,
-        quiet=True,
-    )
-    data = _make_sample_data(artifact, seed=2)
-
-    common_kwargs = {
-        "model": model,
-        "artifact": artifact,
-        "data": data,
-        "target": "nodes",
-        "method": "LayerActivation",
-        "quiet": True,
-        "nodes": "hidden",
-    }
-
-    summary = interpret_model(
-        **common_kwargs,
-        level="summary",
-        site_aggregation="max_abs",
-    )
-    sites = interpret_model(
-        **common_kwargs,
-        level="sites",
-    )
-
-    _assert_summary_matches_sites(
-        summary=summary,
-        sites=sites,
-        backend="graphnn",
+        backend="state_update",
         site_aggregation="max_abs",
     )
 
@@ -369,8 +276,7 @@ def test_interpret_model_hides_pseudo_nodes_on_skip_edge_fixture():
     ("fixture_name", "backend"),
     [
         ("feedforward_skip_edges.csv", "feedforward"),
-        ("recurrent_cycle.csv", "recurrent"),
-        ("graphnn_cycle.csv", "graphnn"),
+        ("state_update_cycle.csv", "state_update"),
     ],
 )
 def test_interpret_model_supports_nodes_after_customize_model(
@@ -380,7 +286,7 @@ def test_interpret_model_supports_nodes_after_customize_model(
     edgelist = _load_edgelist(fixture_name)
     compile_kwargs = {"quiet": True}
 
-    if backend in {"recurrent", "graphnn"}:
+    if backend == "state_update":
         compile_kwargs["steps"] = 2
 
     base_model, artifact = compile_graph(

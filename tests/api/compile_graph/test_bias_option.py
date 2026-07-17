@@ -29,7 +29,7 @@ def _metadata_edgelist() -> pd.DataFrame:
 
 @pytest.mark.parametrize(
     "backend",
-    ["feedforward", "recurrent", "graphnn"],
+    ["feedforward", "state_update"],
 )
 def test_compile_graph_bias_true_keeps_bias_parameters(backend: str):
     model, _ = compile_graph(
@@ -42,15 +42,15 @@ def test_compile_graph_bias_true_keeps_bias_parameters(backend: str):
     if backend == "feedforward":
         for block in model.blocks:
             assert block.linear.bias is not None
-    elif backend == "recurrent":
-        assert model.recurrent.bias is not None
+    elif backend == "state_update":
+        assert model.state_linear.bias is not None
     else:
-        assert model.message_passing.bias is not None
+        assert model.state_linear.bias is not None
 
 
 @pytest.mark.parametrize(
     "backend",
-    ["feedforward", "recurrent", "graphnn"],
+    ["feedforward", "state_update"],
 )
 def test_compile_graph_bias_false_removes_bias_parameters(backend: str):
     model, _ = compile_graph(
@@ -63,15 +63,15 @@ def test_compile_graph_bias_false_removes_bias_parameters(backend: str):
     if backend == "feedforward":
         for block in model.blocks:
             assert block.linear.bias is None
-    elif backend == "recurrent":
-        assert model.recurrent.bias is None
+    elif backend == "state_update":
+        assert model.state_linear.bias is None
     else:
-        assert model.message_passing.bias is None
+        assert model.state_linear.bias is None
 
 
 @pytest.mark.parametrize(
     "backend",
-    ["feedforward", "recurrent", "graphnn"],
+    ["feedforward", "state_update"],
 )
 def test_compile_graph_bias_false_excludes_bias_from_parameters(
     backend: str,
@@ -90,7 +90,7 @@ def test_compile_graph_bias_false_excludes_bias_from_parameters(
 
 @pytest.mark.parametrize(
     "backend",
-    ["feedforward", "recurrent", "graphnn"],
+    ["feedforward", "state_update"],
 )
 def test_compile_graph_bias_true_includes_bias_in_parameters(backend: str):
     model, _ = compile_graph(
@@ -107,7 +107,7 @@ def test_compile_graph_bias_true_includes_bias_in_parameters(backend: str):
 
 @pytest.mark.parametrize(
     "backend",
-    ["feedforward", "recurrent", "graphnn"],
+    ["feedforward", "state_update"],
 )
 def test_bias_false_works_with_edge_metadata(backend: str):
     model, _ = compile_graph(
@@ -121,17 +121,17 @@ def test_bias_false_works_with_edge_metadata(backend: str):
         for block in model.blocks:
             assert isinstance(block.linear, ConstrainedMaskedLinear)
             assert block.linear.bias is None
-    elif backend == "recurrent":
-        assert isinstance(model.recurrent, ConstrainedMaskedLinear)
-        assert model.recurrent.bias is None
+    elif backend == "state_update":
+        assert isinstance(model.state_linear, ConstrainedMaskedLinear)
+        assert model.state_linear.bias is None
     else:
-        assert isinstance(model.message_passing, ConstrainedMaskedLinear)
-        assert model.message_passing.bias is None
+        assert isinstance(model.state_linear, ConstrainedMaskedLinear)
+        assert model.state_linear.bias is None
 
 
 @pytest.mark.parametrize(
     "backend",
-    ["feedforward", "recurrent", "graphnn"],
+    ["feedforward", "state_update"],
 )
 def test_bias_false_forward_pass_runs(backend: str):
     model, artifact = compile_graph(

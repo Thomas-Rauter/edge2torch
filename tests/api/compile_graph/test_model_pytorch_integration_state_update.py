@@ -5,7 +5,7 @@ from torch import nn
 from edge2torch.compile_graph import compile_graph
 
 
-def test_graphnn_model_runs_forward_pass():
+def test_state_update_model_runs_forward_pass():
     edgelist = pd.DataFrame(
         {
             "source": ["gene_1", "gene_2"],
@@ -13,7 +13,7 @@ def test_graphnn_model_runs_forward_pass():
         }
     )
 
-    model, artifact = compile_graph(edgelist, backend="graphnn")
+    model, artifact = compile_graph(edgelist, backend="state_update")
 
     x = torch.randn(4, len(artifact.feature_names))
     y = model(x)
@@ -22,7 +22,7 @@ def test_graphnn_model_runs_forward_pass():
     assert y.shape == (4, 1)
 
 
-def test_graphnn_model_supports_backward_pass():
+def test_state_update_model_supports_backward_pass():
     edgelist = pd.DataFrame(
         {
             "source": ["gene_1", "gene_2"],
@@ -30,7 +30,7 @@ def test_graphnn_model_supports_backward_pass():
         }
     )
 
-    model, artifact = compile_graph(edgelist, backend="graphnn")
+    model, artifact = compile_graph(edgelist, backend="state_update")
 
     x = torch.randn(4, len(artifact.feature_names))
     y = model(x)
@@ -43,7 +43,7 @@ def test_graphnn_model_supports_backward_pass():
     assert any(grad is not None for grad in grads)
 
 
-def test_graphnn_model_supports_optimizer_step():
+def test_state_update_model_supports_optimizer_step():
     edgelist = pd.DataFrame(
         {
             "source": ["gene_1", "gene_2"],
@@ -51,7 +51,7 @@ def test_graphnn_model_supports_optimizer_step():
         }
     )
 
-    model, artifact = compile_graph(edgelist, backend="graphnn")
+    model, artifact = compile_graph(edgelist, backend="state_update")
     optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
 
     x = torch.randn(4, len(artifact.feature_names))
@@ -72,7 +72,7 @@ def test_graphnn_model_supports_optimizer_step():
     )
 
 
-def test_graphnn_model_can_be_wrapped_in_plain_pytorch_module():
+def test_state_update_model_can_be_wrapped_in_plain_pytorch_module():
     edgelist = pd.DataFrame(
         {
             "source": ["gene_1", "gene_2"],
@@ -80,7 +80,7 @@ def test_graphnn_model_can_be_wrapped_in_plain_pytorch_module():
         }
     )
 
-    base_model, artifact = compile_graph(edgelist, backend="graphnn")
+    base_model, artifact = compile_graph(edgelist, backend="state_update")
 
     class WrappedModel(nn.Module):
         def __init__(self, compiled_model):
@@ -104,7 +104,7 @@ def test_graphnn_model_can_be_wrapped_in_plain_pytorch_module():
     assert y.shape == (5, 2)
 
 
-def test_wrapped_graphnn_model_supports_backward_pass():
+def test_wrapped_state_update_model_supports_backward_pass():
     edgelist = pd.DataFrame(
         {
             "source": ["gene_1", "gene_2"],
@@ -112,7 +112,7 @@ def test_wrapped_graphnn_model_supports_backward_pass():
         }
     )
 
-    base_model, artifact = compile_graph(edgelist, backend="graphnn")
+    base_model, artifact = compile_graph(edgelist, backend="state_update")
 
     class WrappedModel(nn.Module):
         def __init__(self, compiled_model):
@@ -140,7 +140,7 @@ def test_wrapped_graphnn_model_supports_backward_pass():
     assert any(grad is not None for grad in grads)
 
 
-def test_graphnn_model_runs_on_cyclic_graph():
+def test_state_update_model_runs_on_cyclic_graph():
     edgelist = pd.DataFrame(
         {
             "source": ["gene_1", "node_a", "node_b", "node_b"],
@@ -148,7 +148,7 @@ def test_graphnn_model_runs_on_cyclic_graph():
         }
     )
 
-    model, artifact = compile_graph(edgelist, backend="graphnn")
+    model, artifact = compile_graph(edgelist, backend="state_update")
 
     x = torch.randn(3, len(artifact.feature_names))
     y = model(x)
@@ -157,7 +157,7 @@ def test_graphnn_model_runs_on_cyclic_graph():
     assert y.shape == (3, 1)
 
 
-def test_graphnn_model_uses_configured_number_of_steps():
+def test_state_update_model_uses_configured_number_of_steps():
     edgelist = pd.DataFrame(
         {
             "source": ["gene_1"],
@@ -165,7 +165,7 @@ def test_graphnn_model_uses_configured_number_of_steps():
         }
     )
 
-    model, _ = compile_graph(edgelist, backend="graphnn")
+    model, _ = compile_graph(edgelist, backend="state_update")
 
     assert hasattr(model, "steps")
     assert model.steps > 0

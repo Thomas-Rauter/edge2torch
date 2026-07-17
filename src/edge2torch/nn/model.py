@@ -13,7 +13,7 @@ Role in the package
 -------------------
 This is an internal neural-network implementation module. It defines the
 compiled model classes for the feedforward backend and the shared
-state-update core used by the recurrent and graphnn backends. It should
+state-update core used by the ``state_update`` backend. It should
 contain model execution logic and backend-specific model structure, not
 public API validation, graph conversion, or compiler dispatch.
 """
@@ -195,18 +195,15 @@ class StateUpdateEdgeModel(nn.Module):
 
     Input features are injected into nodes with zero in-degree. The model
     returns the activations of nodes with zero out-degree.
-
-    The recurrent and graphnn backends currently share this
-    implementation and differ only by their ``backend`` label.
     """
+
+    state_linear: MaskedLinear | ConstrainedMaskedLinear
 
     def __init__(
         self,
         execution_plan: StateUpdateExecutionPlan,
         steps: int = 3,
         bias: bool = True,
-        backend: str = "state_update",
-        linear_module_name: str = "state_linear",
     ) -> None:
         super().__init__()
 
@@ -217,10 +214,9 @@ class StateUpdateEdgeModel(nn.Module):
             raise Edge2TorchError("'steps' must be a positive integer.")
 
         self.execution_plan = execution_plan
-        self.backend = backend
+        self.backend = "state_update"
         self.steps = steps
         self.bias = bias
-        self._linear_module_name = linear_module_name
 
         self.node_names = list(execution_plan.node_names)
         self.input_node_names = list(execution_plan.input_node_names)
@@ -247,25 +243,15 @@ class StateUpdateEdgeModel(nn.Module):
             self.node_index[node_name] for node_name in self.output_node_names
         ]
 
-        linear = build_node_state_linear(
+        self.state_linear = build_node_state_linear(
             original_edges=execution_plan.original_edges,
             node_names=self.node_names,
             node_index=self.node_index,
             bias=bias,
         )
-        self.add_module(linear_module_name, linear)
         self.update_steps = build_state_update_steps(
             linear=self.state_linear,
             steps=steps,
-        )
-
-    @property
-    def state_linear(self) -> MaskedLinear | ConstrainedMaskedLinear:
-        """Canonical access to the masked state-update linear."""
-        module = self._modules[self._linear_module_name]
-        return cast(
-            MaskedLinear | ConstrainedMaskedLinear,
-            module,
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -329,47 +315,3 @@ class StateUpdateEdgeModel(nn.Module):
             raise Edge2TorchError(f"Unknown interpretation site '{site_id}'.")
 
         return cast(StateUpdateStep, self.update_steps[step_idx])
-
-
-class RecurrentEdgeModel(StateUpdateEdgeModel):
-    """
-    Recurrent KPNN model compiled from a state-update execution plan.
-
-    Thin backend-labeled wrapper around ``StateUpdateEdgeModel``.
-    """
-
-    def __init__(
-        self,
-        execution_plan: StateUpdateExecutionPlan,
-        steps: int = 3,
-        bias: bool = True,
-    ) -> None:
-        super().__init__(
-            execution_plan=execution_plan,
-            steps=steps,
-            bias=bias,
-            backend="recurrent",
-            linear_module_name="recurrent",
-        )
-
-
-class EdgeGraphNNModel(StateUpdateEdgeModel):
-    """
-    Graphnn KPNN model compiled from a state-update execution plan.
-
-    Thin backend-labeled wrapper around ``StateUpdateEdgeModel``.
-    """
-
-    def __init__(
-        self,
-        execution_plan: StateUpdateExecutionPlan,
-        steps: int = 3,
-        bias: bool = True,
-    ) -> None:
-        super().__init__(
-            execution_plan=execution_plan,
-            steps=steps,
-            bias=bias,
-            backend="graphnn",
-            linear_module_name="message_passing",
-        )

@@ -173,7 +173,7 @@ def _build_summary_attribution(
     if artifact.backend == "feedforward":
         return _merge_feedforward_site_attributions(site_results)
 
-    if artifact.backend in {"recurrent", "graphnn"}:
+    if artifact.backend == "state_update":
         return _aggregate_state_update_site_attributions(
             site_results=site_results,
             site_aggregation=site_aggregation,
@@ -205,7 +205,7 @@ def _aggregate_state_update_site_attributions(
     site_aggregation: SiteAggregation,
 ) -> pd.DataFrame:
     """
-    Aggregate repeated node columns across recurrent or graphnn steps.
+    Aggregate repeated node columns across state-update steps.
     """
     site_ids = sorted(site_results.keys(), key=_site_sort_key)
 

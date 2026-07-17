@@ -45,7 +45,7 @@ def test_customize_model_wraps_feedforward_model_and_runs():
     assert y.shape == (4, 2)
 
 
-def test_customize_model_wraps_recurrent_model_and_runs():
+def test_customize_model_wraps_state_update_model_and_runs():
     edgelist = pd.DataFrame(
         {
             "source": [
@@ -65,44 +65,7 @@ def test_customize_model_wraps_recurrent_model_and_runs():
 
     base_model, artifact = compile_graph(
         edgelist,
-        backend="recurrent",
-    )
-
-    model = customize_model(
-        model=base_model,
-        activation=nn.ReLU(),
-        dropout=0.1,
-        head=nn.Linear(1, 2),
-    )
-
-    x = torch.randn(4, len(artifact.feature_names))
-    y = model(x)
-
-    assert isinstance(y, torch.Tensor)
-    assert y.shape == (4, 2)
-
-
-def test_customize_model_wraps_graphnn_model_and_runs():
-    edgelist = pd.DataFrame(
-        {
-            "source": [
-                "gene_1",
-                "gene_2",
-                "node_a",
-                "node_b",
-            ],
-            "target": [
-                "node_a",
-                "node_a",
-                "node_b",
-                "output_1",
-            ],
-        }
-    )
-
-    base_model, artifact = compile_graph(
-        edgelist,
-        backend="graphnn",
+        backend="state_update",
     )
 
     model = customize_model(
@@ -159,7 +122,7 @@ def test_customized_feedforward_model_supports_backward_pass():
     assert any(grad is not None for grad in grads)
 
 
-def test_customized_recurrent_model_supports_backward_pass():
+def test_customized_state_update_model_supports_backward_pass():
     edgelist = pd.DataFrame(
         {
             "source": [
@@ -179,7 +142,7 @@ def test_customized_recurrent_model_supports_backward_pass():
 
     base_model, artifact = compile_graph(
         edgelist,
-        backend="recurrent",
+        backend="state_update",
     )
 
     model = customize_model(
@@ -199,7 +162,7 @@ def test_customized_recurrent_model_supports_backward_pass():
     assert any(grad is not None for grad in grads)
 
 
-def test_customized_graphnn_model_supports_optimizer_step():
+def test_customized_state_update_model_supports_optimizer_step():
     edgelist = pd.DataFrame(
         {
             "source": [
@@ -219,7 +182,7 @@ def test_customized_graphnn_model_supports_optimizer_step():
 
     base_model, artifact = compile_graph(
         edgelist,
-        backend="graphnn",
+        backend="state_update",
     )
 
     model = customize_model(

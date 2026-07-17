@@ -71,7 +71,7 @@ def interpret_model(
         for all visible graph nodes.
     site_aggregation : str, default="max_abs"
         Aggregation rule used when ``target="nodes"`` and ``level="summary"``
-        for recurrent and graphnn backends. Ignored for feedforward summary
+        for state_update backends. Ignored for feedforward summary
         results and for ``level="sites"``.
 
     Returns
@@ -92,8 +92,8 @@ def interpret_model(
     -----
     Feature interpretation is supported for all implemented backends.
 
-    Node interpretation is supported for the ``feedforward``, ``recurrent``,
-    and ``graphnn`` backends. Node interpretation methods use Captum layer
+    Node interpretation is supported for the ``feedforward`` and
+    ``state_update`` backends. Node interpretation methods use Captum layer
     attribution classes.
 
     For node-level interpretation, edge2torch must access the compiled

@@ -6,7 +6,7 @@ import torch
 
 from edge2torch.compile_graph import compile_graph
 from edge2torch.nn.masked_linear import MaskedLinear
-from edge2torch.nn.model import EdgeGraphNNModel, EdgeModel, RecurrentEdgeModel
+from edge2torch.nn.model import EdgeModel, StateUpdateEdgeModel
 from edge2torch.utils.constants import PSEUDO_NODE_PREFIX
 
 FIXTURE_DIR = Path(__file__).parents[2] / "fixtures" / "edgelists"
@@ -269,7 +269,7 @@ def _assert_feedforward_model_masks_preserve_expanded_graph(
         )
 
 
-def _assert_recurrent_or_graphnn_model_mask_matches_edgelist(
+def _assert_state_update_or_state_update_model_mask_matches_edgelist(
     *,
     node_names: list[str],
     edgelist: pd.DataFrame,
@@ -393,18 +393,18 @@ def test_compile_graph_fixture_feedforward_skip_edges_preserves_graph():
     assert y.shape == (4, len(_output_nodes(edgelist)))
 
 
-def test_compile_graph_fixture_recurrent_cycle_preserves_graph():
-    edgelist = _load_edgelist("recurrent_cycle.csv")
+def test_compile_graph_fixture_state_update_cycle_preserves_graph():
+    edgelist = _load_edgelist("state_update_cycle.csv")
 
     model, artifact = compile_graph(
         edgelist=edgelist,
-        backend="recurrent",
+        backend="state_update",
         quiet=True,
     )
 
-    assert isinstance(model, RecurrentEdgeModel)
-    assert model.backend == "recurrent"
-    assert artifact.backend == "recurrent"
+    assert isinstance(model, StateUpdateEdgeModel)
+    assert model.backend == "state_update"
+    assert artifact.backend == "state_update"
 
     assert artifact.execution_plan.original_edges.equals(edgelist)
 
@@ -419,48 +419,10 @@ def test_compile_graph_fixture_recurrent_cycle_preserves_graph():
     assert artifact.execution_plan.input_node_names == model.input_node_names
     assert artifact.execution_plan.output_node_names == model.output_node_names
 
-    _assert_recurrent_or_graphnn_model_mask_matches_edgelist(
+    _assert_state_update_or_state_update_model_mask_matches_edgelist(
         node_names=model.node_names,
         edgelist=edgelist,
-        masked_linear=model.recurrent,
-    )
-
-    x = torch.randn(4, len(model.input_node_names))
-    y = model(x)
-
-    assert y.shape == (4, len(model.output_node_names))
-
-
-def test_compile_graph_fixture_graphnn_cycle_preserves_graph():
-    edgelist = _load_edgelist("graphnn_cycle.csv")
-
-    model, artifact = compile_graph(
-        edgelist=edgelist,
-        backend="graphnn",
-        quiet=True,
-    )
-
-    assert isinstance(model, EdgeGraphNNModel)
-    assert model.backend == "graphnn"
-    assert artifact.backend == "graphnn"
-
-    assert artifact.execution_plan.original_edges.equals(edgelist)
-
-    assert model.input_node_names == _input_nodes(edgelist)
-    assert model.output_node_names == _output_nodes(edgelist)
-    assert artifact.feature_names == model.input_node_names
-
-    expected_node_names = _all_nodes(edgelist)
-
-    assert model.node_names == expected_node_names
-    assert artifact.execution_plan.node_names == expected_node_names
-    assert artifact.execution_plan.input_node_names == model.input_node_names
-    assert artifact.execution_plan.output_node_names == model.output_node_names
-
-    _assert_recurrent_or_graphnn_model_mask_matches_edgelist(
-        node_names=model.node_names,
-        edgelist=edgelist,
-        masked_linear=model.message_passing,
+        masked_linear=model.state_linear,
     )
 
     x = torch.randn(4, len(model.input_node_names))

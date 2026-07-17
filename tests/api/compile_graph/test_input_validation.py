@@ -262,7 +262,7 @@ def test_validate_compile_graph_inputs_accepts_valid_steps():
 
     validate_compile_graph_inputs(
         edgelist=edgelist,
-        backend="recurrent",
+        backend="state_update",
         quiet=False,
         bias=True,
         steps=5,
@@ -283,7 +283,7 @@ def test_validate_compile_graph_inputs_rejects_zero_steps():
     ):
         validate_compile_graph_inputs(
             edgelist=edgelist,
-            backend="recurrent",
+            backend="state_update",
             quiet=False,
             bias=True,
             steps=0,
@@ -301,7 +301,7 @@ def test_validate_compile_graph_inputs_rejects_non_integer_steps():
     with pytest.raises(Edge2TorchError, match="'steps' must be an integer"):
         validate_compile_graph_inputs(
             edgelist=edgelist,
-            backend="recurrent",
+            backend="state_update",
             quiet=False,
             bias=True,
             steps="3",
@@ -318,7 +318,7 @@ def test_validate_compile_graph_inputs_rejects_feedforward_steps():
 
     with pytest.raises(
         Edge2TorchError,
-        match="'steps' is only used by the 'recurrent' and 'graphnn'",
+        match="'steps' is only used by the 'state_update'",
     ):
         validate_compile_graph_inputs(
             edgelist=edgelist,

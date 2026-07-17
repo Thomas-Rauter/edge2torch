@@ -21,7 +21,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from ..utils.constants import INTERNAL_NODE_PREFIX
+from ..utils.constants import COMPILE_BACKENDS, INTERNAL_NODE_PREFIX
 from ..utils.errors import Edge2TorchError
 
 # Level 1 functions (functions called by API functions) ------------------------
@@ -50,8 +50,7 @@ def validate_compile_graph_inputs(
     bias
         Whether compiled masked linear layers should include bias terms.
     steps
-        Number of recurrent/message-passing update steps for the ``recurrent``
-        and ``graphnn`` backends.
+        Number of state-update steps for the ``state_update`` backend.
 
     Raises
     ------
@@ -195,7 +194,7 @@ def _validate_backend(backend: Any) -> None:
     if not isinstance(backend, str):
         raise Edge2TorchError("'backend' must be a string.")
 
-    supported_backends = {"feedforward", "recurrent", "graphnn"}
+    supported_backends = set(COMPILE_BACKENDS)
 
     if backend not in supported_backends:
         supported = ", ".join(sorted(supported_backends))
@@ -224,7 +223,7 @@ def _validate_bias(bias: Any) -> None:
 
 def _validate_steps(steps: Any, backend: Any) -> None:
     """
-    Validate recurrent/message-passing step count.
+    Validate state-update step count.
     """
     if isinstance(steps, bool) or not isinstance(steps, int):
         raise Edge2TorchError("'steps' must be an integer.")
@@ -234,7 +233,7 @@ def _validate_steps(steps: Any, backend: Any) -> None:
 
     if backend == "feedforward" and steps != 3:
         raise Edge2TorchError(
-            "'steps' is only used by the 'recurrent' and 'graphnn' backends."
+            "'steps' is only used by the 'state_update' backend."
         )
 
 

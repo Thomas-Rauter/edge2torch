@@ -15,7 +15,7 @@ def _state_update_edgelist() -> pd.DataFrame:
     )
 
 
-@pytest.mark.parametrize("backend", ["recurrent", "graphnn"])
+@pytest.mark.parametrize("backend", ["state_update"])
 def test_compile_graph_sets_steps_for_state_update_backends(
     backend: str,
 ):
@@ -29,7 +29,7 @@ def test_compile_graph_sets_steps_for_state_update_backends(
     assert model.steps == 5
 
 
-@pytest.mark.parametrize("backend", ["recurrent", "graphnn"])
+@pytest.mark.parametrize("backend", ["state_update"])
 def test_compile_graph_default_steps_is_three(
     backend: str,
 ):
@@ -42,7 +42,7 @@ def test_compile_graph_default_steps_is_three(
     assert model.steps == 3
 
 
-@pytest.mark.parametrize("backend", ["recurrent", "graphnn"])
+@pytest.mark.parametrize("backend", ["state_update"])
 def test_steps_changes_state_update_forward_behavior(
     backend: str,
 ):
@@ -103,7 +103,7 @@ def test_compile_graph_rejects_non_default_steps_for_feedforward():
 
     with pytest.raises(
         Edge2TorchError,
-        match="'steps' is only used by the 'recurrent' and 'graphnn'",
+        match="'steps' is only used by the 'state_update'",
     ):
         compile_graph(
             edgelist=edgelist,
@@ -121,7 +121,7 @@ def test_compile_graph_rejects_non_positive_steps(steps: int):
     ):
         compile_graph(
             edgelist=_state_update_edgelist(),
-            backend="recurrent",
+            backend="state_update",
             quiet=True,
             steps=steps,
         )
@@ -132,7 +132,7 @@ def test_compile_graph_rejects_non_integer_steps(steps):
     with pytest.raises(Edge2TorchError, match="'steps' must be an integer"):
         compile_graph(
             edgelist=_state_update_edgelist(),
-            backend="recurrent",
+            backend="state_update",
             quiet=True,
             steps=steps,
         )

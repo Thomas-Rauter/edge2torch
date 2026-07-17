@@ -74,8 +74,8 @@ def run_captum_interpretation(
     level
         Node interpretation detail level.
     site_aggregation
-        Aggregation rule for summary node interpretation in recurrent and
-        graphnn backends.
+        Aggregation rule for summary node interpretation in the
+        ``state_update`` backend.
 
     Notes
     -----

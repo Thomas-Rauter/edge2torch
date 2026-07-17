@@ -1,16 +1,16 @@
 """
-State-update step blocks for recurrent and graphnn KPNN models.
+State-update step blocks for state_update KPNN models.
 
 Why this file exists
 --------------------
-This file isolates one interpretable recurrent or graphnn update step. Each
+This file isolates one interpretable state-update step. Each
 step applies a shared masked linear transformation and re-injects input-node
 values so that later interpretation can hook one unique module per step.
 
 Role in the package
 -------------------
 This is an internal neural-network implementation module. It defines the
-runtime building blocks used by compiled recurrent and graphnn models. It
+runtime building blocks used by compiled state_update models. It
 should contain step-block behavior and shared masked-linear construction,
 not public API logic, validation, or backend dispatch.
 """
@@ -32,7 +32,7 @@ from .masked_linear import (
 
 class StateUpdateStep(nn.Module):
     """
-    One recurrent or graphnn state-update step.
+    One state-update step.
 
     The step applies a shared masked linear update to the full node-state
     vector and then re-injects the external input-node values. The masked
@@ -73,7 +73,7 @@ def build_node_state_linear(
     bias: bool,
 ) -> ConstrainedMaskedLinear | MaskedLinear:
     """
-    Build the shared masked linear layer for recurrent and graphnn models.
+    Build the shared masked linear layer for state_update models.
     """
     n_nodes = len(node_names)
 

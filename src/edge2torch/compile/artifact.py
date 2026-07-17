@@ -63,7 +63,7 @@ class CompileArtifact:
     interpretation_sites : dict[str, list[str]]
         Mapping from interpretation site identifier to ordered node names for
         that site. Feedforward backends use ``layer_1``, ``layer_2``, and so on.
-        Recurrent and graphnn backends use ``step_1``, ``step_2``, and so on.
+        State-update backends use ``step_1``, ``step_2``, and so on.
     feature_names : list[str]
         Names of the input features. This field defines the expected input
         column order for tensors passed to the compiled model.

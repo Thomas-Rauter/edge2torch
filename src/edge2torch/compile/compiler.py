@@ -19,11 +19,11 @@ implementations themselves or the public API entry point.
 from torch import nn
 
 from ..graph.schema import EdgeGraph
+from ..utils.constants import COMPILE_BACKENDS
 from ..utils.errors import Edge2TorchError
 from .artifact import CompileArtifact
 from .feedforward import compile_feedforward
-from .graphnn import compile_graphnn
-from .recurrent import compile_recurrent
+from .state_update import compile_state_update
 
 
 def compile_backend(
@@ -48,8 +48,7 @@ def compile_backend(
         from graph-defined weighted inputs. Disabling bias gives the graph
         structure stricter control over node activations.
     steps
-        Number of recurrent/message-passing update steps for the ``recurrent``
-        and ``graphnn`` backends.
+        Number of state-update steps for the ``state_update`` backend.
 
     Returns
     -------
@@ -67,18 +66,14 @@ def compile_backend(
             bias=bias,
         )
 
-    if backend == "recurrent":
-        return compile_recurrent(
+    if backend == "state_update":
+        return compile_state_update(
             graph=graph,
             bias=bias,
             steps=steps,
         )
 
-    if backend == "graphnn":
-        return compile_graphnn(
-            graph=graph,
-            bias=bias,
-            steps=steps,
-        )
-
-    raise Edge2TorchError(f"Unsupported backend '{backend}'.")
+    supported = ", ".join(sorted(COMPILE_BACKENDS))
+    raise Edge2TorchError(
+        f"Unsupported backend '{backend}'. Supported backends: {supported}."
+    )

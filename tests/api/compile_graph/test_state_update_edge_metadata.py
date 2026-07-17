@@ -20,7 +20,12 @@ def _edge_weight(model: torch.nn.Module, source: str, target: str) -> float:
     source_idx = model.node_index[source]
     target_idx = model.node_index[target]
     return float(
-        model.recurrent.effective_weight[target_idx, source_idx].detach().cpu()
+        model.state_linear.effective_weight[
+            target_idx,
+            source_idx,
+        ]
+        .detach()
+        .cpu()
     )
 
 
@@ -31,7 +36,7 @@ def _edge_constraint_code(
 ) -> int:
     source_idx = model.node_index[source]
     target_idx = model.node_index[target]
-    return int(model.recurrent.constraint[target_idx, source_idx])
+    return int(model.state_linear.constraint[target_idx, source_idx])
 
 
 def _reset_if_available(module: torch.nn.Module) -> None:
@@ -72,17 +77,17 @@ def _metadata_edgelist() -> pd.DataFrame:
     )
 
 
-def test_recurrent_compile_graph_uses_constrained_layer_with_edge_metadata():
+def test_state_update_compile_graph_uses_constrained_layer_with_edge_metadata():
     edgelist = _metadata_edgelist()
 
     model, artifact = compile_graph(
         edgelist=edgelist,
-        backend="recurrent",
+        backend="state_update",
         quiet=True,
     )
 
-    assert isinstance(model.recurrent, ConstrainedMaskedLinear)
-    assert artifact.backend == "recurrent"
+    assert isinstance(model.state_linear, ConstrainedMaskedLinear)
+    assert artifact.backend == "state_update"
     assert artifact.feature_names == ["feature_a", "feature_b"]
 
     assert list(artifact.graph.edges.columns) == [
@@ -100,12 +105,12 @@ def test_recurrent_compile_graph_uses_constrained_layer_with_edge_metadata():
     ]
 
 
-def test_recurrent_edge_metadata_initialize_effective_weights_and_constraints():
+def test_state_update_edge_metadata_initializes_weights_and_constraints():
     edgelist = _metadata_edgelist()
 
     model, _ = compile_graph(
         edgelist=edgelist,
-        backend="recurrent",
+        backend="state_update",
         quiet=True,
     )
 
@@ -166,7 +171,7 @@ def test_recurrent_edge_metadata_initialize_effective_weights_and_constraints():
     assert math.isfinite(unconstrained_weight)
 
 
-def test_recurrent_model_without_edge_metadata_still_uses_masked_linear():
+def test_state_update_model_without_edge_metadata_still_uses_masked_linear():
     edgelist = pd.DataFrame(
         {
             "source": ["feature_a", "feature_b", "hidden"],
@@ -176,22 +181,22 @@ def test_recurrent_model_without_edge_metadata_still_uses_masked_linear():
 
     model, _ = compile_graph(
         edgelist=edgelist,
-        backend="recurrent",
+        backend="state_update",
         quiet=True,
     )
 
-    assert isinstance(model.recurrent, MaskedLinear)
-    assert not isinstance(model.recurrent, ConstrainedMaskedLinear)
+    assert isinstance(model.state_linear, MaskedLinear)
+    assert not isinstance(model.state_linear, ConstrainedMaskedLinear)
 
 
-def test_recurrent_constraints_survive_optimizer_steps():
+def test_state_update_constraints_survive_optimizer_steps():
     torch.manual_seed(0)
 
     edgelist = _metadata_edgelist()
 
     model, _ = compile_graph(
         edgelist=edgelist,
-        backend="recurrent",
+        backend="state_update",
         quiet=True,
     )
 
@@ -240,37 +245,37 @@ def test_recurrent_constraints_survive_optimizer_steps():
         ) == pytest.approx(fixed_before)
 
 
-def test_recurrent_fixed_weights_are_buffers_not_trainable_parameters():
+def test_state_update_fixed_weights_are_buffers_not_trainable_parameters():
     edgelist = _metadata_edgelist()
 
     model, _ = compile_graph(
         edgelist=edgelist,
-        backend="recurrent",
+        backend="state_update",
         quiet=True,
     )
 
     parameter_names = {name for name, _ in model.named_parameters()}
     buffer_names = {name for name, _ in model.named_buffers()}
 
-    assert "recurrent.raw_weight" in parameter_names
-    assert "recurrent.fixed_weight" not in parameter_names
-    assert "recurrent.constraint" not in parameter_names
-    assert "recurrent.initial_effective_weight" not in parameter_names
+    assert "state_linear.raw_weight" in parameter_names
+    assert "state_linear.fixed_weight" not in parameter_names
+    assert "state_linear.constraint" not in parameter_names
+    assert "state_linear.initial_effective_weight" not in parameter_names
 
-    assert "recurrent.fixed_weight" in buffer_names
-    assert "recurrent.constraint" in buffer_names
-    assert "recurrent.initial_effective_weight" in buffer_names
-    assert "recurrent.mask" in buffer_names
+    assert "state_linear.fixed_weight" in buffer_names
+    assert "state_linear.constraint" in buffer_names
+    assert "state_linear.initial_effective_weight" in buffer_names
+    assert "state_linear.mask" in buffer_names
 
 
-def test_recurrent_reset_parameters_restores_explicit_edge_initialization():
+def test_state_update_reset_parameters_restores_explicit_edge_initialization():
     torch.manual_seed(0)
 
     edgelist = _metadata_edgelist()
 
     model, _ = compile_graph(
         edgelist=edgelist,
-        backend="recurrent",
+        backend="state_update",
         quiet=True,
     )
 
@@ -301,14 +306,14 @@ def test_recurrent_reset_parameters_restores_explicit_edge_initialization():
     ) == pytest.approx(0.75)
 
 
-def test_recurrent_state_dict_roundtrip_preserves_edge_metadata_behavior():
+def test_state_update_state_dict_roundtrip_preserves_edge_metadata_behavior():
     torch.manual_seed(0)
 
     edgelist = _metadata_edgelist()
 
     model, _ = compile_graph(
         edgelist=edgelist,
-        backend="recurrent",
+        backend="state_update",
         quiet=True,
     )
 
@@ -324,7 +329,7 @@ def test_recurrent_state_dict_roundtrip_preserves_edge_metadata_behavior():
 
     reloaded_model, _ = compile_graph(
         edgelist=edgelist,
-        backend="recurrent",
+        backend="state_update",
         quiet=True,
     )
     reloaded_model.load_state_dict(state_dict)
@@ -394,7 +399,7 @@ def test_compile_graph_rejects_fixed_constraint_without_initial_weight_value():
     ):
         compile_graph(
             edgelist=edgelist,
-            backend="recurrent",
+            backend="state_update",
             quiet=True,
         )
 
@@ -415,6 +420,6 @@ def test_compile_graph_rejects_initial_weight_with_wrong_constraint_sign():
     ):
         compile_graph(
             edgelist=edgelist,
-            backend="recurrent",
+            backend="state_update",
             quiet=True,
         )
