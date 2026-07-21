@@ -44,7 +44,7 @@ not graph edges, and are not constrained by the edge mask. Set `bias=False` in
 graph-defined weighted inputs.
 
 The use of masked dense layers should not be interpreted as sparse tensor
-acceleration, which is planned as a future addition.
+acceleration, which is not implemented in the package!
 
 ## Common input format
 

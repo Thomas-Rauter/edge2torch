@@ -98,3 +98,20 @@ jobs:
           else
             mike deploy --push "$version"
           fi
+
+      # Google Search Console expects the HTML file at the site root
+      # (…/edge2torch/google….html), not under /latest/. mike only deploys
+      # versioned trees, so copy the file from docs/ onto gh-pages root.
+      - name: Publish Google site verification at docs root
+        run: |
+          git fetch origin gh-pages
+          git worktree add /tmp/gh-pages origin/gh-pages
+          cp docs/google*.html /tmp/gh-pages/
+          cd /tmp/gh-pages
+          git add google*.html
+          if git diff --cached --quiet; then
+            echo "Verification file already up to date."
+          else
+            git commit -m "Add Google Search Console verification file"
+            git push origin HEAD:gh-pages
+          fi
