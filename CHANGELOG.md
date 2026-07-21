@@ -48,7 +48,7 @@ This project follows semantic versioning.
     are combined in the summary (`"max_abs"`, `"mean_abs"`, or `"last"`)
 - **New example notebooks:** recurrent and graphnn end-to-end workflows
   (compile, train, interpret on cyclic graphs).
-- **New docs page:** [Scope and limitations](https://Thomas-Rauter.github.io/edge2torch/scope/)
+- **New docs page:** [Scope and limitations](https://thomas-rauter.github.io/edge2torch/0.2.0/scope/)
   — what each backend supports cleanly, with extra PyTorch work, or not at all.
 
 ### Changed

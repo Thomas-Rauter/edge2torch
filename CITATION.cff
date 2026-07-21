@@ -7,7 +7,7 @@ authors:
     given-names: "Thomas"
     orcid: "https://orcid.org/0009-0004-5578-3628"
 repository-code: "https://github.com/Thomas-Rauter/edge2torch"
-url: "https://Thomas-Rauter.github.io/edge2torch/"
+url: "https://thomas-rauter.github.io/edge2torch/"
 abstract: "edge2torch is a Python package for building sparsely connected PyTorch neural networks from prior-knowledge graphs, with optional feature- and node-level attribution."
 keywords:
   - pytorch
@@ -16,5 +16,5 @@ keywords:
   - graph-defined-neural-networks
   - knowledge-primed-neural-networks
 license: "MIT"
-version: "0.2.0"
-date-released: 2026-06-26
+version: "0.3.0"
+date-released: 2026-07-17

@@ -6,7 +6,7 @@
 Build sparsely connected PyTorch neural networks from prior-knowledge graphs,
 with optional feature- and node-level attribution.
 
-**Documentation:** https://Thomas-Rauter.github.io/edge2torch/
+**Documentation:** https://thomas-rauter.github.io/edge2torch/
 
 ## Overview
 
@@ -196,7 +196,7 @@ It includes:
 - interpretation guidance
 - API reference
 
-Documentation: https://Thomas-Rauter.github.io/edge2torch/
+Documentation: https://thomas-rauter.github.io/edge2torch/
 
 ## Citation
 

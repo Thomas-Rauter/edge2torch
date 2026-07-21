@@ -2,7 +2,7 @@ site_name: edge2torch
 site_description: >
   Build sparsely connected PyTorch neural networks from
   prior-knowledge graphs, with optional feature- and node-level attribution.
-site_url: https://Thomas-Rauter.github.io/edge2torch/
+site_url: https://thomas-rauter.github.io/edge2torch/
 repo_url: https://github.com/Thomas-Rauter/edge2torch
 repo_name: Thomas-Rauter/edge2torch
 

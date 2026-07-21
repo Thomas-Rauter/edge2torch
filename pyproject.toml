@@ -29,8 +29,8 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://Thomas-Rauter.github.io/edge2torch/"
-Documentation = "https://Thomas-Rauter.github.io/edge2torch/"
+Homepage = "https://thomas-rauter.github.io/edge2torch/"
+Documentation = "https://thomas-rauter.github.io/edge2torch/"
 Repository = "https://github.com/Thomas-Rauter/edge2torch"
 Issues = "https://github.com/Thomas-Rauter/edge2torch/issues"
 

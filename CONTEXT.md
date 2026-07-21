@@ -2,7 +2,7 @@
 
 This file is **AI-first documentation** for assistants working in this repository
 or explaining the package to users. It is more detailed and operational than
-`README.md`. Human docs live at https://Thomas-Rauter.github.io/edge2torch/.
+`README.md`. Human docs live at https://thomas-rauter.github.io/edge2torch/.
 
 **Current release:** `0.3.0` (see `pyproject.toml`, `CHANGELOG.md`).
 
