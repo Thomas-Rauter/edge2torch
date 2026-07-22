@@ -449,6 +449,8 @@ def _validate_interpret_dataframe(
             f"'data' contains non-numeric feature column(s): {non_numeric_str}."
         )
 
+    _require_at_least_one_sample(n_samples=len(named))
+
 
 def _validate_interpret_anndata(
     data,
@@ -479,6 +481,8 @@ def _validate_interpret_anndata(
             f"in the compiled model: {extra_str}."
         )
 
+    _require_at_least_one_sample(n_samples=int(data.n_obs))
+
 
 def _validate_interpret_tensor(
     data: torch.Tensor,
@@ -495,3 +499,13 @@ def _validate_interpret_tensor(
             "'data' tensor has the wrong number of features. "
             f"Expected {expected_n_features}, got {data.shape[1]}."
         )
+
+    _require_at_least_one_sample(n_samples=int(data.shape[0]))
+
+
+def _require_at_least_one_sample(*, n_samples: int) -> None:
+    """
+    Reject empty interpretation inputs before Captum runs.
+    """
+    if n_samples < 1:
+        raise Edge2TorchError("'data' must contain at least one sample (row).")

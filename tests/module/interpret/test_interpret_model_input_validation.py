@@ -514,6 +514,25 @@ def test_validate_interpret_dataframe_rejects_non_numeric_columns():
         )
 
 
+def test_validate_interpret_dataframe_rejects_zero_samples():
+    data = pd.DataFrame(
+        {
+            "gene_a": pd.Series([], dtype=float),
+            "gene_b": pd.Series([], dtype=float),
+        }
+    )
+
+    with pytest.raises(
+        Edge2TorchError,
+        match="at least one sample",
+    ):
+        _validate_interpret_dataframe(
+            data=data,
+            feature_names=["gene_a", "gene_b"],
+            required_features={"gene_a", "gene_b"},
+        )
+
+
 # _validate_interpret_anndata --------------------------------------------------
 
 
@@ -630,6 +649,24 @@ def test_validate_interpret_anndata_rejects_extra_var_names():
         )
 
 
+def test_validate_interpret_anndata_rejects_zero_samples():
+    ad = pytest.importorskip("anndata")
+
+    data = ad.AnnData(
+        X=np.empty((0, 2), dtype=float),
+        var=pd.DataFrame(index=["gene_a", "gene_b"]),
+    )
+
+    with pytest.raises(
+        Edge2TorchError,
+        match="at least one sample",
+    ):
+        _validate_interpret_anndata(
+            data=data,
+            required_features={"gene_a", "gene_b"},
+        )
+
+
 # _validate_interpret_tensor ---------------------------------------------------
 
 
@@ -647,6 +684,19 @@ def test_validate_interpret_tensor_rejects_wrong_width():
     data = torch.randn(2, 3)
 
     with pytest.raises(Edge2TorchError, match="wrong number of features"):
+        _validate_interpret_tensor(
+            data=data,
+            expected_n_features=2,
+        )
+
+
+def test_validate_interpret_tensor_rejects_zero_samples():
+    data = torch.zeros(0, 2)
+
+    with pytest.raises(
+        Edge2TorchError,
+        match="at least one sample",
+    ):
         _validate_interpret_tensor(
             data=data,
             expected_n_features=2,

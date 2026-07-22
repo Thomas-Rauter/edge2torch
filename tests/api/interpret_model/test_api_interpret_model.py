@@ -231,6 +231,28 @@ def test_interpret_model_raises_for_incompatible_feature_method():
         )
 
 
+def test_interpret_model_raises_for_zero_sample_data():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1"],
+            "target": ["pathway_1"],
+        }
+    )
+
+    model, artifact = compile_graph(edgelist, quiet=True)
+    data = pd.DataFrame({"gene_1": pd.Series([], dtype=float)})
+
+    with pytest.raises(Edge2TorchError, match="at least one sample"):
+        interpret_model(
+            model=model,
+            artifact=artifact,
+            data=data,
+            target="features",
+            method="IntegratedGradients",
+            quiet=True,
+        )
+
+
 def test_interpret_model_raises_for_incompatible_node_method():
     edgelist = pd.DataFrame(
         {
