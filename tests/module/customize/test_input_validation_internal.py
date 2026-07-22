@@ -161,3 +161,25 @@ def test_validate_customize_model_inputs_accepts_integer_dropout():
         dropout=0,
         head=None,
     )
+
+
+def test_validate_customize_model_inputs_rejects_mismatched_head_width():
+    with pytest.raises(
+        Edge2TorchError,
+        match="in_features match the model output width",
+    ):
+        validate_customize_model_inputs(
+            model=nn.Linear(2, 1),
+            activation=None,
+            dropout=None,
+            head=nn.Linear(99, 1),
+        )
+
+
+def test_validate_customize_model_inputs_accepts_matching_head_width():
+    validate_customize_model_inputs(
+        model=nn.Linear(2, 3),
+        activation=None,
+        dropout=None,
+        head=nn.Linear(3, 1),
+    )

@@ -311,3 +311,27 @@ def test_customize_model_rejects_invalid_head():
             model=base_model,
             head="linear",
         )
+
+
+def test_customize_model_rejects_mismatched_head_width():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_1", "gene_2"],
+            "target": ["output_1", "output_1"],
+        }
+    )
+
+    base_model, _ = compile_graph(
+        edgelist,
+        backend="feedforward",
+        quiet=True,
+    )
+
+    with pytest.raises(
+        Edge2TorchError,
+        match="in_features match the model output width",
+    ):
+        customize_model(
+            model=base_model,
+            head=nn.Linear(99, 1),
+        )
