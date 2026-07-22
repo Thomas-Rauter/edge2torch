@@ -49,6 +49,74 @@ def test_align_features_to_input_nodes_reorders_dataframe_columns():
     assert torch.equal(result, expected)
 
 
+def test_align_features_to_input_nodes_accepts_integer_dataframe_columns():
+    edgelist = pd.DataFrame({"source": [1, 2], "target": [3, 3]})
+    _, artifact = compile_graph(edgelist, quiet=True)
+
+    assert artifact.feature_names == ["1", "2"]
+
+    data = pd.DataFrame({1: [0.1, 0.3], 2: [0.2, 0.4]})
+    result = align_features_to_input_nodes(data, artifact)
+
+    expected = torch.tensor(
+        [
+            [0.1, 0.2],
+            [0.3, 0.4],
+        ],
+        dtype=torch.float32,
+    )
+    assert torch.allclose(result, expected)
+
+
+def test_align_features_to_input_nodes_accepts_numpy_int_columns():
+    edgelist = pd.DataFrame({"source": [1, 2], "target": [3, 3]})
+    _, artifact = compile_graph(edgelist, quiet=True)
+
+    data = pd.DataFrame(
+        {
+            np.int64(1): [0.1],
+            np.int64(2): [0.2],
+        }
+    )
+    result = align_features_to_input_nodes(data, artifact)
+
+    expected = torch.tensor([[0.1, 0.2]], dtype=torch.float32)
+    assert torch.allclose(result, expected)
+
+
+def test_align_features_to_input_nodes_rejects_str_int_column_collision():
+    edgelist = pd.DataFrame({"source": [1, 2], "target": [3, 3]})
+    _, artifact = compile_graph(edgelist, quiet=True)
+
+    data = pd.DataFrame(
+        [
+            [0.1, 0.2, 0.3],
+        ],
+        columns=[1, "1", 2],
+    )
+
+    with pytest.raises(Edge2TorchError, match="duplicate column names"):
+        align_features_to_input_nodes(data, artifact)
+
+
+def test_align_features_to_input_nodes_reorders_numeric_string_anndata_vars():
+    # AnnData stores var_names as strings; use string IDs that match the
+    # stringified integer node names from compile_graph().
+    ad = pytest.importorskip("anndata")
+
+    edgelist = pd.DataFrame({"source": [1, 2], "target": [3, 3]})
+    _, artifact = compile_graph(edgelist, quiet=True)
+
+    data = ad.AnnData(
+        X=np.array([[0.2, 0.1]], dtype=float),
+        var=pd.DataFrame(index=["2", "1"]),
+    )
+    result = align_features_to_input_nodes(data, artifact)
+
+    expected = torch.tensor([[0.1, 0.2]], dtype=torch.float32)
+    assert torch.allclose(result, expected)
+
+
 def test_align_features_to_input_nodes_rejects_missing_dataframe_features():
     artifact = _compile_simple_artifact()
 

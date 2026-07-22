@@ -423,6 +423,32 @@ def test_validate_interpret_data_accepts_tensor():
 # _validate_interpret_dataframe ------------------------------------------------
 
 
+def test_validate_interpret_dataframe_accepts_integer_columns():
+    data = pd.DataFrame({1: [0.1, 0.3], 2: [0.2, 0.4]})
+
+    _validate_interpret_dataframe(
+        data=data,
+        feature_names=["1", "2"],
+        required_features={"1", "2"},
+    )
+
+
+def test_validate_interpret_dataframe_rejects_str_int_column_collision():
+    data = pd.DataFrame(
+        [
+            [0.1, 0.2, 0.3],
+        ],
+        columns=[1, "1", 2],
+    )
+
+    with pytest.raises(Edge2TorchError, match="duplicate column names"):
+        _validate_interpret_dataframe(
+            data=data,
+            feature_names=["1", "2"],
+            required_features={"1", "2"},
+        )
+
+
 def test_validate_interpret_dataframe_rejects_duplicate_columns():
     data = pd.DataFrame(
         [

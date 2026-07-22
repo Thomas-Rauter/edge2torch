@@ -29,12 +29,25 @@ except ImportError:
 
 from ..utils.constants import COMPILE_BACKENDS
 from ..utils.errors import Edge2TorchError
+from ..utils.feature_labels import (
+    dataframe_with_str_feature_columns,
+    unique_str_labels,
+)
 from .method_registry import (
     FEATURE_METHODS,
     FEATURE_METHODS_WITHOUT_CONSTRUCTOR_KWARGS,
     NODE_METHODS,
     NODE_METHODS_WITHOUT_CONSTRUCTOR_KWARGS,
     SUPPORTED_METHODS,
+)
+
+_DF_DUPLICATE_COLUMNS_MSG = (
+    "'data' DataFrame must not contain duplicate column names "
+    "(including after converting labels to strings)."
+)
+_ANNDATA_DUPLICATE_VARS_MSG = (
+    "'data.var_names' must not contain duplicates "
+    "(including after converting labels to strings)."
 )
 
 # Level 1 functions (called by API functions) ----------------------------------
@@ -402,12 +415,12 @@ def _validate_interpret_dataframe(
     """
     Validate DataFrame interpretation input.
     """
-    if data.columns.duplicated().any():
-        raise Edge2TorchError(
-            "'data' DataFrame must not contain duplicate column names."
-        )
+    named = dataframe_with_str_feature_columns(
+        data,
+        duplicate_message=_DF_DUPLICATE_COLUMNS_MSG,
+    )
 
-    data_features = set(data.columns)
+    data_features = set(named.columns)
 
     missing_columns = required_features.difference(data_features)
     if missing_columns:
@@ -427,7 +440,7 @@ def _validate_interpret_dataframe(
     non_numeric_columns = [
         name
         for name in feature_names
-        if not pd.api.types.is_numeric_dtype(data[name])
+        if not pd.api.types.is_numeric_dtype(named[name])
     ]
 
     if non_numeric_columns:
@@ -444,10 +457,10 @@ def _validate_interpret_anndata(
     """
     Validate AnnData interpretation input.
     """
-    var_names = list(data.var_names)
-
-    if len(set(var_names)) != len(var_names):
-        raise Edge2TorchError("'data.var_names' must not contain duplicates.")
+    var_names = unique_str_labels(
+        data.var_names,
+        duplicate_message=_ANNDATA_DUPLICATE_VARS_MSG,
+    )
 
     data_features = set(var_names)
 

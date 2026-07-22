@@ -5,11 +5,24 @@ import torch
 
 from .compile.artifact import CompileArtifact
 from .utils.errors import Edge2TorchError
+from .utils.feature_labels import (
+    dataframe_with_str_feature_columns,
+    unique_str_labels,
+)
 
 try:
     import anndata as ad
 except ImportError:
     ad = None
+
+_DF_DUPLICATE_COLUMNS_MSG = (
+    "Input DataFrame must not contain duplicate column names "
+    "(including after converting labels to strings)."
+)
+_ANNDATA_DUPLICATE_VARS_MSG = (
+    "AnnData var_names must not contain duplicates "
+    "(including after converting labels to strings)."
+)
 
 
 def align_features_to_input_nodes(
@@ -33,7 +46,9 @@ def align_features_to_input_nodes(
 
     Named data containers must contain exactly the compiled model input-node
     features, although they may appear in any order. Missing or extra features
-    raise an error.
+    raise an error. Non-string labels (for example integer DataFrame columns)
+    are matched after converting to strings, matching how node IDs are stored
+    after ``compile_graph()``.
 
     ``torch.Tensor`` inputs do not contain feature names, so they are only
     validated by shape and are assumed to already follow
@@ -122,7 +137,11 @@ def align_features_to_input_nodes(
 
     # Dataframe logic
     if isinstance(data, pd.DataFrame):
-        ordered = cast(pd.DataFrame, data[feature_names])
+        named = dataframe_with_str_feature_columns(
+            data,
+            duplicate_message=_DF_DUPLICATE_COLUMNS_MSG,
+        )
+        ordered = cast(pd.DataFrame, named[feature_names])
 
         return torch.tensor(
             ordered.to_numpy(copy=True),
@@ -134,7 +153,10 @@ def align_features_to_input_nodes(
         # AnnData stores samples in rows and named variables/features in
         # columns.
         # Reorder data.X columns to match artifact.feature_names.
-        var_names = list(data.var_names)
+        var_names = unique_str_labels(
+            data.var_names,
+            duplicate_message=_ANNDATA_DUPLICATE_VARS_MSG,
+        )
         order = [var_names.index(name) for name in feature_names]
         matrix = data.X[:, order]
 
@@ -213,12 +235,11 @@ def _validate_align_features_to_input_nodes_inputs(
     required_features = set(feature_names)
 
     if isinstance(data, pd.DataFrame):
-        if data.columns.duplicated().any():
-            raise Edge2TorchError(
-                "Input DataFrame must not contain duplicate column names."
-            )
-
-        data_features = set(data.columns)
+        named = dataframe_with_str_feature_columns(
+            data,
+            duplicate_message=_DF_DUPLICATE_COLUMNS_MSG,
+        )
+        data_features = set(named.columns)
 
         missing_features = required_features.difference(data_features)
         if missing_features:
@@ -239,7 +260,7 @@ def _validate_align_features_to_input_nodes_inputs(
         non_numeric_features = [
             name
             for name in feature_names
-            if not pd.api.types.is_numeric_dtype(data[name])
+            if not pd.api.types.is_numeric_dtype(named[name])
         ]
 
         if non_numeric_features:
@@ -252,12 +273,10 @@ def _validate_align_features_to_input_nodes_inputs(
         return
 
     if ad is not None and isinstance(data, ad.AnnData):
-        var_names = list(data.var_names)
-
-        if len(set(var_names)) != len(var_names):
-            raise Edge2TorchError(
-                "AnnData var_names must not contain duplicates."
-            )
+        var_names = unique_str_labels(
+            data.var_names,
+            duplicate_message=_ANNDATA_DUPLICATE_VARS_MSG,
+        )
 
         data_features = set(var_names)
 

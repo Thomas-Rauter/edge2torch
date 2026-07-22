@@ -31,6 +31,19 @@ except ImportError:
 
 from ..compile.artifact import CompileArtifact
 from ..utils.errors import Edge2TorchError
+from ..utils.feature_labels import (
+    dataframe_with_str_feature_columns,
+    unique_str_labels,
+)
+
+_DF_DUPLICATE_COLUMNS_MSG = (
+    "'data' DataFrame must not contain duplicate column names "
+    "(including after converting labels to strings)."
+)
+_ANNDATA_DUPLICATE_VARS_MSG = (
+    "'data.var_names' must not contain duplicates "
+    "(including after converting labels to strings)."
+)
 
 
 @dataclass
@@ -71,7 +84,11 @@ def prepare_interpretation_input(
     feature_names = list(artifact.feature_names)
 
     if isinstance(data, pd.DataFrame):
-        ordered = cast(pd.DataFrame, data[feature_names])
+        named = dataframe_with_str_feature_columns(
+            data,
+            duplicate_message=_DF_DUPLICATE_COLUMNS_MSG,
+        )
+        ordered = cast(pd.DataFrame, named[feature_names])
         inputs = torch.tensor(
             ordered.to_numpy(copy=True),
             dtype=torch.float32,
@@ -85,7 +102,10 @@ def prepare_interpretation_input(
         )
 
     if ad is not None and isinstance(data, ad.AnnData):
-        var_names = list(data.var_names)
+        var_names = unique_str_labels(
+            data.var_names,
+            duplicate_message=_ANNDATA_DUPLICATE_VARS_MSG,
+        )
 
         order = [var_names.index(name) for name in feature_names]
         matrix = data.X[:, order]
