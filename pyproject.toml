@@ -40,7 +40,7 @@ all = [
     "anndata>=0.10,<1",
 ]
 interpret = [
-    "captum>=0.7,<1",
+    "captum>=0.8,<1",
 ]
 anndata = [
     "anndata>=0.10,<1",
@@ -52,7 +52,7 @@ dev = [
     "mypy",
     "pandas-stubs>=2.3.3,<2.4",
     "build",
-    "captum>=0.7,<1",
+    "captum>=0.8,<1",
     "anndata>=0.10,<1",
     "scikit-learn",
 ]
@@ -70,7 +70,7 @@ docs = [
     "IPython",
     "seaborn",
     "black",
-    "captum>=0.7,<1",
+    "captum>=0.8,<1",
     "anndata>=0.10,<1",
     "mike>=2,<3",
 ]

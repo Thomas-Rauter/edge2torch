@@ -180,6 +180,65 @@ def test_validate_compile_graph_inputs_raises_for_whitespace_target_name():
         )
 
 
+def test_validate_compile_graph_inputs_raises_for_int_str_label_collision():
+    edgelist = pd.DataFrame(
+        {
+            "source": [1, "1", 2],
+            "target": ["h1", "h2", "h3"],
+        }
+    )
+
+    with pytest.raises(
+        Edge2TorchError,
+        match="become identical after converting to strings",
+    ):
+        validate_compile_graph_inputs(
+            edgelist=edgelist,
+            backend="feedforward",
+            quiet=False,
+            bias=True,
+            steps=3,
+        )
+
+
+def test_validate_compile_graph_inputs_raises_for_strip_label_collision():
+    edgelist = pd.DataFrame(
+        {
+            "source": ["gene_a", " gene_a"],
+            "target": ["pathway_1", "pathway_2"],
+        }
+    )
+
+    with pytest.raises(
+        Edge2TorchError,
+        match="become identical after converting to strings",
+    ):
+        validate_compile_graph_inputs(
+            edgelist=edgelist,
+            backend="feedforward",
+            quiet=False,
+            bias=True,
+            steps=3,
+        )
+
+
+def test_validate_compile_graph_inputs_accepts_homogeneous_int_labels():
+    edgelist = pd.DataFrame(
+        {
+            "source": [1, 2],
+            "target": [3, 3],
+        }
+    )
+
+    validate_compile_graph_inputs(
+        edgelist=edgelist,
+        backend="feedforward",
+        quiet=False,
+        bias=True,
+        steps=3,
+    )
+
+
 def test_validate_compile_graph_inputs_raises_for_non_string_backend():
     edgelist = pd.DataFrame(
         {

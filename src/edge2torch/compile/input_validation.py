@@ -146,6 +146,67 @@ def _validate_source_target_values(edgelist: pd.DataFrame) -> None:
             "edge2torch nodes."
         )
 
+    _validate_no_node_label_str_collisions(edgelist)
+
+
+def _validate_no_node_label_str_collisions(
+    edgelist: pd.DataFrame,
+) -> None:
+    """
+    Reject distinct raw node labels that become identical after ``str``.
+
+    Graph compilation stores node IDs as stripped strings. Values such as
+    ``1`` and ``\"1\"`` would otherwise silently merge into one node.
+    """
+    raw_values = pd.concat(
+        [edgelist["source"], edgelist["target"]],
+        ignore_index=True,
+    )
+
+    groups: dict[str, list[Any]] = {}
+    for value in raw_values:
+        if pd.isna(value):
+            continue
+
+        normalized = str(value).strip()
+        if normalized == "":
+            continue
+
+        members = groups.setdefault(normalized, [])
+        if any(_node_labels_equivalent(value, other) for other in members):
+            continue
+        members.append(value)
+
+    collisions = {
+        normalized: members
+        for normalized, members in groups.items()
+        if len(members) > 1
+    }
+    if not collisions:
+        return
+
+    details = []
+    for normalized in sorted(collisions):
+        rendered = ", ".join(repr(member) for member in collisions[normalized])
+        details.append(f"{normalized!r} from {rendered}")
+
+    detail_str = "; ".join(details)
+    raise Edge2TorchError(
+        "'edgelist' contains distinct node labels that become identical "
+        "after converting to strings "
+        f"({detail_str}). Use one consistent label type for each node."
+    )
+
+
+def _node_labels_equivalent(left: Any, right: Any) -> bool:
+    """
+    Return whether two raw node labels should be treated as the same value.
+    """
+    try:
+        return bool(left == right)
+    except Exception:
+        return False
+
 
 def _validate_optional_edge_metadata(edgelist: pd.DataFrame) -> None:
     """
