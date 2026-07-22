@@ -87,7 +87,10 @@ def build_feedforward_execution_plan(
 
     if not current_layer_nodes:
         raise Edge2TorchError(
-            "Feedforward compilation requires at least one input node."
+            "Feedforward compilation requires at least one input node "
+            "(a node with no incoming edges). This graph has none, which "
+            "often means it is a pure cycle or otherwise closed. "
+            "Feedforward needs an acyclic, layerable graph."
         )
 
     node_to_depth: dict[str, int] = {}

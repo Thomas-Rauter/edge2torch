@@ -195,6 +195,7 @@ def test_validate_feedforward_graph_rejects_graph_without_input_nodes():
     _validate_feedforward_graph(graph=graph, report=report)
 
     assert any("at least one input node" in error for error in report.errors)
+    assert any("pure cycle" in error for error in report.errors)
 
 
 def test_validate_feedforward_graph_rejects_unresolved_cycle():

@@ -239,7 +239,10 @@ def _validate_feedforward_graph(
 
     if not current_layer_nodes:
         report.errors.append(
-            "Feedforward compilation requires at least one input node."
+            "Feedforward compilation requires at least one input node "
+            "(a node with no incoming edges). This graph has none, which "
+            "often means it is a pure cycle or otherwise closed. "
+            "Feedforward needs an acyclic, layerable graph."
         )
         return
 
