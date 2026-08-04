@@ -57,7 +57,10 @@ plugins:
             line_length: 60
             show_source: false
             merge_init_into_class: true
-  - mkdocs-jupyter
+  - mkdocs-jupyter:
+      remove_tag_config:
+        remove_input_tags:
+          - hide_code
 
 markdown_extensions:
   - admonition
