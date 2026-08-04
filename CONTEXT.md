@@ -177,10 +177,12 @@ Model is set to eval mode during attribution, then restored.
 ## Edgelist format
 
 ```python
-edgelist = pd.DataFrame({
-    "source": ["feature_a", "feature_b", "hidden"],
-    "target": ["hidden", "hidden", "output_1"],
-})
+edgelist = pd.DataFrame(
+    {
+        "source": ["feature_a", "feature_b", "hidden"],
+        "target": ["hidden", "hidden", "output_1"],
+    }
+)
 ```
 
 **Optional edge metadata** (row-wise sparse — omit on rows that use defaults):
@@ -267,13 +269,21 @@ x = e2t.align_features_to_input_nodes(x_df, artifact)
 customized = e2t.customize_model(model, head=nn.Linear(1, 1))
 # ... train with PyTorch ...
 
-features = e2t.interpret_model(customized, artifact, x_df, target="features",
-                             method="IntegratedGradients")
-nodes = e2t.interpret_model(customized, artifact, x_df, target="nodes",
-                          method="LayerConductance")
-sites = e2t.interpret_model(customized, artifact, x_df, target="nodes",
-                            level="sites", nodes="non_input",
-                            method="LayerConductance")
+features = e2t.interpret_model(
+    customized, artifact, x_df, target="features", method="IntegratedGradients"
+)
+nodes = e2t.interpret_model(
+    customized, artifact, x_df, target="nodes", method="LayerConductance"
+)
+sites = e2t.interpret_model(
+    customized,
+    artifact,
+    x_df,
+    target="nodes",
+    level="sites",
+    nodes="non_input",
+    method="LayerConductance",
+)
 ```
 
 ---
